@@ -13,7 +13,7 @@ namespace ET.Server
             self.ViewDistance = distance;
             self.Scene().GetComponent<AOIManagerComponent>().Add(self, pos.x, pos.z);
         }
-        
+
         [EntitySystem]
         private static void Destroy(this AOIEntity self)
         {
@@ -27,7 +27,7 @@ namespace ET.Server
             self.SubLeaveCells.Clear();
         }
     }
-    
+
     [FriendOf(typeof(AOIEntity))]
     [FriendOf(typeof(Cell))]
     public static partial class AOIEntitySystem

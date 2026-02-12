@@ -628,7 +628,7 @@ namespace ET
             uint latest_ts = 0;
             int flag = 0;
 
-            if (data == null || size < OVERHEAD) return -1;
+            if (data.IsEmpty || size < OVERHEAD) return -1;
 
             while (true)
             {
