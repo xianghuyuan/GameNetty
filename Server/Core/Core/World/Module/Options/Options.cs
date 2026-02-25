@@ -15,7 +15,6 @@ namespace ET
         BenchmarkServer,
         
         Demo,
-        LockStep,
     }
     
     public class Options: Singleton<Options>

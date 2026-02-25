@@ -20,16 +20,12 @@ namespace ET
 		BenchmarkServer = 1 << 12,
 		Match = 1 << 14,
 		Room = 1 << 15,
-		LockStepClient = 1 << 16,
-		LockStepServer = 1 << 17,
 		RoomRoot = 1 << 18,
 		Watcher = 1 << 19,
 
 		// 客户端
 		Demo = 1 << 30,
 		Current = 1L << 31,
-		LockStep = 1L << 32,
-		LockStepView = 1L << 33,
 		DemoView = 1L << 34,
 		NetClient = 1L << 35,
 

@@ -1,6 +1,4 @@
 using System;
-using System.Text;
-
 namespace ET
 {
     public static class StringHashHelper

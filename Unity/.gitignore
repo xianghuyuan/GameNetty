@@ -9,7 +9,8 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Mm]emoryCaptures/
-
+/[Aa]ssets/StreamingAssets
+/[Aa]ssets/StreamingAssets.meta
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
@@ -62,7 +63,8 @@ crashlytics-build.properties
 #HybirdCLR(HuaTuo)
 /HybirdCLRData/
 [Hh]ybridCLRData/
-[Aa]ssets/HybridCLRData.meta
+[Aa]ssets/HybridCLRGenerate/
+[Aa]ssets/HybridCLRGenerate.meta
 
 
 #AATemp
@@ -82,3 +84,18 @@ Bundles/
 Sandbox/
 
 package/
+#MAC
+.DS_Store
+
+#Rider
+.idea/
+
+#Odin Inspector
+# [Aa]ssets/Plugins/Sirenix/
+# [Aa]ssets/Plugins/Sirenix.meta
+
+#YooAssets
+package/
+yoo/
+[Aa]ssets/TEngine/AssetSetting/Resources/BuiltinFileManifest.asset
+[Aa]ssets/TEngine/AssetSetting/Resources/BuiltinFileManifest.asset.meta

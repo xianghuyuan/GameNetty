@@ -1,6 +1,12 @@
 syntax = "proto3";
 package ET;
 
+message HttpGetRouterResponse
+{
+	repeated string Realms = 1;
+	repeated string Routers = 2;
+}
+
 message RouterSync
 {
 	uint32 ConnectId = 1;
@@ -226,4 +232,825 @@ message G2C_Benchmark // ISessionResponse
 	int32 RpcId = 1;
 	int32 Error = 2;
 	string Message = 3;
+}
+
+// ResponseType R2C_LoginAccount
+message C2R_LoginAccount // ISessionRequest
+{
+	int32 RpcId = 1;
+	
+	string AccountName = 2;
+
+	string Password = 3;
+}
+message R2C_LoginAccount // ISessionResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+
+	string Token = 4;
+}
+
+message A2C_Disconnect // ISessionMessage
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+}
+
+message ServerInfoProto
+{
+	int32 Id = 1;
+	int32 Status = 2;
+	string ServerName = 3;
+}
+
+//ResponseType R2C_GetServerInfos
+message C2R_GetServerInfos // ISessionRequest
+{
+	int32 RpcId = 90;
+	string Token = 1;
+	string Account = 2;
+}
+
+message R2C_GetServerInfos // ISessionResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	repeated ServerInfoProto ServerInfosList = 1;
+}
+
+message RoleInfoProto
+{
+	int64 Id = 1;
+	string Name = 2;
+	int32 State = 3;
+	string Account = 4;
+	int64 LastLoginTime = 5;
+	int64 CreateTime = 6;
+	int32 ServerId = 7;
+}
+
+//ResponseType R2C_GetRoles
+message C2R_GetRoles // ISessionRequest
+{
+	int32 RpcId = 90;
+	string Token = 1;
+	string Account = 2;
+	int32 ServerId = 3;
+}
+
+message R2C_GetRoles // ISessionResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 91;
+	repeated RoleInfoProto RoleInfo = 1;
+}
+
+//ResponseType R2C_CreateRole
+message C2R_CreateRole // ISessionRequest
+{
+	int32 RpcId = 90;
+	string Token = 1;
+	string Account = 2;
+	string Name = 3;
+	int32 ServerId = 4;
+}
+
+message R2C_CreateRole // ISessionResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	RoleInfoProto RoleInfo = 1;
+}
+
+//ResponseType R2C_DeleteRole
+message C2R_DeleteRole // ISessionRequest
+{
+	int32 RpcId = 90;
+	string Token = 1;
+	string Account = 2;
+	string RoleInfoId = 3;
+	int32 ServerId = 4;
+}
+
+message R2C_DeleteRole // ISessionResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	int64 DeletedRoleInfoId = 1;
+}
+
+//ResponseType R2C_GetRealmKey
+message C2R_GetRealmKey // ISessionRequest
+{
+	int32 RpcId = 1;
+	string Token = 2;
+	string Account = 3;
+	int32 ServerId = 4;
+}
+
+message R2C_GetRealmKey // ISessionResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	string Address = 4;
+	int64 Key = 5;
+	int64 GateId = 6;
+}
+
+//ResponseType G2C_LoginGameGate
+message C2G_LoginGameGate // ISessionRequest
+{
+	int32 RpcId = 1;
+	string AccountName = 2;
+	int64 Key = 3;
+	int64 RoleId = 4;
+}
+
+message G2C_LoginGameGate // ISessionResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	int64 PlayerId = 4;
+}
+
+
+// ResponseType G2C_EnterGame
+message C2G_EnterGame // ISessionRequest
+{
+	int32 RpcId = 1;
+}
+
+message G2C_EnterGame // ISessionResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+
+	int64 MyUnitId = 4;
+}
+
+// ResponseType M2C_GetBagInfo
+message C2M_GetBagInfo // ILocationRequest
+{
+	int32 RpcId = 1;
+}
+
+message M2C_GetBagInfo // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	
+	string Message = 3;
+	int64 Money = 4;
+	repeated BagInfo BagInfos = 5;
+}
+
+// ResponseType M2C_GetShopInfo
+message C2M_GetShopInfo // ILocationRequest
+{
+	int32 RpcId = 1;
+}
+
+message M2C_GetShopInfo // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	
+	string Message = 3;
+	repeated ShopInfo ShopInfos = 4;
+	int64 Coin = 5;
+}
+
+// ResponseType M2C_BuyShop
+message C2M_BuyShop // ILocationRequest
+{
+	int32 RpcId = 1;
+	int32 ShopId = 2;
+}
+
+message M2C_BuyShop // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+
+	string Message = 3;
+	int64 Money = 4;
+
+}
+
+message ShopInfo
+{
+	int32 id = 1;
+	string	name = 2;
+	int32 cost = 3;
+}
+
+message BagInfo
+{
+	int32 id  = 1;
+	int32 count = 2;
+}
+
+//ResponseType Chat2C_SendChatInfo
+message C2Chat_SendChatInfo // IActorChatRequest
+{
+	int32 RpcId         = 1;
+	string ChatMessage  = 2;
+}
+
+
+message Chat2C_SendChatInfo // IActorChatResponse
+{
+	int32 RpcId    = 90;
+	int32 Error    = 91;
+	string Message = 92;
+}
+
+ message Chat2C_NoticeChatInfo // IMessage
+{
+	string Name = 1;
+	string ChatMessage = 2;
+}
+
+message ProductionProto
+{
+	int64 Id           = 1;
+	int32 ConfigId     = 2;
+	int64 TargetTime   = 3;
+	int64 StartTime    = 4;
+	int32 ProductionState = 5;
+}
+
+//ResponseType M2C_StartProduction
+message C2M_StartProduction // ILocationRequest
+{
+	int32 RpcId    = 1;
+	int32 ConfigId = 2;
+}
+
+message M2C_StartProduction // ILocationResponse
+{
+	int32 RpcId    = 90;
+	int32 Error    = 91;
+	string Message = 92;
+	ProductionProto  ProductionProto = 2;
+}
+
+message M2C_NoticeUnitNumeric // IMessage
+{
+	int64 UnitId = 1;
+	int32 NumericType = 1;
+	int64 NewValue = 2;
+}
+
+message M2C_NoticeNumericMsg // IMessage
+{
+	int32 NumericType = 1;
+	int64 NewValue = 2;
+}
+
+message M2C_NoticeUnitNumericList // IMessage
+{
+	int64 UnitId = 1;
+	repeated int32 NumericTypeList = 2;
+	repeated int64 NewValueList = 3;
+}
+
+
+// ResponseType M2C_TestNumericValue
+message C2M_TestNumericValue // ILocationRequest
+{
+	int RpcId = 1;
+}
+
+message M2C_TestNumericValue // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+}
+
+message ItemProto
+{
+	int32 ConfigId = 1;
+	int32 ContainerType = 2;
+	int64 Id = 3;
+}
+
+message M2C_UpdateItemInfo
+{
+	int32 Op = 1;
+	ItemProto ItemInfo = 2;
+}
+
+// ResponseType M2C_GetAllKnapsack
+message C2M_GetAllKnapsack // ILocationRequest
+{
+	int32 RpcId = 1;
+}
+
+message M2C_GetAllKnapsack // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	repeated ItemProto ItemList = 4;
+}
+
+// ResponseType M2C_AddKnapsackItem
+message C2M_AddKnapsackItem // ILocationRequest
+{
+	int32 RpcId = 1;
+	int32 ContainerType = 2;
+	int32 ConfigId = 3;
+}
+
+message M2C_AddKnapsackItem // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+}
+
+// ResponseType M2C_RemoveKnapsackItem
+message C2M_RemoveKnapsackItem // ILocationRequest
+{
+	int32 RpcId = 1;
+	int32 ContainerType = 2;
+	int32 ConfigId = 3;
+}
+
+message M2C_RemoveKnapsackItem // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+}
+
+message RankInfoProto
+{
+	int64 Id = 1;
+	int64 UnitId = 2;
+	string Name = 3;
+}
+
+//ResponseType Rank2C_GetRanksInfo
+message C2Rank_GetRanksInfo // IRankInfoRequest
+{
+	int32 RpcId = 1;
+}
+
+message Rank2C_GetRanksInfo // IRankInfoResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	repeated RankInfoProto RankInfoProtoList = 1;
+}
+
+message MailInfoProto
+{
+	int64 MailId = 1;
+	string Title = 2;
+	string Message = 3;
+}
+
+//ResponseType Mail2C_GetAllMailList
+message C2Mail_GetAllMailList // IMailInfoRequest
+{
+	int32 RpcId = 90;
+}
+
+message Mail2C_GetAllMailList // IMailInfoResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	repeated MailInfoProto MailInfoList = 1;
+}
+
+message M2C_AllProductionList // IMessage
+{
+	repeated ProductionProto ProductionProtoList = 1;
+}
+
+message BuildingInfoProto
+{
+	int64 Id = 5;
+	int32 State = 1;
+	int64 ConfigId = 2;
+	int64 StartTime = 3;
+	int64 EndTime = 4;
+}
+message M2C_BuildingEntity
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	BuildingInfoProto BuildingEntity = 1;
+}
+// ResponseType M2C_CreateEnemy
+message C2M_CreateEnemy // ILocationRequest
+{
+	int32 RpcId = 1;
+}
+
+message M2C_CreateEnemy // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	UnitInfo Enemy = 4;
+}
+// ResponseType M2C_AttackEnemy
+message C2M_AttackEnemy // ILocationRequest
+{
+	int32 RpcId = 1;
+	int64 EnemyId = 2;
+	int32 Damage = 3;
+}
+
+message M2C_AttackEnemy // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	int64 EnemyId = 4;
+	int32 CurrentHp = 5;
+	bool IsDead = 6;
+}
+
+
+// ResponseType M2C_StartCombat
+message C2M_StartCombat // ISessionRequest
+{
+    int32 RpcId = 1;
+    int64 targetId = 2;
+}
+
+message M2C_StartCombat // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+}
+
+// ResponseType M2C_AttackTarget
+message C2M_AttackTarget // ISessionRequest
+{
+    int32 RpcId = 1;
+    int64 targetId = 2;
+}
+
+message M2C_AttackTarget // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    CombatResultProto result = 4;
+}
+
+// ResponseType M2C_SwitchControlMode
+message C2M_SwitchControlMode // ISessionRequest
+{
+    int32 RpcId = 1;
+    int32 Mode = 2; // 0: Auto, 1: Manual
+}
+
+message M2C_SwitchControlMode // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int32 CurrentMode = 4;
+}
+
+message M2C_ControlModeChanged // IMessage
+{
+    int64 UnitId = 1;
+    int32 NewMode = 2;
+}
+
+// 战斗结果
+message CombatResultProto
+{
+    int64 attackerId = 1;
+    int64 targetId = 2;
+    int32 damage = 3;
+    int32 attackerCurrentHp = 4;
+    int32 targetCurrentHp = 5;
+    bool targetDead = 6;
+    bool attackerDead = 7;
+}
+
+// ========== 战斗系统 (Battle System) ==========
+
+// ResponseType M2C_StartBattle
+message C2M_StartBattle // ILocationRequest
+{
+    int32 RpcId = 1;
+    int32 battleType = 2;  // 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss
+    int32 totalWaves = 3;  // 总波数（波次战斗用）
+}
+
+message M2C_StartBattle // ILocationResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int64 battleId = 4;
+}
+
+// 战斗结束（服务器主动推送）
+message M2C_BattleEnd // IMessage
+{
+    int64 battleId = 1;
+    bool success = 2;
+    int32 duration = 3;  // 持续时间（秒）
+    map<int64, int32> playerDamage = 4;  // 玩家伤害统计
+}
+
+// 波次开始（服务器主动推送）
+message M2C_WaveStart // IMessage
+{
+    int64 battleId = 1;
+    int32 waveNumber = 2;
+    int32 totalWaves = 3;
+    int32 monsterCount = 4;
+}
+
+// 波次完成（服务器主动推送）
+message M2C_WaveComplete // IMessage
+{
+    int64 battleId = 1;
+    int32 waveNumber = 2;
+    int32 totalWaves = 3;
+    int32 duration = 4;  // 持续时间（秒）
+}
+
+// ResponseType M2C_ExitBattle
+// 客户端主动退出战斗
+message C2M_ExitBattle // ILocationRequest
+{
+    int32 RpcId = 1;
+    int64 battleId = 2;
+}
+
+message M2C_ExitBattle // ILocationResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+}
+
+// ResponseType M2C_TeamStartBattle
+// 队长开启组队战斗
+message C2M_TeamStartBattle // ILocationRequest
+{
+    int32 RpcId = 1;
+    int64 teamId = 2;      // 队伍ID
+    int32 battleType = 3;  // 战斗类型
+    int32 totalWaves = 4;  // 总波数（波次战斗用）
+}
+
+message M2C_TeamStartBattle // ILocationResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int64 battleId = 4;    // 实际上是 RoomId
+    repeated int64 memberIds = 5;  // 所有参战成员ID
+}
+
+// ResponseType M2C_JoinTeamBattle
+// 队员加入进行中的战斗
+message C2M_JoinTeamBattle // ILocationRequest
+{
+    int32 RpcId = 1;
+    int64 battleId = 2;    // RoomId
+}
+
+message M2C_JoinTeamBattle // ILocationResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    repeated int64 memberIds = 4;  // 当前所有成员
+}
+
+// ========== 技能系统 (Skill System) ==========
+
+// ResponseType M2C_CastSkill
+// 释放技能
+message C2M_CastSkill // ISessionRequest
+{
+    int32 RpcId = 1;
+    int32 skillId = 2;      // 技能ID
+    int64 targetId = 3;     // 目标ID（可选）
+}
+
+message M2C_CastSkill // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int64 cooldownEnd = 4;  // 冷却结束时间戳
+}
+
+// 技能冷却同步（服务器推送）
+message M2C_SkillCooldown // IMessage
+{
+    int32 skillId = 1;
+    int64 cooldownEnd = 2;  // 冷却结束时间戳
+}
+
+// ========== 组队系统 (Team System) ==========
+
+// ResponseType M2C_CreateTeam
+message C2M_CreateTeam // ISessionRequest
+{
+    int32 RpcId = 1;
+}
+
+message M2C_CreateTeam // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int64 teamId = 4;
+}
+
+// ResponseType M2C_JoinTeam
+message C2M_JoinTeam // ISessionRequest
+{
+    int32 RpcId = 1;
+    int64 teamId = 2;
+}
+
+message M2C_JoinTeam // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+}
+
+// ResponseType M2C_LeaveTeam
+message C2M_LeaveTeam // ISessionRequest
+{
+    int32 RpcId = 1;
+}
+
+message M2C_LeaveTeam // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+}
+
+// 队伍更新（服务器主动推送）
+message M2C_TeamUpdate // IMessage
+{
+    int64 teamId = 1;
+    int64 leaderId = 2;
+    repeated int64 memberIds = 3;
+    int32 teamState = 4;  // 0=Idle, 1=InCombat, 2=InDungeon
+}
+
+// ========== 副本系统 (Dungeon System) ==========
+
+// ResponseType M2C_EnterDungeon
+message C2M_EnterDungeon // ISessionRequest
+{
+    int32 RpcId = 1;
+    int32 dungeonConfigId = 2;  // 副本配置ID
+}
+
+message M2C_EnterDungeon // ISessionResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
+    int64 dungeonInstanceId = 4;
+    int64 battleId = 5;
+}
+
+// 副本开始（服务器主动推送）
+message M2C_DungeonStart // IMessage
+{
+    int64 dungeonInstanceId = 1;
+    int64 teamId = 2;
+    int32 dungeonConfigId = 3;
+}
+
+// 副本完成（服务器主动推送）
+message M2C_DungeonComplete // IMessage
+{
+    int64 dungeonInstanceId = 1;
+    bool success = 2;
+    int32 duration = 3;  // 持续时间（秒）
+    map<int64, int32> playerDamage = 4;  // 玩家伤害统计
+}
+
+// ========== 战斗表现同步 (Combat Visual Sync) ==========
+
+// 伤害同步（服务器推送）
+message M2C_Damage // IMessage
+{
+    int64 attackerId = 1;       // 攻击者ID
+    int64 targetId = 2;         // 目标ID
+    int32 damage = 3;           // 伤害值
+    bool isCrit = 4;            // 是否暴击
+    int32 targetCurrentHp = 5;  // 目标当前血量
+    int32 targetMaxHp = 6;      // 目标最大血量
+    bool targetDead = 7;        // 目标是否死亡
+    int32 damageType = 8;       // 伤害类型: 0=普攻, 1=技能, 2=DOT, 3=反伤
+}
+
+// 治疗同步（服务器推送）
+message M2C_Heal // IMessage
+{
+    int64 casterId = 1;         // 施法者ID
+    int64 targetId = 2;         // 目标ID
+    int32 healAmount = 3;       // 治疗量
+    int32 targetCurrentHp = 4;  // 目标当前血量
+    int32 targetMaxHp = 5;      // 目标最大血量
+    int32 healType = 6;         // 治疗类型: 0=技能, 1=HOT, 2=吸血
+}
+
+// Buff添加同步（服务器推送）
+message M2C_BuffAdd // IMessage
+{
+    int64 unitId = 1;           // 单位ID
+    int64 buffId = 2;           // Buff实例ID
+    int32 configId = 3;         // Buff配置ID
+    int64 casterId = 4;         // 施法者ID
+    int32 effectType = 5;       // 效果类型
+    int64 duration = 6;         // 持续时间(ms)
+    int32 stacks = 7;           // 层数
+    bool isBuff = 8;            // 是否增益
+}
+
+// Buff移除同步（服务器推送）
+message M2C_BuffRemove // IMessage
+{
+    int64 unitId = 1;           // 单位ID
+    int64 buffId = 2;           // Buff实例ID
+    int32 configId = 3;         // Buff配置ID
+    bool isExpired = 4;         // 是否自然过期
+}
+
+// Buff层数更新（服务器推送）
+message M2C_BuffStackUpdate // IMessage
+{
+    int64 unitId = 1;           // 单位ID
+    int64 buffId = 2;           // Buff实例ID
+    int32 configId = 3;         // Buff配置ID
+    int32 stacks = 4;           // 当前层数
+}
+
+// 单位血量同步（服务器推送）
+message M2C_UnitHpSync // IMessage
+{
+    int64 unitId = 1;           // 单位ID
+    int32 currentHp = 2;        // 当前血量
+    int32 maxHp = 3;            // 最大血量
+    int64 shieldValue = 4;      // 护盾值
+}
+
+// 单位死亡同步（服务器推送）
+message M2C_UnitDead // IMessage
+{
+    int64 unitId = 1;           // 死亡单位ID
+    int64 killerId = 2;         // 击杀者ID
+}
+
+// 技能释放同步（服务器推送给周围玩家）
+message M2C_SkillCast // IMessage
+{
+    int64 casterId = 1;         // 施法者ID
+    int32 skillId = 2;          // 技能ID
+    int64 targetId = 3;         // 目标ID（可选）
+    Unity.Mathematics.float3 targetPos = 4;  // 目标位置（AOE技能用）
+}
+
+// 怪物AI状态变化（服务器推送）
+message M2C_MonsterStateChange // IMessage
+{
+    int64 unitId = 1;           // 怪物ID
+    string state = 2;           // 状态名称
+}
+
+// Room内资源奖励同步（服务器推送）
+message M2C_RoomRewardSync // IMessage
+{
+    int64 AddMoney = 1;         // 本次增加的金币
+    int64 TotalMoney = 2;       // 当前总金币
 }
