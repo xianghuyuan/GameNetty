@@ -29,50 +29,16 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-::StartConfig Release
+::StartConfig Localhost (代码结构 + 数据)
 dotnet %LUBAN_DLL% ^
     --customTemplateDir ServerTemplate ^
-    -t Release ^
+    -t Localhost ^
     -c cs-bin ^
     -d bin ^
     --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
     -x outputCodeDir=%WORKSPACE%\Server\Model\Generate\Config\StartConfig ^
-    -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\Release ^
-    -x lineEnding=CRLF ^
-    
-
-echo ==================== StartConfig : GenReleaseFinish ====================
-
-if %ERRORLEVEL% NEQ 0 (
-    echo An error occurred, press any key to exit.
-    pause
-    exit /b
-)
-
-::StartConfig Benchmark
-dotnet %LUBAN_DLL% ^
-    --customTemplateDir ServerTemplate ^
-    -t Benchmark ^
-    -d bin ^
-    --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
-    -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\Benchmark ^
-    
-
-echo ==================== StartConfig : GenBenchmarkFinish ====================
-
-if %ERRORLEVEL% NEQ 0 (
-    echo An error occurred, press any key to exit.
-    pause
-    exit /b
-)
-
-::StartConfig Localhost
-dotnet %LUBAN_DLL% ^
-    --customTemplateDir ServerTemplate ^
-    -t Localhost ^
-    -d bin ^
-    --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
     -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\Localhost ^
+    -x lineEnding=CRLF ^
     
 
 echo ==================== StartConfig : GenLocalhostFinish ====================
@@ -83,19 +49,56 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-::StartConfig RouterTest
-dotnet %LUBAN_DLL% ^
-    --customTemplateDir ServerTemplate ^
-    -t RouterTest ^
-    -d bin ^
-    --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
-    -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\RouterTest ^
-    
+:: ::StartConfig Release
+:: dotnet %LUBAN_DLL% ^
+::     --customTemplateDir ServerTemplate ^
+::     -t Release ^
+::     -c cs-bin ^
+::     -d bin ^
+::     --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
+::     -x outputCodeDir=%WORKSPACE%\Server\Model\Generate\Config\StartConfig ^
+::     -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\Release ^
+::     -x lineEnding=CRLF ^
+::     
+:: 
+:: echo ==================== StartConfig : GenReleaseFinish ====================
+:: 
+:: if %ERRORLEVEL% NEQ 0 (
+::     echo An error occurred, press any key to exit.
+::     pause
+::     exit /b
+:: )
 
-echo ==================== StartConfig : GenRouterTestFinish ====================
+:: ::StartConfig Benchmark
+:: dotnet %LUBAN_DLL% ^
+::     --customTemplateDir ServerTemplate ^
+::     -t Benchmark ^
+::     -d bin ^
+::     --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
+::     -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\Benchmark ^
+::     
+:: 
+:: echo ==================== StartConfig : GenBenchmarkFinish ====================
+:: 
+:: if %ERRORLEVEL% NEQ 0 (
+::     echo An error occurred, press any key to exit.
+::     pause
+::     exit /b
+:: )
 
-if %ERRORLEVEL% NEQ 0 (
-    echo An error occurred, press any key to exit.
-    pause
-    exit /b
-)
+:: ::StartConfig RouterTest
+:: dotnet %LUBAN_DLL% ^
+::     --customTemplateDir ServerTemplate ^
+::     -t RouterTest ^
+::     -d bin ^
+::     --conf %CONF_ROOT%\StartConfig\__luban__.conf ^
+::     -x bin.outputDataDir=%WORKSPACE%\Config\Generate\StartConfig\RouterTest ^
+::     
+:: 
+:: echo ==================== StartConfig : GenRouterTestFinish ====================
+:: 
+:: if %ERRORLEVEL% NEQ 0 (
+::     echo An error occurred, press any key to exit.
+::     pause
+::     exit /b
+:: )

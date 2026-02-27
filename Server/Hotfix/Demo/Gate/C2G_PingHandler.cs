@@ -12,8 +12,6 @@ namespace ET.Server
 			
 			response.Time = TimeInfo.Instance.ClientNow();
 			await ETTask.CompletedTask;
-			
-			//response会在函数返回发送完消息回收到池
 		}
 	}
 }

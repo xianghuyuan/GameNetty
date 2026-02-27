@@ -300,23 +300,6 @@ Transform:
   - {fileID: 80070478}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &792494458 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2425705315945453279, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
-  m_PrefabInstance: {fileID: 2425705316520036048}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &792494460
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 792494458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 744ea2ac262d44f478bcd3c9adacca57, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fantasy.Unity::Fantasy.FantasyRuntime
 --- !u!1001 &2425705316520036048
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -373,13 +356,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 2425705316150093153, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
+      propertyPath: m_MatchWidthOrHeight
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2425705316150093153, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
+      propertyPath: m_ReferenceResolution.x
+      value: 1920
+      objectReference: {fileID: 0}
+    - target: {fileID: 2425705316150093153, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
+      propertyPath: m_ReferenceResolution.y
+      value: 1080
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2425705315945453279, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 792494460}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4f5fbbbb040049d41a5f897d5a956bf6, type: 3}
 --- !u!1001 &7696541954144433114
 PrefabInstance:

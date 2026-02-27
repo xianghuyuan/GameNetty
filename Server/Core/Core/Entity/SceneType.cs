@@ -23,6 +23,13 @@ namespace ET
 		RoomRoot = 1 << 18,
 		Watcher = 1 << 19,
 
+		LoginCenter = 1<<20,
+		Chat = 1<<21,
+		UnitCache = 1<<22,
+		Rank = 1<<23,
+		Mail = 1<<24,
+		Battle = 1<<25,
+		
 		// 客户端
 		Demo = 1 << 30,
 		Current = 1L << 31,

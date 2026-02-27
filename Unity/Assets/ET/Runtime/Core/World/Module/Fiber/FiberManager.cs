@@ -27,13 +27,13 @@ namespace ET
             this.mainThreadScheduler = new MainThreadScheduler(this);
             this.schedulers[(int)SchedulerType.Main] = this.mainThreadScheduler;
             
-#if ENABLE_VIEW && UNITY_EDITOR || UNITY_WEBGL
+// #if ENABLE_VIEW && UNITY_EDITOR || UNITY_WEBGL
             this.schedulers[(int)SchedulerType.Thread] = this.mainThreadScheduler;
             this.schedulers[(int)SchedulerType.ThreadPool] = this.mainThreadScheduler;
-#else
-            this.schedulers[(int)SchedulerType.Thread] = new ThreadScheduler(this);
-            this.schedulers[(int)SchedulerType.ThreadPool] = new ThreadPoolScheduler(this);
-#endif
+// #else
+//             this.schedulers[(int)SchedulerType.Thread] = new ThreadScheduler(this);
+//             this.schedulers[(int)SchedulerType.ThreadPool] = new ThreadPoolScheduler(this);
+//#endif
         }
         
         public void Update()

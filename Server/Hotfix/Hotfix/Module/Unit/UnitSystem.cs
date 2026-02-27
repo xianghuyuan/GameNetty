@@ -7,6 +7,12 @@ namespace ET
         private static void Awake(this Unit self, int configId)
         {
             self.ConfigId = configId;
+            // 尝试从配置获取类型，如果配置存在的话
+            UnitConfig config = UnitConfigCategory.Instance.GetOrDefault(configId);
+            if (config != null)
+            {
+                self.UnitType = (UnitType)config.Type;
+            }
         }
 
         public static UnitConfig Config(this Unit self)

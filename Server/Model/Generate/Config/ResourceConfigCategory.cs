@@ -29,7 +29,7 @@ namespace ET
             for (int n = _buf.ReadSize(); n > 0; --n)
             {
                 ResourceConfig _v;
-                _v = ResourceConfig.DeserializeResourceConfig(_buf);
+                _v = global::ET.ResourceConfig.DeserializeResourceConfig(_buf);
                 _dataList.Add(_v);
                 _dataMap.Add(_v.Id, _v);
             }

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Unity/Assets/Scripts/Hotfix/Server/Demo/Gate/NetOnReadInvoker_Gate.cs.meta
+guid: 6e9ef1591a94eba438f75984975fe7d8
+========
+guid: 7e44d691f47abe34e9deb9cb309074f4
+>>>>>>>> release8.1:Unity/Assets/Scripts/Loader/Resource/StreamingAssetsHelper/StreamingAssetsDefine.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

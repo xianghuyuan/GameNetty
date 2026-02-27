@@ -6,22 +6,26 @@ namespace ET
     public partial class StartSceneConfigCategory
     {
         public MultiMap<int, StartSceneConfig> Gates = new();
-
+        
         public MultiMap<int, StartSceneConfig> ProcessScenes = new();
-
+        
         public Dictionary<long, Dictionary<string, StartSceneConfig>> ClientScenesByName = new();
 
         public StartSceneConfig LocationConfig;
 
         public List<StartSceneConfig> Realms = new();
-
+        
         public List<StartSceneConfig> Routers = new();
-
+        
         public List<StartSceneConfig> Maps = new();
 
         public StartSceneConfig Match;
 
         public StartSceneConfig Benchmark;
+        public StartSceneConfig LoginCenterConfig;
+        public StartSceneConfig Chat;
+        public StartSceneConfig UnitCache;
+        public StartSceneConfig Rank;
 
         public List<StartSceneConfig> GetByProcess(int process)
         {
@@ -68,6 +72,18 @@ namespace ET
                         break;
                     case SceneType.BenchmarkServer:
                         this.Benchmark = startSceneConfig;
+                        break;
+                    case SceneType.LoginCenter:
+                        this.LoginCenterConfig = startSceneConfig;
+                        break;
+                    case SceneType.Chat:
+                        this.Chat = startSceneConfig;
+                        break;
+                    case SceneType.UnitCache:
+                        this.UnitCache = startSceneConfig;
+                        break;
+                    case SceneType.Rank:
+                        this.Rank = startSceneConfig;
                         break;
                 }
             }

@@ -26,7 +26,7 @@ namespace ET
             for (int n = _buf.ReadSize(); n > 0; --n)
             {
                 AIConfig _v;
-                _v = AIConfig.DeserializeAIConfig(_buf);
+                _v = global::ET.AIConfig.DeserializeAIConfig(_buf);
                 _dataList.Add(_v);
                 _dataMap.Add(_v.Id, _v);
             }

@@ -19,12 +19,10 @@ namespace ET.Server
             root.AddComponent<LocationProxyComponent>();
             root.AddComponent<MessageLocationSenderComponent>();
 
+            root.AddComponent<DBManagerComponent>();
             StartSceneConfig startSceneConfig = StartSceneConfigCategory.Instance.Get((int)root.Id);
             root.AddComponent<NetComponent, IPEndPoint, NetworkProtocol>(startSceneConfig.InnerIPPort, NetworkProtocol.UDP);
-            
-#if DOTNET_WEBGL
             root.AddComponent<NetWSComponent, IEnumerable<string>>(new[]{$"http://*:{startSceneConfig.Port}/"});
-#endif
             await ETTask.CompletedTask;
         }
     }

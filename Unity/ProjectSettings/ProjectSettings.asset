@@ -821,7 +821,7 @@ PlayerSettings:
     PS5: UNITY_POST_PROCESSING_STACK_V2;TextMeshPro
     QNX: TextMeshPro
     Stadia: UNITY_POST_PROCESSING_STACK_V2;TextMeshPro
-    Standalone: ENABLE_LOG;TextMeshPro
+    Standalone: ENABLE_LOG;TextMeshPro;ENABLE_VIEW;UNITY_WEBGL
     VisionOS: TextMeshPro
     WebGL: UNITY_POST_PROCESSING_STACK_V2;TextMeshPro;ENABLE_LOG
     Windows Store Apps: UNITY_POST_PROCESSING_STACK_V2;TextMeshPro;ENABLE_LOG
@@ -832,6 +832,7 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Android: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   il2cppStacktraceInformation: {}

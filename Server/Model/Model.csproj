@@ -51,7 +51,7 @@
         <ProjectReference Include="..\ThirdParty\ThirdParty.csproj" />
     </ItemGroup> 
     <ItemGroup>
-      <Folder Include="Demo\" />
+      <Folder Include="Demo\Chat\Handler\" />
       <Folder Include="Generate\" />
     </ItemGroup> 
 </Project>
