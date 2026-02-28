@@ -22,7 +22,7 @@ CONF_ROOT="$WORKSPACE/Config/Excel/GameConfig"
     -d bin \
     --conf "$CONF_ROOT/__luban__.conf" \
     -x outputCodeDir="$WORKSPACE/Unity/Assets/GameScripts/HotFix/GameProto/Generate/Config" \
-    -x bin.outputDataDir="$WORKSPACE/Config/Generate/GameConfig/c" \
+    -x bin.outputDataDir="$WORKSPACE/Unity/Assets/AssetRaw/Configs" \
     -x lineEnding=LF
 
 echo "==================== FuncConfig : GenClientFinish ===================="

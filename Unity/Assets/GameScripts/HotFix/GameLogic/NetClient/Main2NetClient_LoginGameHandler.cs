@@ -1,4 +1,4 @@
-﻿namespace ET.Client
+﻿namespace ET
 {
     [MessageHandler(SceneType.NetClient)]
     public class Main2NetClient_LoginGameHandler:MessageHandler<Scene,Main2NetClinet_LoginGame,NetClient2Main_LoginGame>

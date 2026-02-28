@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Launcher;
 using TEngine;
+using TEngine.TEngine;
 using UnityEngine;
 using YooAsset;
 using ProcedureOwner = TEngine.IFsm<TEngine.IProcedureModule>;
@@ -100,7 +101,7 @@ namespace Procedure
                 OnInitResourcesError(procedureOwner, operation2.Error);
                 yield break;
             }
-
+            ResourceHelper.IsDefaultPackageReady = true;
             _initResourcesComplete = true;
         }
 

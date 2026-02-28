@@ -346,6 +346,16 @@ public class MainToolbarDropdownPlayMode
 
     public static void Init()
     {
+        // 【新增】确保 EditorPrefs 有默认值
+        if (!EditorPrefs.HasKey("EditorPlayMode"))
+        {
+            EditorPrefs.SetInt("EditorPlayMode", 0); // 默认 EditorSimulateMode
+            Debug.Log("[TEngine] 初始化 EditorPlayMode 为 EditorSimulateMode (0)");
+        }
+        
+        _resourceModeIndex = EditorPrefs.GetInt("EditorPlayMode", 0);
+        Debug.Log($"[TEngine] 当前 EditorPlayMode: {_resourceModeNames[_resourceModeIndex]} (value: {_resourceModeIndex})");
+        
         // 监听播放模式变化
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         // EditorApplication.projectChanged += UpdateScenes;

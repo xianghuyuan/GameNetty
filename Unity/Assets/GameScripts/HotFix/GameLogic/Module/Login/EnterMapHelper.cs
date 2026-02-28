@@ -2,7 +2,7 @@ using System;
 using GameLogic;
 
 
-namespace ET.Client
+namespace ET
 {
     public static partial class EnterMapHelper
     {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TEngine.TEngine;
 using UnityEngine;
 using YooAsset;
 #if UNITY_WEBGL && WEIXINMINIGAME && !UNITY_EDITOR
@@ -11,6 +12,19 @@ using WeChatWASM;
 
 namespace TEngine
 {
+    namespace TEngine
+    {
+        /// <summary>
+        /// 资源模块辅助类
+        /// </summary>
+        public static class ResourceHelper
+        {
+            /// <summary>
+            /// DefaultPackage 是否已就绪（初始化成功）
+            /// </summary>
+            public static bool IsDefaultPackageReady { get; set; } = false;
+        }
+    }
     /// <summary>
     /// 资源管理器。
     /// </summary>
@@ -118,8 +132,11 @@ namespace TEngine
 
         public void Initialize()
         {
+            // 重置标志
+            ResourceHelper.IsDefaultPackageReady = false;
+            
             // 初始化资源系统
-            YooAssets.Initialize(new ResourceLogger());
+            YooAssets.Initialize();
             YooAssets.SetOperationSystemMaxTimeSlice(Milliseconds);
 
             // 创建默认的资源包
@@ -141,8 +158,9 @@ namespace TEngine
         {
 #if UNITY_EDITOR
             //编辑器模式使用。
-            EPlayMode playMode = (EPlayMode)UnityEditor.EditorPrefs.GetInt("EditorPlayMode");
-            Log.Warning($"Editor Module Used :{playMode}");
+            int editorPlayModeValue = UnityEditor.EditorPrefs.GetInt("EditorPlayMode", 0);
+            EPlayMode playMode = (EPlayMode)editorPlayModeValue;
+            Log.Warning($"Editor Module Used: {playMode}");
 #else
             //运行时使用。
             EPlayMode playMode = (EPlayMode)PlayMode;
@@ -232,9 +250,18 @@ namespace TEngine
                 initializationOperation = package.InitializeAsync(createParameters);
             }
 
+            // 检查初始化操作是否创建成功
+            if (initializationOperation == null)
+            {
+                string error = $"InitializationOperation is null! PlayMode: {playMode}";
+                Log.Error(error);
+                throw new Exception(error);
+            }
+
+            // 等待初始化完成
             await initializationOperation.ToUniTask();
 
-            Log.Info($"Init resource package version : {initializationOperation?.Status}");
+            Log.Info($"Init resource package: {packageName}, Status: {initializationOperation.Status}");
 
             if (needInitMainFest)
             {
