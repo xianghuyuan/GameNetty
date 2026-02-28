@@ -19,7 +19,16 @@ namespace ET
                 Log.Error($"Actor类型转换错误: {entity.GetType().FullName} to {typeof(E).Name} --{typeof(Message).FullName}");
                 return;
             }
-
+            // 打印收到的消息体
+            try
+            {
+                string json = JsonHelper.ToJson(msg);
+                Log.Info($"[收到消息] {typeof(Message).Name}: {json}");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[收到消息] {typeof(Message).Name}: 无法序列化为JSON - {ex.Message}");
+            }
             await this.Run(e, msg);
         }
 
@@ -61,7 +70,16 @@ namespace ET
                     Log.Error($"Actor类型转换错误: {entity.GetType().FullName} to {typeof(E).FullName} --{typeof(Request).FullName}");
                     return;
                 }
-
+                // 打印收到的请求消息体
+                try
+                {
+                    string json = JsonHelper.ToJson(request);
+                    Log.Info($"[收到请求] {typeof(Request).Name}: {json}");
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"[收到请求] {typeof(Request).Name}: 无法序列化为JSON - {ex.Message}");
+                }
                 int rpcId = request.RpcId;
                 Response response = ObjectPool.Instance.Fetch<Response>();
                 try

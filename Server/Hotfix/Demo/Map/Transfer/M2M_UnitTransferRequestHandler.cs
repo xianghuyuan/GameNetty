@@ -6,6 +6,17 @@ namespace ET.Server
     [MessageHandler(SceneType.Map)]
     public class M2M_UnitTransferRequestHandler: MessageHandler<Scene, M2M_UnitTransferRequest, M2M_UnitTransferResponse>
     {
+        /// <summary>
+        /// 为Unit添加必要的组件
+        /// </summary>
+        private static void AddUnitComponents(Unit unit, Scene scene)
+        {
+            // 基础组件
+            unit.AddComponent<UnitDBSaveComponent>();
+            unit.AddComponent<MailBoxComponent, MailBoxType>(MailBoxType.OrderedMessage);
+            unit.AddComponent<NumericNoticeComponent>();
+        }
+        
         protected override async ETTask Run(Scene scene, M2M_UnitTransferRequest request, M2M_UnitTransferResponse response)
         {
             UnitComponent unitComponent = scene.GetComponent<UnitComponent>();
@@ -13,19 +24,15 @@ namespace ET.Server
 
             unitComponent.AddChild(unit);
             unitComponent.Add(unit);
-
+            // 添加所有业务必要的组件
+            AddUnitComponents(unit, scene);
             foreach (byte[] bytes in request.Entitys)
             {
                 Entity entity = MongoHelper.Deserialize<Entity>(bytes);
                 unit.AddComponent(entity);
             }
-
-            // unit.AddComponent<MoveComponent>();
-            // unit.AddComponent<PathfindingComponent, string>(scene.Name);
+            
             unit.Position = new float3(-10, 0, -10);
-
-            unit.AddComponent<MailBoxComponent, MailBoxType>(MailBoxType.OrderedMessage);
-
             // 通知客户端开始切场景
             M2C_StartSceneChange m2CStartSceneChange = M2C_StartSceneChange.Create();
             m2CStartSceneChange.SceneInstanceId = scene.InstanceId;

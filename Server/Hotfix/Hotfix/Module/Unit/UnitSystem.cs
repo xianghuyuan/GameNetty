@@ -1,3 +1,5 @@
+using System;
+
 namespace ET
 {
     [EntitySystemOf(typeof(Unit))]
@@ -23,6 +25,19 @@ namespace ET
         public static UnitType Type(this Unit self)
         {
             return (UnitType)self.Config().Type;
+        }
+        
+        [EntitySystem]
+        private static void GetComponentSys(this Unit unit, Type type)
+        {
+            if (!typeof(IUnitCache).IsAssignableFrom(type))
+            {
+                return;
+            }
+            EventSystem.Instance.Publish(unit.Root(),new UnitGetComponent()
+            {
+                Unit = unit,Type = type
+            });
         }
     }
 }

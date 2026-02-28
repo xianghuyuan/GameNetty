@@ -6,8 +6,8 @@ namespace ET
     {
         private readonly HashSet<ushort> ignore = new()
         {
-            // OuterMessage.C2G_Ping, 
-            // OuterMessage.G2C_Ping, 
+            OuterMessage.C2G_Ping, 
+            OuterMessage.G2C_Ping, 
             // OuterMessage.C2G_Benchmark, 
             // OuterMessage.G2C_Benchmark,
         };

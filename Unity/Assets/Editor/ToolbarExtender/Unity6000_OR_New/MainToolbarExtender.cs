@@ -354,7 +354,7 @@ public class MainToolbarDropdownPlayMode
         }
         
         _resourceModeIndex = EditorPrefs.GetInt("EditorPlayMode", 0);
-        Debug.Log($"[TEngine] 当前 EditorPlayMode: {_resourceModeNames[_resourceModeIndex]} (value: {_resourceModeIndex})");
+        // Debug.Log($"[TEngine] 当前 EditorPlayMode: {_resourceModeNames[_resourceModeIndex]} (value: {_resourceModeIndex})");
         
         // 监听播放模式变化
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;

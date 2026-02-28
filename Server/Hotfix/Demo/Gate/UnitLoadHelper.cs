@@ -1,5 +1,8 @@
 ﻿namespace ET.Server
 {
+    /// <summary>
+    /// 进入Game场景
+    /// </summary>
     public static class UnitLoadHelper
     {
         public static async ETTask<(bool, Unit)> LoadUnit(Player player)
