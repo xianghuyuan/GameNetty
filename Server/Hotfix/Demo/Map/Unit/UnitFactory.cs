@@ -71,9 +71,9 @@ namespace ET.Server
         }
         
         // 创建玩家英雄
-        public static BattleUnit CreateHero(Battle battle, long playerId, int configId, Vector3 position)
+        public static BattleUnit CreateHero(BattleRoom battleRoom, long playerId, int configId, Vector3 position)
         {
-            BattleUnit unit = battle.AddChild<BattleUnit, int>(configId);
+            BattleUnit unit = battleRoom.AddChild<BattleUnit, int>(configId);
             unit.Camp = UnitCamp.Friend;
             unit.OwnerId = playerId;
             unit.Position = position;
@@ -89,9 +89,9 @@ namespace ET.Server
         }
     
         // 创建怪物
-        public static BattleUnit CreateMonster(Battle battle, int configId, Vector3 position)
+        public static BattleUnit CreateMonster(BattleRoom battleRoom, int configId, Vector3 position)
         {
-            BattleUnit unit = battle.AddChild<BattleUnit, int>(configId);
+            BattleUnit unit = battleRoom.AddChild<BattleUnit, int>(configId);
             unit.Camp = UnitCamp.Enemy;
             unit.OwnerId = 0;
             unit.Position = position;

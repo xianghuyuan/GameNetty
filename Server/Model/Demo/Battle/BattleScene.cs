@@ -40,8 +40,8 @@ namespace ET
         End = 5,
     }
 
-    [ComponentOf]
-    public class Battle : Entity, IScene, IAwake, IUpdate
+    [ChildOf]
+    public class BattleRoom : Entity, IScene, IAwake, IUpdate
     {
         public Fiber Fiber { get; set; }
         public SceneType SceneType { get; set; } = SceneType.Battle;

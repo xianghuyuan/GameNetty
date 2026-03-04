@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using GameLogic;
 
 namespace ET
@@ -21,6 +22,8 @@ namespace ET
         protected override async ETTask Run(Scene scene, LoginFinish a)
         {
             GameModule.UI.CloseAll();
+            await UniTask.Yield();
+            GameModule.UI.ShowUIAsync<BattleUI>();
             await ETTask.CompletedTask;
         }
     }

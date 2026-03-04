@@ -105,5 +105,7 @@ namespace ET
         // Control Mode error codes (200500-200599)
         public const int ERR_OperationTooFrequent = 200501;       // Operation too frequent
         public const int ERR_OperationDenied = 200502;            // Operation denied (e.g., auto mode)
+        //无效战斗
+        public const int ERR_InvalidBattleType = 200503;
     }
 }

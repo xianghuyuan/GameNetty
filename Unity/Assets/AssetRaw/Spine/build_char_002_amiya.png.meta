@@ -1,0 +1,1573 @@
+fileFormatVersion: 2
+guid: f9d6ef811458a41c7800babbfa4836e4
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7561985032756962990
+    second: build_char_002_amiya_0
+  - first:
+      213: -6807219227493838250
+    second: build_char_002_amiya_1
+  - first:
+      213: -6195776449769368920
+    second: build_char_002_amiya_2
+  - first:
+      213: -4789627258393574792
+    second: build_char_002_amiya_3
+  - first:
+      213: -588076823287940745
+    second: build_char_002_amiya_4
+  - first:
+      213: -7700614303713603575
+    second: build_char_002_amiya_5
+  - first:
+      213: -2779613183313928210
+    second: build_char_002_amiya_6
+  - first:
+      213: -5697062457520037778
+    second: build_char_002_amiya_7
+  - first:
+      213: 7325008447992803974
+    second: build_char_002_amiya_8
+  - first:
+      213: -7464033228078810393
+    second: build_char_002_amiya_9
+  - first:
+      213: -4791860972566715772
+    second: build_char_002_amiya_10
+  - first:
+      213: -7892195621327803332
+    second: build_char_002_amiya_11
+  - first:
+      213: -2374609241023297794
+    second: build_char_002_amiya_12
+  - first:
+      213: 1851085182419548653
+    second: build_char_002_amiya_13
+  - first:
+      213: -333126689329921919
+    second: build_char_002_amiya_14
+  - first:
+      213: -1243347224398378002
+    second: build_char_002_amiya_15
+  - first:
+      213: 3628776418977741681
+    second: build_char_002_amiya_16
+  - first:
+      213: -7888567397934315746
+    second: build_char_002_amiya_17
+  - first:
+      213: 2383707947908525627
+    second: build_char_002_amiya_18
+  - first:
+      213: -2615153752135673541
+    second: build_char_002_amiya_19
+  - first:
+      213: 6730460002728774137
+    second: build_char_002_amiya_20
+  - first:
+      213: 3746544574057391780
+    second: build_char_002_amiya_21
+  - first:
+      213: -2211341905795969548
+    second: build_char_002_amiya_22
+  - first:
+      213: -8714954093076206960
+    second: build_char_002_amiya_23
+  - first:
+      213: -5345036508618640304
+    second: build_char_002_amiya_24
+  - first:
+      213: 1235785740010494726
+    second: build_char_002_amiya_25
+  - first:
+      213: -6973273402186763921
+    second: build_char_002_amiya_26
+  - first:
+      213: 5808003738897766206
+    second: build_char_002_amiya_27
+  - first:
+      213: 4712353033785655002
+    second: build_char_002_amiya_28
+  - first:
+      213: -9040478486548077697
+    second: build_char_002_amiya_29
+  - first:
+      213: -8751801479574775295
+    second: build_char_002_amiya_30
+  - first:
+      213: -7681970308503465537
+    second: build_char_002_amiya_31
+  - first:
+      213: -2522917625534986168
+    second: build_char_002_amiya_32
+  - first:
+      213: 6667907958666484348
+    second: build_char_002_amiya_33
+  - first:
+      213: -2133418857878836347
+    second: build_char_002_amiya_34
+  - first:
+      213: -3793446478084933010
+    second: build_char_002_amiya_35
+  - first:
+      213: -4674030147842303938
+    second: build_char_002_amiya_36
+  - first:
+      213: -9196861923474700556
+    second: build_char_002_amiya_37
+  - first:
+      213: 8830535864052450455
+    second: build_char_002_amiya_38
+  - first:
+      213: -5811002156729850823
+    second: build_char_002_amiya_39
+  - first:
+      213: -3148614880958570351
+    second: build_char_002_amiya_40
+  - first:
+      213: -8547776085654603261
+    second: build_char_002_amiya_41
+  - first:
+      213: -4800315676665374524
+    second: build_char_002_amiya_42
+  - first:
+      213: 4959918285862874598
+    second: build_char_002_amiya_43
+  - first:
+      213: 3904468222260817237
+    second: build_char_002_amiya_44
+  - first:
+      213: -3881072263948249461
+    second: build_char_002_amiya_45
+  - first:
+      213: 5654735094457758501
+    second: build_char_002_amiya_46
+  - first:
+      213: -5410516982246909445
+    second: build_char_002_amiya_47
+  - first:
+      213: -6472407220355301651
+    second: build_char_002_amiya_48
+  - first:
+      213: 7463738092766856081
+    second: build_char_002_amiya_49
+  - first:
+      213: 1238805726048156523
+    second: build_char_002_amiya_50
+  - first:
+      213: -94343077155773553
+    second: build_char_002_amiya_51
+  - first:
+      213: -368455711567065186
+    second: build_char_002_amiya_52
+  - first:
+      213: -2024057665409153758
+    second: build_char_002_amiya_53
+  - first:
+      213: -1900780515963839012
+    second: build_char_002_amiya_54
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: build_char_002_amiya_0
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 57
+        width: 24
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25953b58dae6e0790800000000000000
+      internalID: -7561985032756962990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_1
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 57
+        width: 17
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6525505cd26e781a0800000000000000
+      internalID: -6807219227493838250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_2
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 57
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a214c3452e240aa0800000000000000
+      internalID: -6195776449769368920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_3
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 57
+        width: 14
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8724ce09263d78db0800000000000000
+      internalID: -4789627258393574792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_4
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 57
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7793847be3bb6d7f0800000000000000
+      internalID: -588076823287940745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_5
+      rect:
+        serializedVersion: 2
+        x: 119
+        y: 57
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 900dbd2271ce12590800000000000000
+      internalID: -7700614303713603575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_6
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 69
+        width: 21
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eef949b6984dc69d0800000000000000
+      internalID: -2779613183313928210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_7
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 69
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e60ed4411e7ffe0b0800000000000000
+      internalID: -5697062457520037778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_8
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 69
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 682b857bf58a7a560800000000000000
+      internalID: 7325008447992803974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_9
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 69
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ea76a0435d6a6890800000000000000
+      internalID: -7464033228078810393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_10
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 67
+        width: 41
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4826a1575d3ef7db0800000000000000
+      internalID: -4791860972566715772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_11
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 71
+        width: 11
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3cecd4a5e9497290800000000000000
+      internalID: -7892195621327803332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_12
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 64
+        width: 20
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef6427cf971bb0fd0800000000000000
+      internalID: -2374609241023297794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_13
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 71
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de93b1b7a2060b910800000000000000
+      internalID: 1851085182419548653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_14
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 49
+        width: 73
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 180c9418a0f706bf0800000000000000
+      internalID: -333126689329921919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_15
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 49
+        width: 60
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eeb4445794ebebee0800000000000000
+      internalID: -1243347224398378002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_16
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 47
+        width: 53
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17b7b7e4de00c5230800000000000000
+      internalID: 3628776418977741681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_17
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 42
+        width: 61
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e17c56b3fbd268290800000000000000
+      internalID: -7888567397934315746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_18
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 40
+        width: 59
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3eec5bcfb1a41120800000000000000
+      internalID: 2383707947908525627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_19
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 34
+        width: 50
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b395ce2a48b15bbd0800000000000000
+      internalID: -2615153752135673541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_20
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 32
+        width: 51
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f98f9586b5676d50800000000000000
+      internalID: 6730460002728774137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_21
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 58
+        width: 32
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a6abd7a0766ef330800000000000000
+      internalID: 3746544574057391780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_22
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 57
+        width: 32
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fd881cb04cbf41e0800000000000000
+      internalID: -2211341905795969548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_23
+      rect:
+        serializedVersion: 2
+        x: 860
+        y: 1
+        width: 70
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09a2b581d634e0780800000000000000
+      internalID: -8714954093076206960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_24
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 55
+        width: 47
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 054ba485d9d92d5b0800000000000000
+      internalID: -5345036508618640304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_25
+      rect:
+        serializedVersion: 2
+        x: 181
+        y: 55
+        width: 24
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60b91d34594662110800000000000000
+      internalID: 1235785740010494726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_26
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 56
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f617af469c4f93f90800000000000000
+      internalID: -6973273402186763921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_27
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 55
+        width: 27
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e37542fd0ac2a9050800000000000000
+      internalID: 5808003738897766206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_28
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 64
+        width: 13
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ade370bfd14a56140800000000000000
+      internalID: 4712353033785655002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_29
+      rect:
+        serializedVersion: 2
+        x: 704
+        y: 51
+        width: 17
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f73adb907b4c98280800000000000000
+      internalID: -9040478486548077697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_30
+      rect:
+        serializedVersion: 2
+        x: 731
+        y: 28
+        width: 28
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10a15316cea5b8680800000000000000
+      internalID: -8751801479574775295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_31
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 1
+        width: 98
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb19d8a84b8246590800000000000000
+      internalID: -7681970308503465537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_32
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 56
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8484a6c59cbccfcd0800000000000000
+      internalID: -2522917625534986168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_33
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 55
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7ad057d5fa298c50800000000000000
+      internalID: 6667907958666484348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_34
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 28
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58b23032ad29462e0800000000000000
+      internalID: -2133418857878836347
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_35
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 28
+        width: 27
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6a7a47d688fa5bc0800000000000000
+      internalID: -3793446478084933010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_36
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 27
+        width: 25
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3894683852822fb0800000000000000
+      internalID: -4674030147842303938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_37
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 1
+        width: 100
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f689f2cece2e5080800000000000000
+      internalID: -9196861923474700556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_38
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 1
+        width: 71
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7948139059d5c8a70800000000000000
+      internalID: 8830535864052450455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_39
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 1
+        width: 72
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 934a613935c2b5fa0800000000000000
+      internalID: -5811002156729850823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_40
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 1
+        width: 65
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 190a4f5a27fdd44d0800000000000000
+      internalID: -3148614880958570351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_41
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 1
+        width: 51
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30a7afa20f2306980800000000000000
+      internalID: -8547776085654603261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_42
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 1
+        width: 56
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c81f92435ad16db0800000000000000
+      internalID: -4800315676665374524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_43
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 1
+        width: 53
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ed22d7f66b25d440800000000000000
+      internalID: 4959918285862874598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_44
+      rect:
+        serializedVersion: 2
+        x: 702
+        y: 28
+        width: 7
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55d28a059257f2630800000000000000
+      internalID: 3904468222260817237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_45
+      rect:
+        serializedVersion: 2
+        x: 708
+        y: 28
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b865eb7b659a32ac0800000000000000
+      internalID: -3881072263948249461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_46
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 37
+        width: 10
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 523f61cbb97a97e40800000000000000
+      internalID: 5654735094457758501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_47
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 1
+        width: 55
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf954f5887bf9e4b0800000000000000
+      internalID: -5410516982246909445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_48
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 1
+        width: 50
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dee7c05ece36d26a0800000000000000
+      internalID: -6472407220355301651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_49
+      rect:
+        serializedVersion: 2
+        x: 672
+        y: 1
+        width: 41
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1938be33046849760800000000000000
+      internalID: 7463738092766856081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_50
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 1
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6bf1de8e3f113110800000000000000
+      internalID: 1238805726048156523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_51
+      rect:
+        serializedVersion: 2
+        x: 744
+        y: 1
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f83ec1f9873d0bef0800000000000000
+      internalID: -94343077155773553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_52
+      rect:
+        serializedVersion: 2
+        x: 775
+        y: 1
+        width: 29
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9fc4948b7bf2eaf0800000000000000
+      internalID: -368455711567065186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_53
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 1
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2258168f64a19e3e0800000000000000
+      internalID: -2024057665409153758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: build_char_002_amiya_54
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 1
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cddddf501321f95e0800000000000000
+      internalID: -1900780515963839012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      build_char_002_amiya_0: -7561985032756962990
+      build_char_002_amiya_1: -6807219227493838250
+      build_char_002_amiya_10: -4791860972566715772
+      build_char_002_amiya_11: -7892195621327803332
+      build_char_002_amiya_12: -2374609241023297794
+      build_char_002_amiya_13: 1851085182419548653
+      build_char_002_amiya_14: -333126689329921919
+      build_char_002_amiya_15: -1243347224398378002
+      build_char_002_amiya_16: 3628776418977741681
+      build_char_002_amiya_17: -7888567397934315746
+      build_char_002_amiya_18: 2383707947908525627
+      build_char_002_amiya_19: -2615153752135673541
+      build_char_002_amiya_2: -6195776449769368920
+      build_char_002_amiya_20: 6730460002728774137
+      build_char_002_amiya_21: 3746544574057391780
+      build_char_002_amiya_22: -2211341905795969548
+      build_char_002_amiya_23: -8714954093076206960
+      build_char_002_amiya_24: -5345036508618640304
+      build_char_002_amiya_25: 1235785740010494726
+      build_char_002_amiya_26: -6973273402186763921
+      build_char_002_amiya_27: 5808003738897766206
+      build_char_002_amiya_28: 4712353033785655002
+      build_char_002_amiya_29: -9040478486548077697
+      build_char_002_amiya_3: -4789627258393574792
+      build_char_002_amiya_30: -8751801479574775295
+      build_char_002_amiya_31: -7681970308503465537
+      build_char_002_amiya_32: -2522917625534986168
+      build_char_002_amiya_33: 6667907958666484348
+      build_char_002_amiya_34: -2133418857878836347
+      build_char_002_amiya_35: -3793446478084933010
+      build_char_002_amiya_36: -4674030147842303938
+      build_char_002_amiya_37: -9196861923474700556
+      build_char_002_amiya_38: 8830535864052450455
+      build_char_002_amiya_39: -5811002156729850823
+      build_char_002_amiya_4: -588076823287940745
+      build_char_002_amiya_40: -3148614880958570351
+      build_char_002_amiya_41: -8547776085654603261
+      build_char_002_amiya_42: -4800315676665374524
+      build_char_002_amiya_43: 4959918285862874598
+      build_char_002_amiya_44: 3904468222260817237
+      build_char_002_amiya_45: -3881072263948249461
+      build_char_002_amiya_46: 5654735094457758501
+      build_char_002_amiya_47: -5410516982246909445
+      build_char_002_amiya_48: -6472407220355301651
+      build_char_002_amiya_49: 7463738092766856081
+      build_char_002_amiya_5: -7700614303713603575
+      build_char_002_amiya_50: 1238805726048156523
+      build_char_002_amiya_51: -94343077155773553
+      build_char_002_amiya_52: -368455711567065186
+      build_char_002_amiya_53: -2024057665409153758
+      build_char_002_amiya_54: -1900780515963839012
+      build_char_002_amiya_6: -2779613183313928210
+      build_char_002_amiya_7: -5697062457520037778
+      build_char_002_amiya_8: 7325008447992803974
+      build_char_002_amiya_9: -7464033228078810393
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

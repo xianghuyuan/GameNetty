@@ -1,37 +1,52 @@
-# GameNetty
+# GameNetty (ET8.1 + TEngine + Luban)
 
 [![UnityVersion](https://img.shields.io/badge/Unity%20Ver-2019.4.12++-blue.svg?style=flat-square)](https://github.com/ALEXTANGXIAO/GameNetty)
 [![License](https://img.shields.io/github/license/ALEXTANGXIAO/GameNetty)](https://github.com/ALEXTANGXIAO/GameNetty)
-[![License](https://img.shields.io/github/last-commit/ALEXTANGXIAO/GameNetty)](https://github.com/ALEXTANGXIAO/GameNetty)
-[![License](https://img.shields.io/github/issues/ALEXTANGXIAO/GameNetty)](https://github.com/ALEXTANGXIAO/GameNetty)
 
-
-众所周知，目前游戏开发中最好的C#服务器基本上就是ET框架的服务器。但无奈他是一个整体的解决方案、前后端共享的方式以及工程共享、前后端耦合的模式不是所有人都能接受。还有客户端工程为了共享以及ClientServer模式加入了很多不必要的代码和库（monogo和NLog等）很多人、甚至中型团队想用ET做网络需求但是最方便接入只能往里面加自己的代码。
-
-<strong>ClientServer这种模式虽然很适合独立开发、但是如果团队规模上去后，存在专门的前后端分工，大量的共享双端的意义已经不大了，以及安全起见更不会让源码权限都掌握每个人的手中。就绝大多数商业级项目而言，前后端分离是必然。（既然ET的服务器作为商业级解决方案已经很完美了，那不如就按照中大型项目的架构来分离前后端！一次到位）</strong>
-
-于是再次首次拆分最新的ET8.1的前后端！客户端最精简大约750k，完美做成包的形式，几乎零成本 无侵入的嵌入进你的框架。真正做到人人都能往自己框架加ET。
-
-<strong>改动：转表工具和启动服务器配置完全使用最新luban。现已完美兼容支持。</strong>
-
----
-服务器运行指南：
-
-1.打开Share解决方案编译全部解决方案。
-
-2.打开Server服务器解决方案直接编译。（一定要执行第一步，因为Server依赖分析器和源代码生成器）。
-
-3.完成、直接运行Server。
+GameNetty 是一个基于 **ET8.1** 框架进行深度解耦的高性能游戏开发解决方案。它旨在保留 ET 框架在 C# 分布式服务器和开发效率上的优势，同时通过彻底分离前后端工程，解决源码权限管理和项目耦合问题，使其更适合中大型团队的商业化开发。
 
 ---
 
-![image](Books/src/info.png)
+## 🚀 核心架构与改动
 
+- **深度解耦**: 
+  - `Model/Hotfix`: 逻辑层 (纯 C# / ET Fiber)，处理协议与计算。
+  - `ModelView/HotfixView`: 表现层 (Unity / TEngine)，处理渲染与 UI。
+- **极致精简**: 客户端插件化，核心库极小（约 750k），几乎零成本、无侵入地嵌入你的项目。
+- **UI 系统**: 全面集成 **TEngine**，支持自动绑定与极速开发。
+- **配表工具**: 使用 **Luban** 导出 Excel 配置文件，完美兼容。
+- **资源管理**: 集成 **YooAsset**，支持完善的按需加载与补丁更新。
 
-## <strong>特别鸣谢
-#### <a href="https://github.com/egametang/ET"><strong>ET</strong></a> - ET是一个开源的游戏客户端（基于unity3d）服务端双端框架，服务端是使用C# .net core开发的分布式游戏服务端，其特点是开发效率高，性能强，双端共享逻辑代码，客户端服务端热更机制完善。
+---
 
+## 📚 开发指南与技术文档
 
-## <strong>Buy me a 奶茶.
+为了帮助开发者快速从传统 ET 切换到 GameNetty 开发模式，请按顺序阅读以下文档：
 
-[如果觉得本仓库对您有帮助，不妨请我可爱的女儿买杯奶茶吧~](Books/Donate.md)
+1. [**核心开发指南**](./docs/GameNetty_Development_Guide.md) - **必读：** 理解解耦架构、Entity 绑定与开发规范。
+2. [**网络通信机制**](./docs/GameNetty_Network_Architecture.md) - 掌握基于 Fiber 的消息流转与解耦收发路径。
+3. [**时差滚动系统实现**](./docs/Parallax_Scrolling_System.md) - **实战案例：** 在 ECS 架构下实现 2D 时差滚动逻辑。
+4. [**高性能 AI 设计**](./docs/GameNetty_AI_System.md) - 针对 Roguelike/割草类游戏的 AI 优化思路。
+
+---
+
+## 🏗 快速开始
+
+### 1. 环境准备
+- **IDE**: JetBrains Rider (推荐) 或 VS2022。
+- **Unity**: 2019.4.12+ (推荐 2021.3.x 及以上)。
+- **.NET SDK**: .NET 8.0。
+
+### 2. 运行服务器
+1. 打开 `Share/Share.sln` 编译全部。
+2. 打开 `Server/Server.sln` 编译并运行。（必须先执行第 1 步）。
+3. 运行 `Tools/Luban/GenConfig_Server.sh` 导出配置。
+
+---
+
+## 🤝 特别鸣谢
+- **[ET](https://github.com/egametang/ET)**: 提供核心底层分布式框架。
+- **[TEngine](https://github.com/1689726/TEngine)**: 提供优秀的 UI 表现层与模块化工具。
+- **[Luban](https://github.com/focus-creative-games/luban)**: 提供强大的配表导出解决方案。
+
+[**如果觉得本仓库对您有帮助，不妨请我可爱的女儿买杯奶茶吧~**](Books/Donate.md)

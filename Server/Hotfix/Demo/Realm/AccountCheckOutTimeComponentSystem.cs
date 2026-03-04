@@ -22,6 +22,7 @@
                     .NewOnceTimer(TimeInfo.Instance.ServerNow() + 600000, TimerInvokeType.AccountSessionCheckOutTime, self);
         }
 
+        [EntitySystem]
         private static void Destroy(this ET.Server.AccountCheckOutTimeComponent self)
         {
             self.Root().GetComponent<TimerComponent>().Remove(ref self.Timer);

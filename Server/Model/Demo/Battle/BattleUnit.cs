@@ -1,14 +1,14 @@
 using System.Numerics;
 
-namespace ET;
-
-public enum UnitCamp
+namespace ET
 {
-    Friend = 1,  // 友方
-    Enemy = 2,   // 敌方
-}
+    public enum UnitCamp
+    {
+        Friend = 1,  // 友方
+        Enemy = 2,   // 敌方
+    }
     // 战斗单位
-    [ChildOf(typeof(Battle))]
+    [ChildOf(typeof(BattleRoom))]
     public class BattleUnit : Entity, IAwake<int>, IDestroy
     {
         // 配置ID
@@ -24,3 +24,4 @@ public enum UnitCamp
         public Vector3 Position { get; set; }
         public float Rotation { get; set; }
     }
+}
