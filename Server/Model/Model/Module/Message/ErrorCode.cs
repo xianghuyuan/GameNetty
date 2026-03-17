@@ -107,5 +107,12 @@ namespace ET
         public const int ERR_OperationDenied = 200502;            // Operation denied (e.g., auto mode)
         //无效战斗
         public const int ERR_InvalidBattleType = 200503;
+        
+        // Battle Gameplay error codes (200600-200699)
+        public const int ERR_BattleNotInBattle = 200600;            // Player not in battle
+        public const int ERR_BattleUnitNotFound = 200601;           // Battle unit not found
+        public const int ERR_BattleTargetNotFound = 200602;         // Battle target not found
+        public const int ERR_BattleCannotAttackAlly = 200603;       // Cannot attack ally
+        public const int ERR_BattleAttackNotReady = 200604;         // Attack not ready (cooldown)
     }
 }

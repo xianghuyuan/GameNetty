@@ -12,7 +12,6 @@ namespace ET
             root.AddComponent<ProcessInnerSender>();
             
             // Client Owner
-            
             root.AddComponent<CurrentScenesComponent>();
             await EventSystem.Instance.PublishAsync(root, new AppStartInitFinish());
                         

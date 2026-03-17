@@ -17,6 +17,22 @@
   - 代码清单和文件结构
   - EntityRef 正确使用方法
 
+- **[BattleHelper使用指南.md](./BattleHelper使用指南.md)**
+  - 客户端战斗辅助类使用指南
+  - 简化战斗操作的 Helper 模式
+
+- **[C2M_StartBattleHandler实现指南.md](./C2M_StartBattleHandler实现指南.md)**
+  - 服务端战斗 Handler 实现指南
+  - BattleRoomManagerComponent 使用说明
+
+- **[WaveManagerComponent波次管理组件.md](./WaveManagerComponent波次管理组件.md)**
+  - 波次战斗管理组件详解
+  - 自动波次流程和怪物生成
+
+- **[BattleRoom架构说明-Unit与BattleUnit.md](./BattleRoom架构说明-Unit与BattleUnit.md)**
+  - BattleRoom 架构核心概念
+  - Unit 与 BattleUnit 的区别和关系
+
 ### ⚙️ 状态机框架
 - **[状态机优化ET风格.md](./状态机优化ET风格.md)** - 状态机系统优化和ET框架风格适配
 - **[状态机迁移总结.md](./状态机迁移总结.md)** - 状态机系统迁移过程总结
@@ -35,6 +51,15 @@
 - **[ET框架Fiber单线程模型详解.md](./ET框架Fiber单线程模型详解.md)** - ET 框架 Fiber 单线程模型详解
 - **[ET框架客户端与服务端通信机制总结.md](./ET框架客户端与服务端通信机制总结.md)** - ET 框架通信机制总结
 - **[ET框架网络消息协议转发流程图.md](./ET框架网络消息协议转发流程图.md)** - ET 框架网络消息协议转发流程
+
+### ⚙️ 配置系统
+- **[Luban-Excel导出C#配置指南.md](./Luban-Excel导出C#配置指南.md)**
+  - Excel 配置表导出 C# 代码和二进制数据
+  - 字段类型、分组标记、引用关系详解
+
+- **[Luban-JSON导出C#配置指南.md](./Luban-JSON导出C#配置指南.md)**
+  - JSON 转 C# 的完整流程详解
+  - 二进制序列化格式说明
 
 ---
 

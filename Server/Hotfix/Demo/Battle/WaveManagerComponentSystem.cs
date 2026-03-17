@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Numerics;
-using Unity.Mathematics;
 
 namespace ET.Server
 {
@@ -10,13 +9,15 @@ namespace ET.Server
     public static partial class WaveManagerComponentSystem
     {
         [EntitySystem]
-        private static void Awake(this WaveManagerComponent self, int totalWaves)
+        private static void Awake(this WaveManagerComponent self, int stageConfigId, List<int> waveConfigIds)
         {
-            self.TotalWaves = totalWaves;
-            self.CurrentWave = 0;
+            self.StageConfigId = stageConfigId;
+            self.WaveConfigIds = waveConfigIds;
+            self.TotalWaves = waveConfigIds.Count;
+            self.CurrentWaveIndex = -1;
             self.State = WaveState.None;
             self.CurrentWaveMonsterIds = new List<long>();
-            self.WaveInterval = 5000; // 5秒间隔
+            self.WaveInterval = 5000;
             self.AutoStartNextWave = true;
         }
         
@@ -24,121 +25,164 @@ namespace ET.Server
         private static void Destroy(this WaveManagerComponent self)
         {
             self.CurrentWaveMonsterIds.Clear();
+            self.WaveConfigIds?.Clear();
         }
         
-        /// <summary>
-        /// 开始第一波
-        /// </summary>
         public static async ETTask StartFirstWave(this WaveManagerComponent self)
         {
             await self.StartNextWave();
         }
         
-        /// <summary>
-        /// 开始下一波
-        /// </summary>
         public static async ETTask StartNextWave(this WaveManagerComponent self)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             
-            // 检查是否还有下一波
-            if (self.CurrentWave >= self.TotalWaves)
+            if (self.CurrentWaveIndex >= self.TotalWaves - 1)
             {
                 Log.Info($"所有波次已完成: BattleRoomId={battleRoom.Id}");
                 await self.OnAllWavesCompleted();
                 return;
             }
             
-            // 进入下一波
-            self.CurrentWave++;
+            self.CurrentWaveIndex++;
             self.State = WaveState.Preparing;
             
-            Log.Info($"准备开始第 {self.CurrentWave}/{self.TotalWaves} 波: BattleRoomId={battleRoom.Id}");
+            int waveNumber = self.CurrentWaveIndex + 1;
+            int waveConfigId = self.WaveConfigIds[self.CurrentWaveIndex];
             
-            // 广播波次开始消息
+            Log.Info($"准备开始第 {waveNumber}/{self.TotalWaves} 波: BattleRoomId={battleRoom.Id}, WaveConfigId={waveConfigId}");
+            
+            WaveConfig waveConfig = WaveConfigCategory.Instance.GetOrDefault(waveConfigId);
+            int monsterCount = self.GetTotalMonsterCount(waveConfigId);
+            
             M2C_WaveStart waveStartMsg = M2C_WaveStart.Create();
             waveStartMsg.battleId = battleRoom.Id;
-            waveStartMsg.waveNumber = self.CurrentWave;
+            waveStartMsg.waveNumber = waveNumber;
             waveStartMsg.totalWaves = self.TotalWaves;
-            waveStartMsg.monsterCount = self.GetMonsterCountForWave(self.CurrentWave);
+            waveStartMsg.monsterCount = monsterCount;
             
             self.BroadcastToBattleRoom(waveStartMsg);
             
-            // 等待准备时间（如果不是第一波）
-            if (self.CurrentWave > 1)
+            if (self.CurrentWaveIndex > 0)
             {
-                await self.Root().GetComponent<TimerComponent>().WaitAsync(self.WaveInterval);
+                int interval = waveConfig?.WaveInterval ?? self.WaveInterval;
+                await self.Root().GetComponent<TimerComponent>().WaitAsync(interval);
             }
             
-            // 生成怪物
-            await self.SpawnWaveMonsters();
+            await self.SpawnWaveMonsters(waveConfigId);
             
-            // 开始战斗
             self.State = WaveState.Fighting;
             self.WaveStartTime = TimeInfo.Instance.ServerFrameTime();
             
-            Log.Info($"第 {self.CurrentWave} 波开始战斗: BattleRoomId={battleRoom.Id}, MonsterCount={self.CurrentWaveMonsterIds.Count}");
+            Log.Info($"第 {waveNumber} 波开始战斗: BattleRoomId={battleRoom.Id}, MonsterCount={self.CurrentWaveMonsterIds.Count}");
         }
         
-        /// <summary>
-        /// 生成当前波次的怪物
-        /// </summary>
-        private static async ETTask SpawnWaveMonsters(this WaveManagerComponent self)
+        private static async ETTask SpawnWaveMonsters(this WaveManagerComponent self, int waveConfigId)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             
-            // 清空上一波的怪物列表
             self.CurrentWaveMonsterIds.Clear();
             
-            // 根据波次计算怪物数量和配置
-            int monsterCount = self.GetMonsterCountForWave(self.CurrentWave);
-            int monsterConfigId = self.GetMonsterConfigIdForWave(self.CurrentWave);
-            
-            // 生成怪物
-            for (int i = 0; i < monsterCount; i++)
+            WaveConfig waveConfig = WaveConfigCategory.Instance.GetOrDefault(waveConfigId);
+            if (waveConfig == null)
             {
-                // 计算怪物生成位置（排成一排）
-                Vector3 position = new Vector3(
-                    (i - monsterCount / (float)2) * 2, // X轴排列
-                    0,
-                    10 // Z轴距离
-                );
-                
-                // 创建怪物
-                BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterConfigId, position);
-                
-                // 添加到房间和波次管理器
-                battleRoom.Units[monster.Id] = monster;
-                self.CurrentWaveMonsterIds.Add(monster.Id);
-                
-                Log.Debug($"生成怪物: MonsterId={monster.Id}, ConfigId={monsterConfigId}, Position={position}");
+                Log.Error($"找不到波次配置: WaveConfigId={waveConfigId}");
+                return;
             }
             
-            Log.Info($"第 {self.CurrentWave} 波怪物生成完成: Count={monsterCount}");
+            // 使用新配置系统：SpawnConfig
+            await self.SpawnWaveMonstersFromBatches(waveConfig);
+        }
+        
+        private static async ETTask SpawnWaveMonstersFromBatches(this WaveManagerComponent self, WaveConfig waveConfig)
+        {
+            BattleRoom battleRoom = self.GetParent<BattleRoom>();
+            long waveStartTime = TimeInfo.Instance.ServerFrameTime();
+            
+            foreach (var batch in waveConfig.Batches)
+            {
+                SpawnConfig spawnConfig = SpawnConfigCategory.Instance.GetOrDefault(batch.SpawnId);
+                if (spawnConfig == null)
+                {
+                    Log.Error($"找不到刷怪配置: SpawnId={batch.SpawnId}");
+                    continue;
+                }
+                
+                if (batch.Delay > 0)
+                {
+                    await self.Root().GetComponent<TimerComponent>().WaitAsync(batch.Delay);
+                }
+                
+                await self.SpawnFromSpawnConfig(spawnConfig);
+            }
             
             await ETTask.CompletedTask;
         }
         
-        /// <summary>
-        /// 怪物死亡回调
-        /// </summary>
+        private static async ETTask SpawnFromSpawnConfig(this WaveManagerComponent self, SpawnConfig spawnConfig)
+        {
+            BattleRoom battleRoom = self.GetParent<BattleRoom>();
+            
+            float centerX = spawnConfig.PositionX;
+            float centerZ = spawnConfig.PositionZ;
+            float spreadRange = spawnConfig.SpreadRange;
+            
+            // 收集本批次创建的怪物信息
+            List<BattleUnitInfo> battleUnitInfos = new List<BattleUnitInfo>();
+            
+            foreach (var monsterInfo in spawnConfig.Monsters)
+            {
+                for (int i = 0; i < monsterInfo.Count; i++)
+                {
+                    float offsetX = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
+                    float offsetZ = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
+                    
+                    Vector3 position = new Vector3(centerX + offsetX, 0, centerZ + offsetZ);
+                    BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterInfo.MonsterId, position);
+                    
+                    battleRoom.Units[monster.Id] = monster;
+                    self.CurrentWaveMonsterIds.Add(monster.Id);
+                    
+                    // 添加到消息列表
+                    BattleUnitInfo unitInfo = BattleUnitInfo.Create();
+                    unitInfo.unitId = monster.Id;
+                    unitInfo.configId = monster.ConfigId;
+                    unitInfo.camp = (int)monster.Camp;
+                    unitInfo.position = new Unity.Mathematics.float3(monster.Position.X, monster.Position.Y, monster.Position.Z);
+                    unitInfo.forward = new Unity.Mathematics.float3(0, 0, 1); // 默认朝向
+                    battleUnitInfos.Add(unitInfo);
+                    
+                    Log.Debug($"生成怪物: MonsterId={monster.Id}, ConfigId={monsterInfo.MonsterId}, Position={position}");
+                }
+            }
+            
+            // 发送怪物创建消息给所有玩家
+            if (battleUnitInfos.Count > 0)
+            {
+                M2C_CreateBattleUnits createMsg = M2C_CreateBattleUnits.Create();
+                createMsg.battleId = battleRoom.Id;
+                createMsg.units = battleUnitInfos;
+                
+                self.BroadcastToBattleRoom(createMsg);
+                
+                Log.Info($"发送怪物创建消息: BattleId={battleRoom.Id}, Count={battleUnitInfos.Count}");
+            }
+            
+            await ETTask.CompletedTask;
+        }
+        
         public static async ETTask OnMonsterDead(this WaveManagerComponent self, long monsterId)
         {
-            // 从当前波次列表移除
             self.CurrentWaveMonsterIds.Remove(monsterId);
             
             Log.Debug($"怪物死亡: MonsterId={monsterId}, 剩余怪物数: {self.CurrentWaveMonsterIds.Count}");
             
-            // 检查当前波次是否完成
             if (self.CurrentWaveMonsterIds.Count == 0 && self.State == WaveState.Fighting)
             {
                 await self.OnWaveCompleted();
             }
         }
         
-        /// <summary>
-        /// 当前波次完成
-        /// </summary>
         private static async ETTask OnWaveCompleted(this WaveManagerComponent self)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
@@ -146,62 +190,52 @@ namespace ET.Server
             self.State = WaveState.Completed;
             long duration = (TimeInfo.Instance.ServerFrameTime() - self.WaveStartTime) / 1000;
             
-            Log.Info($"第 {self.CurrentWave} 波完成: BattleRoomId={battleRoom.Id}, 耗时={duration}秒");
+            int waveNumber = self.CurrentWaveIndex + 1;
             
-            // 广播波次完成消息
+            Log.Info($"第 {waveNumber} 波完成: BattleRoomId={battleRoom.Id}, 耗时={duration}秒");
+            
             M2C_WaveComplete waveCompleteMsg = M2C_WaveComplete.Create();
             waveCompleteMsg.battleId = battleRoom.Id;
-            waveCompleteMsg.waveNumber = self.CurrentWave;
+            waveCompleteMsg.waveNumber = waveNumber;
             waveCompleteMsg.totalWaves = self.TotalWaves;
             waveCompleteMsg.duration = (int)duration;
             
             self.BroadcastToBattleRoom(waveCompleteMsg);
             
-            // 检查是否还有下一波
-            if (self.CurrentWave < self.TotalWaves)
+            if (self.CurrentWaveIndex < self.TotalWaves - 1)
             {
                 if (self.AutoStartNextWave)
                 {
-                    // 自动开始下一波
                     await self.StartNextWave();
                 }
                 else
                 {
-                    // 等待玩家手动开始
                     Log.Info($"等待玩家开始下一波: BattleRoomId={battleRoom.Id}");
                 }
             }
             else
             {
-                // 所有波次完成
                 await self.OnAllWavesCompleted();
             }
         }
         
-        /// <summary>
-        /// 所有波次完成
-        /// </summary>
         private static async ETTask OnAllWavesCompleted(this WaveManagerComponent self)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             
             Log.Info($"所有波次完成，战斗胜利: BattleRoomId={battleRoom.Id}");
             
-            // 设置战斗状态为结束
             battleRoom.State = BattleState.End;
             
-            // 广播战斗结束消息
             M2C_BattleEnd battleEndMsg = M2C_BattleEnd.Create();
             battleEndMsg.battleId = battleRoom.Id;
             battleEndMsg.success = true;
-            battleEndMsg.duration = 0; // TODO: 计算总耗时
+            battleEndMsg.duration = 0;
             
             self.BroadcastToBattleRoom(battleEndMsg);
             
-            // 延迟清理房间
             await self.Root().GetComponent<TimerComponent>().WaitAsync(5000);
             
-            // 清理房间
             Scene mapScene = battleRoom.Scene();
             BattleRoomManagerComponent roomManager = mapScene.GetComponent<BattleRoomManagerComponent>();
             if (roomManager != null)
@@ -216,29 +250,30 @@ namespace ET.Server
             battleRoom.Dispose();
         }
         
-        /// <summary>
-        /// 获取指定波次的怪物数量
-        /// </summary>
-        private static int GetMonsterCountForWave(this WaveManagerComponent self, int wave)
+        private static int GetTotalMonsterCount(this WaveManagerComponent self, int waveConfigId)
         {
-            // 简单的递增规则：每波增加1个怪物
-            // 第1波: 3个，第2波: 4个，第3波: 5个...
-            return 2 + wave;
+            WaveConfig config = WaveConfigCategory.Instance.GetOrDefault(waveConfigId);
+            if (config == null)
+            {
+                return 0;
+            }
+            
+            int totalCount = 0;
+            foreach (var batch in config.Batches)
+            {
+                SpawnConfig spawnConfig = SpawnConfigCategory.Instance.GetOrDefault(batch.SpawnId);
+                if (spawnConfig != null)
+                {
+                    foreach (var monsterInfo in spawnConfig.Monsters)
+                    {
+                        totalCount += monsterInfo.Count;
+                    }
+                }
+            }
+            
+            return totalCount;
         }
         
-        /// <summary>
-        /// 获取指定波次的怪物配置ID
-        /// </summary>
-        private static int GetMonsterConfigIdForWave(this WaveManagerComponent self, int wave)
-        {
-            // TODO: 从配置表读取
-            // 目前使用固定值
-            return 2001; // 普通怪物配置ID
-        }
-        
-        /// <summary>
-        /// 广播消息给房间内所有玩家
-        /// </summary>
         private static void BroadcastToBattleRoom(this WaveManagerComponent self, IMessage message)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
@@ -255,9 +290,6 @@ namespace ET.Server
             }
         }
         
-        /// <summary>
-        /// 强制结束当前波次（用于调试或特殊情况）
-        /// </summary>
         public static async ETTask ForceCompleteCurrentWave(this WaveManagerComponent self)
         {
             if (self.State != WaveState.Fighting)
@@ -265,7 +297,6 @@ namespace ET.Server
                 return;
             }
             
-            // 清除所有怪物
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             foreach (long monsterId in self.CurrentWaveMonsterIds.ToArray())
             {

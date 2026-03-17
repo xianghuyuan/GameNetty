@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace ET.Server
@@ -9,14 +10,12 @@ namespace ET.Server
         {
             Scene mapScene = unit.Scene();
             
-            // 1. 获取或创建 BattleRoomManagerComponent
             BattleRoomManagerComponent roomManager = mapScene.GetComponent<BattleRoomManagerComponent>();
             if (roomManager == null)
             {
                 roomManager = mapScene.AddComponent<BattleRoomManagerComponent>();
             }
             
-            // 2. 检查玩家是否已在战斗中
             if (roomManager.IsUnitInBattle(unit.Id))
             {
                 response.Error = ErrorCode.ERR_AlreadyInBattle;
@@ -25,43 +24,46 @@ namespace ET.Server
                 return;
             }
             
-            // 3. 创建战斗房间（BattleRoom）
             BattleRoom battleRoom = mapScene.AddChild<BattleRoom>();
             battleRoom.Fiber = mapScene.Fiber;
             battleRoom.SceneType = SceneType.Battle;
             battleRoom.State = BattleState.Prepare;
-            battleRoom.ConfigId = request.battleType; // 使用 battleType 作为配置ID
+            battleRoom.ConfigId = request.stageId > 0 ? request.stageId : request.battleType;
             battleRoom.PlayerIds.Add(unit.Id);
             
             long battleRoomId = battleRoom.Id;
             
-            Log.Info($"创建战斗房间: BattleRoomId={battleRoomId}, PlayerId={unit.Id}, BattleType={request.battleType}");
+            Log.Info($"创建战斗房间: BattleRoomId={battleRoomId}, PlayerId={unit.Id}, StageId={request.stageId}, BattleType={request.battleType}");
             
-            // 4. 添加房间到管理器
             roomManager.AddBattleRoom(battleRoom);
             roomManager.AddUnitToBattleRoom(unit.Id, battleRoomId);
             
-            // 5. 根据战斗类型初始化战斗内容
             try
             {
-                switch (request.battleType)
+                if (request.stageId > 0)
                 {
-                    case 0: // WaveBattle - 波次战斗
-                        await InitWaveBattle(battleRoom, unit, request.totalWaves);
-                        break;
-                    case 1: // Dungeon - 副本
-                        await InitDungeon(battleRoom, unit);
-                        break;
-                    case 2: // Boss - Boss战
-                        await InitBossBattle(battleRoom, unit);
-                        break;
-                    default:
-                        response.Error = ErrorCode.ERR_InvalidBattleType;
-                        response.Message = "无效的战斗类型";
-                        // 清理已创建的房间
-                        roomManager.RemoveBattleRoom(battleRoomId);
-                        battleRoom.Dispose();
-                        return;
+                    await InitStageBattle(battleRoom, unit, request.stageId);
+                }
+                else
+                {
+                    switch (request.battleType)
+                    {
+                        case 0:
+                            await InitWaveBattle(battleRoom, unit);
+                            break;
+                        case 1:
+                            await InitDungeon(battleRoom, unit);
+                            break;
+                        case 2:
+                            await InitBossBattle(battleRoom, unit);
+                            break;
+                        default:
+                            response.Error = ErrorCode.ERR_InvalidBattleType;
+                            response.Message = "无效的战斗类型";
+                            roomManager.RemoveBattleRoom(battleRoomId);
+                            battleRoom.Dispose();
+                            return;
+                    }
                 }
             }
             catch (System.Exception e)
@@ -69,31 +71,24 @@ namespace ET.Server
                 Log.Error($"初始化战斗失败: {e}");
                 response.Error = ErrorCode.ERR_CreateRoomFailed;
                 response.Message = "创建战斗房间失败";
-                // 清理已创建的房间
                 roomManager.RemoveBattleRoom(battleRoomId);
                 battleRoom.Dispose();
                 return;
             }
             
-            // 6. 开始战斗
             battleRoom.State = BattleState.Fighting;
             
-            // 7. 响应客户端
             response.Error = ErrorCode.ERR_Success;
             response.Message = "战斗开始";
             response.battleId = battleRoomId;
             
-            Log.Info($"玩家 {unit.Id} 开始战斗成功: BattleRoomId={battleRoomId}, BattleType={request.battleType}");
+            Log.Info($"玩家 {unit.Id} 开始战斗成功: BattleRoomId={battleRoomId}");
             
             await ETTask.CompletedTask;
         }
         
-        /// <summary>
-        /// 初始化波次战斗
-        /// </summary>
-        private async ETTask InitWaveBattle(BattleRoom battleRoom, Unit unit, int totalWaves)
+        private async ETTask InitStageBattle(BattleRoom battleRoom, Unit unit, int stageId)
         {
-            // 创建玩家的战斗单位
             BattleUnit playerUnit = UnitFactory.CreateHero(
                 battleRoom, 
                 unit.Id, 
@@ -103,21 +98,63 @@ namespace ET.Server
             
             battleRoom.Units[playerUnit.Id] = playerUnit;
             
-            // 添加波次管理组件
-            WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int>(totalWaves);
+            StageConfigInfo stageInfo = GetStageConfig(stageId);
             
-            Log.Info($"初始化波次战斗: BattleRoomId={battleRoom.Id}, TotalWaves={totalWaves}");
+            WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int, List<int>>(
+                stageId, 
+                stageInfo.WaveConfigIds
+            );
             
-            // 开始第一波
+            Log.Info($"初始化关卡战斗: BattleRoomId={battleRoom.Id}, StageId={stageId}, TotalWaves={stageInfo.TotalWaves}");
+            
             await waveManager.StartFirstWave();
         }
         
-        /// <summary>
-        /// 初始化副本
-        /// </summary>
-        private async ETTask InitDungeon(BattleRoom battleRoom, Unit unit)
+        private StageConfigInfo GetStageConfig(int stageId)
         {
-            // 创建玩家的战斗单位
+            // TODO: 配置表生成后从 StageConfigCategory 读取
+            // StageConfig config = StageConfigCategory.Instance.Get(stageId);
+            // return new StageConfigInfo
+            // {
+            //     TotalWaves = config.TotalWaves,
+            //     WaveConfigIds = config.WaveList
+            // };
+            
+            // 临时：使用 WaveConfig 构建虚拟关卡
+            List<int> waveConfigIds = new List<int>();
+            int maxWaveNumber = 0;
+            
+            foreach (var config in WaveConfigCategory.Instance.DataList)
+            {
+                waveConfigIds.Add(config.Id);
+                if (config.WaveNumber > maxWaveNumber)
+                {
+                    maxWaveNumber = config.WaveNumber;
+                }
+            }
+            
+            waveConfigIds.Sort((a, b) => 
+            {
+                var configA = WaveConfigCategory.Instance.Get(a);
+                var configB = WaveConfigCategory.Instance.Get(b);
+                return (configA?.WaveNumber ?? 0).CompareTo(configB?.WaveNumber ?? 0);
+            });
+            
+            return new StageConfigInfo
+            {
+                TotalWaves = waveConfigIds.Count,
+                WaveConfigIds = waveConfigIds
+            };
+        }
+        
+        private struct StageConfigInfo
+        {
+            public int TotalWaves;
+            public List<int> WaveConfigIds;
+        }
+        
+        private async ETTask InitWaveBattle(BattleRoom battleRoom, Unit unit)
+        {
             BattleUnit playerUnit = UnitFactory.CreateHero(
                 battleRoom, 
                 unit.Id, 
@@ -127,21 +164,36 @@ namespace ET.Server
             
             battleRoom.Units[playerUnit.Id] = playerUnit;
             
-            // TODO: 添加副本管理组件
-            // DungeonManagerComponent dungeonManager = battleRoom.AddComponent<DungeonManagerComponent>();
-            // await dungeonManager.StartDungeon(battleRoom.ConfigId);
+            StageConfigInfo stageInfo = GetStageConfig(1);
+            
+            WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int, List<int>>(
+                1, 
+                stageInfo.WaveConfigIds
+            );
+            
+            Log.Info($"初始化波次战斗: BattleRoomId={battleRoom.Id}, TotalWaves={stageInfo.TotalWaves}");
+            
+            await waveManager.StartFirstWave();
+        }
+        
+        private async ETTask InitDungeon(BattleRoom battleRoom, Unit unit)
+        {
+            BattleUnit playerUnit = UnitFactory.CreateHero(
+                battleRoom, 
+                unit.Id, 
+                unit.ConfigId, 
+                new Vector3(0, 0, 0)
+            );
+            
+            battleRoom.Units[playerUnit.Id] = playerUnit;
             
             Log.Info($"初始化副本: BattleRoomId={battleRoom.Id}, ConfigId={battleRoom.ConfigId}");
             
             await ETTask.CompletedTask;
         }
         
-        /// <summary>
-        /// 初始化Boss战
-        /// </summary>
         private async ETTask InitBossBattle(BattleRoom battleRoom, Unit unit)
         {
-            // 创建玩家的战斗单位
             BattleUnit playerUnit = UnitFactory.CreateHero(
                 battleRoom, 
                 unit.Id, 
@@ -151,10 +203,9 @@ namespace ET.Server
             
             battleRoom.Units[playerUnit.Id] = playerUnit;
             
-            // 创建Boss
             BattleUnit bossUnit = UnitFactory.CreateMonster(
                 battleRoom, 
-                battleRoom.ConfigId, // 使用 ConfigId 作为 Boss 配置ID
+                battleRoom.ConfigId,
                 new Vector3(0, 0, 5)
             );
             

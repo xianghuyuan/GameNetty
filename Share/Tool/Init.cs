@@ -37,22 +37,34 @@ namespace ET.Server
                 string protoDirPath = "";
                 string clientPath = "";
                 string serverPath = "";
+                
+                // 跳过已被 CommandLine 解析的参数，从实际的位置参数开始
+                int paramIndex = 0;
                 for (int i = 0; i < args.Length; i++)
                 {
                     string arg = args[i];
-                    Console.WriteLine(arg);
-                    if (i == 3)
+                    Console.WriteLine($"arg[{i}]: {arg}");
+                    
+                    // 跳过 --AppType 和 --Process 等命名参数
+                    if (arg.StartsWith("--") || arg.StartsWith("-"))
+                    {
+                        continue;
+                    }
+                    
+                    // 处理位置参数
+                    if (paramIndex == 0)
                     {
                         protoDirPath = arg;
                     }
-                    if (i == 4)
+                    else if (paramIndex == 1)
                     {
                         clientPath = arg;
                     }
-                    if (i == 5)
+                    else if (paramIndex == 2)
                     {
                         serverPath = arg;
                     }
+                    paramIndex++;
                 }
 				
                 switch (Options.Instance.AppType)

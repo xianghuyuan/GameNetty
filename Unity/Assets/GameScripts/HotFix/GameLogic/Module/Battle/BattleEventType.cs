@@ -40,6 +40,15 @@ namespace ET
     }
     
     /// <summary>
+    /// 战斗单位创建事件
+    /// </summary>
+    public struct BattleUnitCreated
+    {
+        public Battle Battle;
+        public BattleUnit Unit;
+    }
+    
+    /// <summary>
     /// 战斗单位死亡事件
     /// </summary>
     public struct BattleUnitDead

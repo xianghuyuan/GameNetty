@@ -757,8 +757,8 @@ message CombatResultProto
 message C2M_StartBattle // ILocationRequest
 {
     int32 RpcId = 1;
-    int32 battleType = 2;  // 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss
-    int32 totalWaves = 3;  // 总波数（波次战斗用）
+    int32 battleType = 2;  // 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss (兼容旧版)
+    int32 stageId = 3;     // 关卡配置ID (优先使用)
 }
 
 message M2C_StartBattle // ILocationResponse
@@ -785,6 +785,23 @@ message M2C_WaveStart // IMessage
     int32 waveNumber = 2;
     int32 totalWaves = 3;
     int32 monsterCount = 4;
+}
+
+// 战斗单位信息
+message BattleUnitInfo
+{
+    int64 unitId = 1;
+    int32 configId = 2;
+    int32 camp = 3;  // 阵营：1=友方，2=敌方
+    Unity.Mathematics.float3 position = 4;
+    Unity.Mathematics.float3 forward = 5;
+}
+
+// 创建战斗单位（服务器主动推送）
+message M2C_CreateBattleUnits // IMessage
+{
+    int64 battleId = 1;
+    repeated BattleUnitInfo units = 2;
 }
 
 // 波次完成（服务器主动推送）

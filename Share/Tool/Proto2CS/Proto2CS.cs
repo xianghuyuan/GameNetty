@@ -24,7 +24,7 @@ namespace ET
     public static partial class InnerProto2CS
     {
         private static string protoDir = "../Config/Proto";
-        private static string clientMessagePath = "../Unity/Assets/GameScripts/GameProto/Generate/Message/";
+        private static string clientMessagePath = "../Unity/Assets/GameScripts/HotFix/GameProto/Generate/Message/";
         private static string serverMessagePath = "../Server/Model/Generate/Message/";
         // private const string clientServerMessagePath = "../Unity/Assets/Scripts/Model/Generate/ClientServer/Message/";
         private static readonly char[] splitChars = [' ', '\t'];
@@ -53,7 +53,12 @@ namespace ET
             RemoveAllFilesExceptMeta(serverMessagePath);
             // RemoveAllFilesExceptMeta(clientServerMessagePath);
 
+            Log.Console($"Proto directory: {protoDir}");
+            Log.Console($"Client path: {clientMessagePath}");
+            Log.Console($"Server path: {serverMessagePath}");
+
             List<string> list = FileHelper.GetAllFiles(protoDir, "*proto");
+            Log.Console($"Found {list.Count} proto files");
             foreach (string s in list)
             {
                 if (!s.EndsWith(".proto"))
@@ -66,6 +71,7 @@ namespace ET
                 string protoName = ss2[0];
                 string cs = ss2[1];
                 int startOpcode = int.Parse(ss2[2]);
+                Log.Console($"Processing: {fileName}, cs flag: {cs}");
                 ProtoFile2CS(fileName, protoName, cs, startOpcode);
             }
 
@@ -239,6 +245,7 @@ namespace ET
 
             if (cs.Contains('C'))
             {
+                Log.Console($"Generating {fileName} to client and server (C flag)");
                 GenerateCS(result, clientMessagePath, proto);
                 GenerateCS(result, serverMessagePath, proto);
                 // GenerateCS(result, clientServerMessagePath, proto);
@@ -246,6 +253,7 @@ namespace ET
 
             if (cs.Contains('S'))
             {
+                Log.Console($"Generating {fileName} to server only (S flag)");
                 GenerateCS(result, serverMessagePath, proto);
                 // GenerateCS(result, clientServerMessagePath, proto);
             }
@@ -255,13 +263,16 @@ namespace ET
         {
             if (!Directory.Exists(path))
             {
+                Log.Console($"Creating directory: {path}");
                 Directory.CreateDirectory(path);
             }
 
             string csPath = Path.Combine(path, Path.GetFileNameWithoutExtension(proto) + ".cs");
+            Log.Console($"Writing file: {csPath}");
             using FileStream txt = new(csPath, FileMode.Create, FileAccess.ReadWrite);
             using StreamWriter sw = new(txt);
             sw.Write(result);
+            Log.Console($"File written successfully: {csPath}");
         }
 
         private static void Map(StringBuilder sb, string newline, StringBuilder sbDispose)

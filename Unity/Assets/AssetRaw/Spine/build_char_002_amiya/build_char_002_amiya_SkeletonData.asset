@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1b3b4b945939a54ea0b23d3396115fb, type: 3}
   m_Name: build_char_002_amiya_SkeletonData
   m_EditorClassIdentifier: spine-unity::Spine.Unity.SkeletonDataAsset
-  atlasAssets: []
+  atlasAssets:
+  - {fileID: 11400000, guid: 1cd102baa05f341ffbc422247a12e973, type: 2}
   scale: 0.01
-  skeletonJSON: {fileID: 4900000, guid: 482e3afada5b54d96b6ed8be86b18f8e, type: 3}
+  skeletonJSON: {fileID: 4900000, guid: 214f18a598ba24c818251682c72ed4af, type: 3}
   isUpgradingBlendModeMaterials: 0
   blendModeMaterials:
     requiresBlendModeMaterials: 0

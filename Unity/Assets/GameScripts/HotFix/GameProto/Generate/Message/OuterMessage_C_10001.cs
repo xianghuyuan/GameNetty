@@ -3396,16 +3396,16 @@ namespace ET
         public int RpcId { get; set; }
 
         /// <summary>
-        /// 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss
+        /// 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss (兼容旧版)
         /// </summary>
         [MemoryPackOrder(1)]
         public int battleType { get; set; }
 
         /// <summary>
-        /// 总波数（波次战斗用）
+        /// 关卡配置ID (优先使用)
         /// </summary>
         [MemoryPackOrder(2)]
-        public int totalWaves { get; set; }
+        public int stageId { get; set; }
 
         public override void Dispose()
         {
@@ -3416,7 +3416,7 @@ namespace ET
 
             this.RpcId = default;
             this.battleType = default;
-            this.totalWaves = default;
+            this.stageId = default;
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -3536,6 +3536,81 @@ namespace ET
             this.waveNumber = default;
             this.totalWaves = default;
             this.monsterCount = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 战斗单位信息
+    [MemoryPackable]
+    [Message(OuterMessage.BattleUnitInfo)]
+    public partial class BattleUnitInfo : MessageObject
+    {
+        public static BattleUnitInfo Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(BattleUnitInfo), isFromPool) as BattleUnitInfo;
+        }
+
+        [MemoryPackOrder(0)]
+        public long unitId { get; set; }
+
+        [MemoryPackOrder(1)]
+        public int configId { get; set; }
+
+        /// <summary>
+        /// 阵营：1=友方，2=敌方
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int camp { get; set; }
+
+        [MemoryPackOrder(3)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        [MemoryPackOrder(4)]
+        public Unity.Mathematics.float3 forward { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.unitId = default;
+            this.configId = default;
+            this.camp = default;
+            this.position = default;
+            this.forward = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 创建战斗单位（服务器主动推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_CreateBattleUnits)]
+    public partial class M2C_CreateBattleUnits : MessageObject, IMessage
+    {
+        public static M2C_CreateBattleUnits Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_CreateBattleUnits), isFromPool) as M2C_CreateBattleUnits;
+        }
+
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        [MemoryPackOrder(1)]
+        public List<BattleUnitInfo> units { get; set; } = new();
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.units.Clear();
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -4946,36 +5021,38 @@ namespace ET
         public const ushort M2C_StartBattle = 10104;
         public const ushort M2C_BattleEnd = 10105;
         public const ushort M2C_WaveStart = 10106;
-        public const ushort M2C_WaveComplete = 10107;
-        public const ushort C2M_ExitBattle = 10108;
-        public const ushort M2C_ExitBattle = 10109;
-        public const ushort C2M_TeamStartBattle = 10110;
-        public const ushort M2C_TeamStartBattle = 10111;
-        public const ushort C2M_JoinTeamBattle = 10112;
-        public const ushort M2C_JoinTeamBattle = 10113;
-        public const ushort C2M_CastSkill = 10114;
-        public const ushort M2C_CastSkill = 10115;
-        public const ushort M2C_SkillCooldown = 10116;
-        public const ushort C2M_CreateTeam = 10117;
-        public const ushort M2C_CreateTeam = 10118;
-        public const ushort C2M_JoinTeam = 10119;
-        public const ushort M2C_JoinTeam = 10120;
-        public const ushort C2M_LeaveTeam = 10121;
-        public const ushort M2C_LeaveTeam = 10122;
-        public const ushort M2C_TeamUpdate = 10123;
-        public const ushort C2M_EnterDungeon = 10124;
-        public const ushort M2C_EnterDungeon = 10125;
-        public const ushort M2C_DungeonStart = 10126;
-        public const ushort M2C_DungeonComplete = 10127;
-        public const ushort M2C_Damage = 10128;
-        public const ushort M2C_Heal = 10129;
-        public const ushort M2C_BuffAdd = 10130;
-        public const ushort M2C_BuffRemove = 10131;
-        public const ushort M2C_BuffStackUpdate = 10132;
-        public const ushort M2C_UnitHpSync = 10133;
-        public const ushort M2C_UnitDead = 10134;
-        public const ushort M2C_SkillCast = 10135;
-        public const ushort M2C_MonsterStateChange = 10136;
-        public const ushort M2C_RoomRewardSync = 10137;
+        public const ushort BattleUnitInfo = 10107;
+        public const ushort M2C_CreateBattleUnits = 10108;
+        public const ushort M2C_WaveComplete = 10109;
+        public const ushort C2M_ExitBattle = 10110;
+        public const ushort M2C_ExitBattle = 10111;
+        public const ushort C2M_TeamStartBattle = 10112;
+        public const ushort M2C_TeamStartBattle = 10113;
+        public const ushort C2M_JoinTeamBattle = 10114;
+        public const ushort M2C_JoinTeamBattle = 10115;
+        public const ushort C2M_CastSkill = 10116;
+        public const ushort M2C_CastSkill = 10117;
+        public const ushort M2C_SkillCooldown = 10118;
+        public const ushort C2M_CreateTeam = 10119;
+        public const ushort M2C_CreateTeam = 10120;
+        public const ushort C2M_JoinTeam = 10121;
+        public const ushort M2C_JoinTeam = 10122;
+        public const ushort C2M_LeaveTeam = 10123;
+        public const ushort M2C_LeaveTeam = 10124;
+        public const ushort M2C_TeamUpdate = 10125;
+        public const ushort C2M_EnterDungeon = 10126;
+        public const ushort M2C_EnterDungeon = 10127;
+        public const ushort M2C_DungeonStart = 10128;
+        public const ushort M2C_DungeonComplete = 10129;
+        public const ushort M2C_Damage = 10130;
+        public const ushort M2C_Heal = 10131;
+        public const ushort M2C_BuffAdd = 10132;
+        public const ushort M2C_BuffRemove = 10133;
+        public const ushort M2C_BuffStackUpdate = 10134;
+        public const ushort M2C_UnitHpSync = 10135;
+        public const ushort M2C_UnitDead = 10136;
+        public const ushort M2C_SkillCast = 10137;
+        public const ushort M2C_MonsterStateChange = 10138;
+        public const ushort M2C_RoomRewardSync = 10139;
     }
 }

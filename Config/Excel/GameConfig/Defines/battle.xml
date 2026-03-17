@@ -1,0 +1,10 @@
+<module name="">
+    <bean name="BatchInfo" valueType="1" sep=",">
+        <var name="SpawnId" type="int"/>
+        <var name="Delay" type="int"/>
+    </bean>
+    <bean name="MonsterSpawnInfo" valueType="1" sep=",">
+        <var name="MonsterId" type="int"/>
+        <var name="Count" type="int"/>
+    </bean>
+</module>

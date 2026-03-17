@@ -21,7 +21,7 @@ namespace ET
             Application.OpenURL(Application.dataPath + @"/../../Tools/Luban/GenConfig_Server.bat");
         }
 
-        private const string clientMessagePath = "../Unity/Assets/GameScripts/GameProto/Generate/Message/";
+        private const string clientMessagePath = "../Unity/Assets/GameScripts/HotFix/GameProto/Generate/Message/";
         
         private const string serverMessagePath = "../Server/Model/Generate/Message/";
 
@@ -35,8 +35,8 @@ namespace ET
 #else
             const string tools = ".\\Tool.exe";
 #endif
-            // ShellHelper.Run($"{tools} --AppType=Proto2CS --Console=1 {protoDir} {clientMessagePath} {serverMessagePath}", "../Bin/");
-            ShellHelper.Run($"{tools} --AppType=Proto2CS --Console=1", "../Bin/");
+            ShellHelper.Run($"{tools} --AppType=Proto2CS --Console=1 {protoDir} {clientMessagePath} {serverMessagePath}", "../Bin/");
+            //ShellHelper.Run($"{tools} --AppType=Proto2CS --Console=1", "../Bin/");
         }
     }
 }

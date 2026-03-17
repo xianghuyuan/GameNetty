@@ -10,27 +10,33 @@ namespace ET
         /// 开始单人战斗
         /// </summary>
         /// <param name="scene">场景</param>
-        /// <param name="battleType">战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss</param>
-        /// <param name="totalWaves">总波数（波次战斗用）</param>
+        /// <param name="stageId">关卡配置ID（优先使用）</param>
+        /// <param name="battleType">战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss（兼容旧版）</param>
         /// <returns>战斗ID（BattleRoomId），失败返回0</returns>
-        public static async ETTask<long> StartBattle(Scene scene, int battleType = 0, int totalWaves = 1)
+        public static async ETTask<long> StartBattle(Scene scene, int stageId = 0, int battleType = 0)
         {
-            // 创建请求
             C2M_StartBattle request = C2M_StartBattle.Create();
+            request.stageId = stageId;
             request.battleType = battleType;
-            request.totalWaves = totalWaves;
             
-            // 发送请求
             M2C_StartBattle response = await scene.GetComponent<ClientSenderComponent>().Call(request) as M2C_StartBattle;
             
-            // 检查结果
             if (response.Error != ErrorCode.ERR_Success)
             {
                 Log.Error($"开始战斗失败: {response.Message}");
                 return 0;
             }
             
-            Log.Info($"开始战斗成功, BattleId: {response.battleId}");
+            BattleComponent battleComponent = scene.GetComponent<BattleComponent>();
+            if (battleComponent == null)
+            {
+                Log.Error("BattleComponent not found");
+                return 0;
+            }
+            
+            battleComponent.CreateBattle(response.battleId, battleType);
+            
+            Log.Info($"开始战斗成功, BattleId: {response.battleId}, 等待服务端发送波次信息");
             return response.battleId;
         }
         

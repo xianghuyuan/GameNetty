@@ -11,6 +11,7 @@ namespace ET
 		BenchmarkServer = 1 << 12,
 		Current = 1L << 31,
 		NetClient = 1L << 35,
+		Battle = 1L << 41,
 		All = long.MaxValue,
 	}
 

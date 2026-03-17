@@ -9,7 +9,7 @@ namespace ET
     }
     // 战斗单位
     [ChildOf(typeof(BattleRoom))]
-    public class BattleUnit : Entity, IAwake<int>, IDestroy
+    public partial class BattleUnit : Entity, IAwake<int>, IDestroy
     {
         // 配置ID
         public int ConfigId { get; set; }
@@ -23,5 +23,8 @@ namespace ET
         // 位置信息
         public Vector3 Position { get; set; }
         public float Rotation { get; set; }
+        
+        // 是否死亡
+        public bool IsDead { get; set; }
     }
 }

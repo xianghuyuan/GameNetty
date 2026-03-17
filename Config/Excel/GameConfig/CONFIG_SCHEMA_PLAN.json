@@ -1,0 +1,284 @@
+# 割草游戏波次刷怪系统 - 配置表结构方案
+
+## 概述
+
+三层配置表结构：
+- **StageConfig** (关卡表) → 管理关卡流程和波次列表
+- **WaveConfig** (波次表) → 管理波次流程、时间间隔、批次引用
+- **SpawnTable** (刷怪表) → 管理刷怪数据（怪物类型、数量、位置）
+
+---
+
+## 1. Bean 定义 (在 __beans__.xlsx 中添加)
+
+### 1.1 BatchInfo (批次信息)
+```
+名称: BatchInfo
+描述: 波次中的单个批次
+
+字段:
+- SpawnId (int) - 刷怪表ID
+- Delay (int) - 相对于波次开始的时间延迟(毫秒)
+```
+
+### 1.2 MonsterSpawnInfo (怪物生成信息)
+```
+名称: MonsterSpawnInfo
+描述: 单个怪物类型及数量
+
+字段:
+- MonsterId (int) - 怪物配置ID (引用 MonsterUnitConfig)
+- Count (int) - 数量
+```
+
+---
+
+## 2. StageConfig.xlsx (关卡配置表)
+
+### Excel 表格结构
+```
+行1: ##var
+行2: ##type
+行3: ##
+行4+: 字段名/类型/描述
+
+| ##var       | Id    | Name     | Type | TotalWaves | WaveList    | Reward | TimeLimit |
+|-------------|-------|----------|------|------------|-------------|--------|-----------|
+| ##type      | int   | string   | int  | int        | list,int    | int    | int       |
+| ##          |       |          |      |            |             |        |           |
+| 描述        | 关卡ID| 关卡名称 | 类型 | 总波次数   | 波次ID列表  | 奖励ID | 时间限制  |
+| 数据行1     | 1001  | 新手村   | 1    | 3          | [1,2,3]     | 5001   | 300       |
+| 数据行2     | 1002  | 黑暗森林 | 1    | 5          | [4,5,6,7,8] | 5002   | 600       |
+```
+
+### 字段说明
+- **Id**: 关卡唯一ID
+- **Name**: 关卡名称
+- **Type**: 关卡类型 (1=普通, 2=精英, 3=Boss)
+- **TotalWaves**: 总波次数 (客户端UI显示用)
+- **WaveList**: 波次配置ID列表 (引用 WaveConfig)
+- **Reward**: 通关奖励ID
+- **TimeLimit**: 时间限制(秒)，0表示无限制
+
+### 示例数据
+```
+1001, 新手村, 1, 3, [1,2,3], 5001, 300
+1002, 黑暗森林, 1, 5, [4,5,6,7,8], 5002, 600
+1003, Boss关卡, 3, 1, [9], 5003, 180
+```
+
+---
+
+## 3. WaveConfig.xlsx (波次配置表 - 修改)
+
+### Excel 表格结构
+```
+行1: ##var
+行2: ##type
+行3: ##
+行4+: 字段名/类型/描述
+
+| ##var       | Id    | WaveNumber | Batches              | WaveInterval | Desc        |
+|-------------|-------|------------|----------------------|--------------|-------------|
+| ##type      | int   | int        | list,BatchInfo       | int          | string      |
+| ##          |       |            |                      |              |             |
+| 描述        | 波次ID| 波次编号   | 批次列表             | 波次间隔(毫秒)| 描述       |
+| 数据行1     | 1     | 1          | [{101,0},{102,1000}] | 5000         | 第一波      |
+| 数据行2     | 2     | 2          | [{103,0},{104,500}]  | 5000         | 第二波      |
+```
+
+### 字段说明
+- **Id**: 波次配置ID
+- **WaveNumber**: 波次编号 (用于UI显示)
+- **Batches**: 批次列表 (类型: `list,BatchInfo`)
+  - **SpawnId**: 刷怪表ID
+  - **Delay**: 延迟时间(毫秒)
+- **WaveInterval**: 波次间隔时间(毫秒)，下一波开始前的等待时间
+- **Desc**: 描述
+
+### 示例数据
+```
+1, 1, [{101,0},{102,1000}], 5000, 第一波-新手教学
+2, 2, [{101,0},{103,500}], 5000, 第二波-增加难度
+3, 3, [{102,0},{103,0},{104,1000}], 8000, 第三波-小高潮
+```
+
+---
+
+## 4. SpawnTable.xlsx (刷怪表 - 新建)
+
+### Excel 表格结构
+```
+行1: ##var
+行2: ##type
+行3: ##
+行4+: 字段名/类型/描述
+
+| ##var       | Id        | PositionX | PositionZ | SpreadRange | Monsters                  | Desc          |
+|-------------|-----------|-----------|-----------|-------------|---------------------------|---------------|
+| ##type      | int       | float     | float     | float       | list,MonsterSpawnInfo     | string        |
+| ##          |           |           |           |             |                           |               |
+| 描述        | 刷怪表ID  | X坐标     | Z坐标     | 分散范围    | 怪物列表                  | 描述          |
+| 数据行1     | 101       | 0         | 10        | 2           | [{3001,3}]                | 前方3只小怪  |
+| 数据行2     | 102       | -5        | 15        | 3           | [{3001,5}]                | 左侧5只小怪  |
+| 数据行3     | 103       | 5         | 15        | 3           | [{3002,3}]                | 右侧3只中怪  |
+```
+
+### 字段说明
+- **Id**: 刷怪表唯一ID
+- **PositionX**: 刷怪中心点X坐标
+- **PositionZ**: 刷怪中心点Z坐标
+- **SpreadRange**: 分散范围 (怪物在中心点周围的随机分布范围)
+- **Monsters**: 怪物列表 (类型: `list,MonsterSpawnInfo`)
+  - **MonsterId**: 怪物配置ID (引用 MonsterUnitConfig)
+  - **Count**: 数量
+- **Desc**: 描述
+
+### 示例数据
+```
+101, 0, 10, 2, [{3001,3}], 前方3只小怪
+102, -5, 15, 3, [{3001,5}], 左侧5只小怪
+103, 5, 15, 3, [{3002,3}], 右侧3只中怪
+104, 0, 20, 5, [{3001,3},{3002,2}], 混合怪物群
+105, 0, 25, 1, [{3003,1}], Boss位置
+```
+
+---
+
+## 5. __tables__.xlsx 注册表
+
+在 `__tables__.xlsx` 中添加以下表注册：
+
+```
+| name            | value            |
+|-----------------|------------------|
+| StageConfig     | StageConfig      |
+| WaveConfig      | WaveConfig       |
+| SpawnTable      | SpawnTable       |
+```
+
+---
+
+## 6. __beans__.xlsx Bean 注册
+
+在 `__beans__.xlsx` 中添加以下 Bean 定义：
+
+### 6.1 BatchInfo
+```
+| name      | sep | valueType | fields                              |
+|-----------|-----|-----------|-------------------------------------|
+| BatchInfo | ,   | 1         | SpawnId#int,Delay#int               |
+```
+
+### 6.2 MonsterSpawnInfo
+```
+| name             | sep | valueType | fields                              |
+|------------------|-----|-----------|-------------------------------------|
+| MonsterSpawnInfo | ,   | 1         | MonsterId#int,Count#int             |
+```
+
+---
+
+## 7. 配置关系图
+
+```
+StageConfig (关卡表)
+    ├── Id: 1001 (新手村)
+    ├── TotalWaves: 3
+    └── WaveList: [1, 2, 3]
+         │
+         ├── WaveConfig (波次表) Id: 1
+         │   ├── WaveNumber: 1
+         │   ├── WaveInterval: 5000
+         │   └── Batches:
+         │       ├── {SpawnId: 101, Delay: 0}
+         │       └── {SpawnId: 102, Delay: 1000}
+         │            │
+         │            └── SpawnTable (刷怪表) Id: 101
+         │                ├── Position: (0, 10)
+         │                ├── SpreadRange: 2
+         │                └── Monsters:
+         │                    └── {MonsterId: 3001, Count: 3}
+         │                         │
+         │                         └── MonsterUnitConfig (怪物配置)
+         │
+         ├── WaveConfig (波次表) Id: 2
+         │   └── ...
+         │
+         └── WaveConfig (波次表) Id: 3
+             └── ...
+```
+
+---
+
+## 8. 数据流程
+
+1. **开始战斗**:
+   ```csharp
+   StageConfig stage = StageConfigCategory.Instance.Get(stageId);
+   int totalWaves = stage.TotalWaves;
+   List<int> waveIds = stage.WaveList;
+   ```
+
+2. **开始波次**:
+   ```csharp
+   WaveConfig wave = WaveConfigCategory.Instance.Get(waveId);
+   foreach (var batch in wave.Batches) {
+       // batch.SpawnId, batch.Delay
+   }
+   ```
+
+3. **执行刷怪**:
+   ```csharp
+   SpawnTable spawn = SpawnTableCategory.Instance.Get(batch.SpawnId);
+   foreach (var monster in spawn.Monsters) {
+       // monster.MonsterId, monster.Count
+       // 在 spawn.PositionX/Z 周围 spawn.SpreadRange 范围内生成
+   }
+   ```
+
+---
+
+## 9. 操作步骤
+
+1. **在 __beans__.xlsx 中添加 Bean 定义**:
+   - 添加 `BatchInfo`
+   - 添加 `MonsterSpawnInfo`
+
+2. **在 __tables__.xlsx 中注册新表**:
+   - 添加 `StageConfig`
+   - 添加 `SpawnTable`
+   - 确认 `WaveConfig` 已存在
+
+3. **创建 StageConfig.xlsx**:
+   - 按照上述结构创建表
+
+4. **修改 WaveConfig.xlsx**:
+   - 添加 `Batches` 字段 (替换原有的 MonsterConfigId, MonsterCount, SpawnInterval)
+   - 保留 `Id`, `WaveNumber`, `Desc`
+
+5. **创建 SpawnTable.xlsx**:
+   - 按照上述结构创建表
+
+6. **运行 Luban 生成代码**:
+   ```bash
+   cd Tools/Luban
+   ./GenConfig_Server.sh
+   ```
+
+7. **修改代码使用新配置**:
+   - 更新 `WaveManagerComponentSystem.cs`
+   - 更新 `C2M_StartBattleHandler.cs`
+
+---
+
+## 10. 注意事项
+
+1. **SpawnTable 不包含时间信息** - 时间间隔在 WaveConfig.Batches.Delay 中
+2. **SpawnTable 可复用** - 同一个 SpawnTable 可以在多个 WaveConfig 中引用
+3. **BatchInfo.Delay 是相对于波次开始的时间** - 不是相对于上一个批次
+4. **WaveInterval 是波次之间的间隔** - 用于 UI 倒计时和下一波准备时间
+
+---
+
+完成配置表创建后，请告诉我，我会继续修改代码逻辑。
