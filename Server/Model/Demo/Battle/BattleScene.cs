@@ -41,7 +41,7 @@ namespace ET
     }
 
     [ChildOf]
-    public class BattleRoom : Entity, IScene, IAwake, IDestroy, IUpdate
+    public class BattleRoom : Entity, IScene, IAwake<int>, IDestroy, IUpdate
     {
         public Fiber Fiber { get; set; }
         public SceneType SceneType { get; set; } = SceneType.Battle;
