@@ -143,13 +143,8 @@ namespace ET.Server
                     battleRoom.Units[monster.Id] = monster;
                     self.CurrentWaveMonsterIds.Add(monster.Id);
                     
-                    // 添加到消息列表
-                    BattleUnitInfo unitInfo = BattleUnitInfo.Create();
-                    unitInfo.unitId = monster.Id;
-                    unitInfo.configId = monster.ConfigId;
-                    unitInfo.camp = (int)monster.Camp;
-                    unitInfo.position = new Unity.Mathematics.float3(monster.Position.X, monster.Position.Y, monster.Position.Z);
-                    unitInfo.forward = new Unity.Mathematics.float3(0, 0, 1); // 默认朝向
+                    // 使用统一方法创建单位信息（包含数值）
+                    BattleUnitInfo unitInfo = BattleRoomSystem.CreateBattleUnitInfo(monster);
                     battleUnitInfos.Add(unitInfo);
                     
                     Log.Debug($"生成怪物: MonsterId={monster.Id}, ConfigId={monsterInfo.MonsterId}, Position={position}");

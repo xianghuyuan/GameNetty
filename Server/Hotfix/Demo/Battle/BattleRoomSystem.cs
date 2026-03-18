@@ -172,18 +172,101 @@ namespace ET.Server
         /// </summary>
         public static async ETTask StartFirstWaveDelayed(this BattleRoom self)
         {
-            WaveManagerComponent waveManager = self.GetComponent<WaveManagerComponent>();
-            if (waveManager == null)
+            // 等待一帧，确保响应已发送到客户端
+            await self.Root().GetComponent<TimerComponent>().WaitFrameAsync();
+            
+            if (self.IsDisposed)
             {
                 return;
             }
             
-            // 等待一帧，确保响应已发送到客户端
+            // 发送玩家英雄创建消息
+            self.SendHeroUnits();
+            
+            // 再等待一帧，确保客户端处理完英雄创建
             await self.Root().GetComponent<TimerComponent>().WaitFrameAsync();
             
-            if (!self.IsDisposed && waveManager != null && !waveManager.IsDisposed)
+            // 开始波次
+            WaveManagerComponent waveManager = self.GetComponent<WaveManagerComponent>();
+            if (waveManager != null && !waveManager.IsDisposed)
             {
                 await waveManager.StartFirstWave();
+            }
+        }
+        
+        /// <summary>
+        /// 发送玩家英雄创建消息
+        /// </summary>
+        public static void SendHeroUnits(this BattleRoom self)
+        {
+            List<BattleUnit> heroes = self.GetUnitsByCamp(UnitCamp.Friend);
+            if (heroes.Count == 0)
+            {
+                return;
+            }
+            
+            List<BattleUnitInfo> battleUnitInfos = new List<BattleUnitInfo>();
+            foreach (BattleUnit hero in heroes)
+            {
+                BattleUnitInfo unitInfo = CreateBattleUnitInfo(hero);
+                battleUnitInfos.Add(unitInfo);
+            }
+            
+            M2C_CreateBattleUnits createMsg = M2C_CreateBattleUnits.Create();
+            createMsg.battleId = self.Id;
+            createMsg.units = battleUnitInfos;
+            
+            self.BroadcastToPlayers(createMsg);
+            
+            Log.Info($"发送玩家英雄创建消息: BattleRoomId={self.Id}, Count={battleUnitInfos.Count}");
+        }
+        
+        /// <summary>
+        /// 创建战斗单位信息（包含数值）
+        /// </summary>
+        public static BattleUnitInfo CreateBattleUnitInfo(BattleUnit unit)
+        {
+            BattleUnitInfo unitInfo = BattleUnitInfo.Create();
+            unitInfo.unitId = unit.Id;
+            unitInfo.configId = unit.ConfigId;
+            unitInfo.camp = (int)unit.Camp;
+            unitInfo.position = new Unity.Mathematics.float3(unit.Position.X, unit.Position.Y, unit.Position.Z);
+            unitInfo.forward = new Unity.Mathematics.float3(1, 0, 0);
+            
+            // 数值信息
+            NumericComponent numeric = unit.GetComponent<NumericComponent>();
+            if (numeric != null)
+            {
+                unitInfo.hp = numeric.GetAsInt(NumericType.Hp);
+                unitInfo.maxHp = numeric.GetAsInt(NumericType.MaxHp);
+                unitInfo.attack = numeric.GetAsInt(NumericType.Attack);
+            }
+            
+            // 战斗组件
+            BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
+            if (combat != null)
+            {
+                unitInfo.attackRange = combat.AttackRange;
+            }
+            
+            return unitInfo;
+        }
+        
+        /// <summary>
+        /// 广播消息给所有玩家
+        /// </summary>
+        public static void BroadcastToPlayers(this BattleRoom self, IMessage message)
+        {
+            Scene mapScene = self.Root();
+            UnitComponent unitComponent = mapScene.GetComponent<UnitComponent>();
+            
+            foreach (long playerId in self.PlayerIds)
+            {
+                Unit player = unitComponent.Get(playerId);
+                if (player != null)
+                {
+                    MapMessageHelper.SendToClient(player, message);
+                }
             }
         }
         

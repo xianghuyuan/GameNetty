@@ -19,16 +19,22 @@ namespace ET
                 return;
             }
 
-            Log.Info($"收到怪物创建消息: BattleId={message.battleId}, Count={message.units.Count}");
+            Log.Info($"收到战斗单位创建消息: BattleId={message.battleId}, Count={message.units.Count}");
 
             foreach (var unitInfo in message.units)
             {
-                // 使用 AddChildWithId 创建战斗单位，ET 框架会自动管理子实体
+                // 创建战斗单位
                 BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitInfo.unitId, unitInfo.configId);
                 unit.Camp = (UnitCamp)unitInfo.camp;
                 unit.Position = unitInfo.position;
 
-                Log.Debug($"创建战斗单位: UnitId={unit.Id}, ConfigId={unit.ConfigId}, Camp={unit.Camp}, Position={unitInfo.position}");
+                // 添加并初始化数值组件
+                NumericComponent numeric = unit.AddComponent<NumericComponent>();
+                numeric.Set(NumericType.Hp, unitInfo.hp);
+                numeric.Set(NumericType.MaxHp, unitInfo.maxHp);
+                numeric.Set(NumericType.Attack, unitInfo.attack);
+
+                Log.Debug($"创建战斗单位: UnitId={unit.Id}, ConfigId={unit.ConfigId}, Camp={unit.Camp}, HP={unitInfo.hp}/{unitInfo.maxHp}, ATK={unitInfo.attack}");
 
                 // 发布战斗单位创建事件，供表现层订阅
                 EventSystem.Instance.Publish(root, new BattleUnitCreated

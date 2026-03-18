@@ -35,6 +35,29 @@ namespace ET
         }
         
         /// <summary>
+        /// 设置数值并发布事件
+        /// </summary>
+        public static void SetNumeric(this BattleUnit self, int numericType, long value)
+        {
+            var numeric = self.GetComponent<NumericComponent>();
+            if (numeric == null) return;
+            
+            long oldValue = numeric.GetByKey(numericType);
+            if (oldValue == value) return;
+            
+            numeric.Set(numericType, (int)value);
+            
+            // 发布数值变化事件给UI
+            EventSystem.Instance.Publish(self.Scene(), new BattleUnitNumericChange
+            {
+                BattleUnit = self,
+                NumericType = numericType,
+                OldValue = oldValue,
+                NewValue = value
+            });
+        }
+        
+        /// <summary>
         /// 受到伤害
         /// </summary>
         public static void TakeDamage(this BattleUnit self, int damage)
@@ -58,7 +81,7 @@ namespace ET
                 newHp = 0;
             }
             
-            numeric.Set(NumericType.Hp, (int)newHp);
+            self.SetNumeric(NumericType.Hp, newHp);
             
             // 检查是否死亡
             if (newHp <= 0)
@@ -95,7 +118,7 @@ namespace ET
                 newHp = maxHp;
             }
             
-            numeric.Set(NumericType.Hp, (int)newHp);
+            self.SetNumeric(NumericType.Hp, newHp);
         }
     }
 }

@@ -795,6 +795,11 @@ message BattleUnitInfo
     int32 camp = 3;  // 阵营：1=友方，2=敌方
     Unity.Mathematics.float3 position = 4;
     Unity.Mathematics.float3 forward = 5;
+    // 数值信息
+    int32 hp = 6;           // 当前血量
+    int32 maxHp = 7;        // 最大血量
+    int32 attack = 8;       // 攻击力
+    float attackRange = 9;  // 攻击距离
 }
 
 // 创建战斗单位（服务器主动推送）

@@ -58,6 +58,17 @@ namespace ET
         public long Old;
         public long New;
     }
+    
+    /// <summary>
+    /// BattleUnit 数值变化事件
+    /// </summary>
+    public struct BattleUnitNumericChange
+    {
+        public BattleUnit BattleUnit;
+        public int NumericType;
+        public long OldValue;
+        public long NewValue;
+    }
     // 这个可弄个配置表生成
     public static class NumericType
     {

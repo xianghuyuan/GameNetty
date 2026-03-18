@@ -166,7 +166,7 @@ MonoBehaviour:
   m_text: "\u5F00\u59CB\u6218\u6597"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 63ebef0048ea14fe88a63b45f672d525, type: 2}
-  m_sharedMaterial: {fileID: 7909714233080309783, guid: 63ebef0048ea14fe88a63b45f672d525, type: 2}
+  m_sharedMaterial: {fileID: 5250436514535730352, guid: 63ebef0048ea14fe88a63b45f672d525, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -201,23 +201,20 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
-  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
-  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 1
   m_isCullingEnabled: 0

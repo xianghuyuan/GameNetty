@@ -3569,6 +3569,33 @@ namespace ET
         [MemoryPackOrder(4)]
         public Unity.Mathematics.float3 forward { get; set; }
 
+        /// <summary>
+        /// 数值信息
+        /// </summary>
+        /// <summary>
+        /// 当前血量
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public int hp { get; set; }
+
+        /// <summary>
+        /// 最大血量
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public int maxHp { get; set; }
+
+        /// <summary>
+        /// 攻击力
+        /// </summary>
+        [MemoryPackOrder(7)]
+        public int attack { get; set; }
+
+        /// <summary>
+        /// 攻击距离
+        /// </summary>
+        [MemoryPackOrder(8)]
+        public float attackRange { get; set; }
+
         public override void Dispose()
         {
             if (!this.IsFromPool)
@@ -3581,6 +3608,10 @@ namespace ET
             this.camp = default;
             this.position = default;
             this.forward = default;
+            this.hp = default;
+            this.maxHp = default;
+            this.attack = default;
+            this.attackRange = default;
 
             ObjectPool.Instance.Recycle(this);
         }
