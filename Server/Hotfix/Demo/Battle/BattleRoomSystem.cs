@@ -6,6 +6,10 @@ namespace ET.Server
     [FriendOf(typeof(BattleRoom))]
     public static partial class BattleRoomSystem
     {
+        private const float PlayerSpawnX = -5f;
+        private const float EnemySpawnX = 5f;
+        private const float TeamMemberSpacingX = 1.5f;
+
         [EntitySystem]
         private static void Awake(this BattleRoom self, int configId)
         {
@@ -36,8 +40,11 @@ namespace ET.Server
                     continue;
                 }
                 
-                SimpleAIComponent ai = unit.GetComponent<SimpleAIComponent>();
+                BattleAIComponent ai = unit.GetComponent<BattleAIComponent>();
                 ai?.Update();
+
+                BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
+                moveComponent?.Update();
             }
         }
         
@@ -115,7 +122,7 @@ namespace ET.Server
         public static void InitBattle(this BattleRoom self, Unit playerUnit, int stageId, int battleType)
         {
             // 创建玩家战斗单位
-            BattleUnit heroUnit = UnitFactory.CreateHero(self, playerUnit.Id, playerUnit.ConfigId, new System.Numerics.Vector3(0, 0, 0));
+            BattleUnit heroUnit = UnitFactory.CreateHero(self, playerUnit.Id, playerUnit.ConfigId, new System.Numerics.Vector3(PlayerSpawnX, 0, 0));
             self.Units[heroUnit.Id] = heroUnit;
             
             // 获取关卡配置
@@ -138,6 +145,7 @@ namespace ET.Server
             UnitComponent unitComponent = mapScene.GetComponent<UnitComponent>();
             
             int index = 0;
+            float centerOffset = (memberIds.Count - 1) * 0.5f;
             foreach (long memberId in memberIds)
             {
                 Unit unit = unitComponent.Get(memberId);
@@ -147,7 +155,8 @@ namespace ET.Server
                     continue;
                 }
                 
-                var position = new System.Numerics.Vector3(index * 2 - memberIds.Count, 0, 0);
+                float xOffset = (index - centerOffset) * TeamMemberSpacingX;
+                var position = new System.Numerics.Vector3(PlayerSpawnX + xOffset, 0, 0);
                 BattleUnit battleUnit = UnitFactory.CreateHero(self, unit.Id, unit.ConfigId, position);
                 self.Units[battleUnit.Id] = battleUnit;
                 index++;
@@ -156,7 +165,7 @@ namespace ET.Server
             // 根据战斗类型初始化
             if (battleType == 2) // Boss
             {
-                BattleUnit bossUnit = UnitFactory.CreateMonster(self, self.ConfigId, new System.Numerics.Vector3(0, 0, 10));
+                BattleUnit bossUnit = UnitFactory.CreateMonster(self, self.ConfigId, new System.Numerics.Vector3(EnemySpawnX, 0, 0));
                 self.Units[bossUnit.Id] = bossUnit;
             }
             
@@ -208,7 +217,7 @@ namespace ET.Server
             List<BattleUnitInfo> battleUnitInfos = new List<BattleUnitInfo>();
             foreach (BattleUnit hero in heroes)
             {
-                BattleUnitInfo unitInfo = CreateBattleUnitInfo(hero);
+                BattleUnitInfo unitInfo = BattleUnitHelper.CreateBattleUnitInfo(hero);
                 battleUnitInfos.Add(unitInfo);
             }
             
@@ -224,32 +233,10 @@ namespace ET.Server
         /// <summary>
         /// 创建战斗单位信息（包含数值）
         /// </summary>
+        [System.Obsolete("Use BattleUnitHelper.CreateBattleUnitInfo instead")]
         public static BattleUnitInfo CreateBattleUnitInfo(BattleUnit unit)
         {
-            BattleUnitInfo unitInfo = BattleUnitInfo.Create();
-            unitInfo.unitId = unit.Id;
-            unitInfo.configId = unit.ConfigId;
-            unitInfo.camp = (int)unit.Camp;
-            unitInfo.position = new Unity.Mathematics.float3(unit.Position.X, unit.Position.Y, unit.Position.Z);
-            unitInfo.forward = new Unity.Mathematics.float3(1, 0, 0);
-            
-            // 数值信息
-            NumericComponent numeric = unit.GetComponent<NumericComponent>();
-            if (numeric != null)
-            {
-                unitInfo.hp = numeric.GetAsInt(NumericType.Hp);
-                unitInfo.maxHp = numeric.GetAsInt(NumericType.MaxHp);
-                unitInfo.attack = numeric.GetAsInt(NumericType.Attack);
-            }
-            
-            // 战斗组件
-            BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
-            if (combat != null)
-            {
-                unitInfo.attackRange = combat.AttackRange;
-            }
-            
-            return unitInfo;
+            return BattleUnitHelper.CreateBattleUnitInfo(unit);
         }
         
         /// <summary>
@@ -269,7 +256,7 @@ namespace ET.Server
                 }
             }
         }
-        
+
         private static StageConfigInfo GetStageConfig(int stageId)
         {
             List<int> waveConfigIds = new List<int>();

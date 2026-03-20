@@ -11,6 +11,7 @@ namespace ET.Server
             self.LastAttackTime = 0;
             self.AttackRange = 2.0f;
             self.CanAttack = true;
+            self.SkillCooldownEnds.Clear();
         }
         
         [EntitySystem]
@@ -18,6 +19,7 @@ namespace ET.Server
         {
             self.LastAttackTime = 0;
             self.CanAttack = false;
+            self.SkillCooldownEnds.Clear();
         }
         
         public static bool IsAttackReady(this BattleUnitCombatComponent self)
@@ -44,6 +46,37 @@ namespace ET.Server
         public static void SetAttackRange(this BattleUnitCombatComponent self, float range)
         {
             self.AttackRange = range;
+        }
+
+        public static bool IsSkillReady(this BattleUnitCombatComponent self, SkillConfig skillConfig)
+        {
+            if (skillConfig == null || !self.CanAttack)
+            {
+                return false;
+            }
+
+            long currentTime = TimeInfo.Instance.ClientFrameTime();
+            int cooldownKey = skillConfig.CooldownGroupId != 0 ? skillConfig.CooldownGroupId : skillConfig.Id;
+            if (!self.SkillCooldownEnds.TryGetValue(cooldownKey, out long cooldownEnd))
+            {
+                return true;
+            }
+
+            return currentTime >= cooldownEnd;
+        }
+
+        public static long StartSkillCooldown(this BattleUnitCombatComponent self, SkillConfig skillConfig)
+        {
+            long cooldownEnd = TimeInfo.Instance.ClientFrameTime() + (skillConfig?.CooldownMs ?? self.AttackCooldown);
+            if (skillConfig != null)
+            {
+                int cooldownKey = skillConfig.CooldownGroupId != 0 ? skillConfig.CooldownGroupId : skillConfig.Id;
+                self.SkillCooldownEnds[cooldownKey] = cooldownEnd;
+                self.AttackCooldown = skillConfig.CooldownMs;
+            }
+
+            self.LastAttackTime = TimeInfo.Instance.ClientFrameTime();
+            return cooldownEnd;
         }
     }
 }

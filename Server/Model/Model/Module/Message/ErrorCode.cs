@@ -114,5 +114,7 @@ namespace ET
         public const int ERR_BattleTargetNotFound = 200602;         // Battle target not found
         public const int ERR_BattleCannotAttackAlly = 200603;       // Cannot attack ally
         public const int ERR_BattleAttackNotReady = 200604;         // Attack not ready (cooldown)
+        public const int ERR_BattleTargetOutOfRange = 200605;       // Target out of attack range
+        public const int ERR_BattleInAutoMode = 200606;             // In auto battle mode
     }
 }

@@ -35,12 +35,7 @@ namespace ET
             
             if (self.GameObject != null)
             {
-                // 2D 游戏：X/Y 直接作为世界坐标
-                Vector3 worldPos = new Vector3(
-                    position.x + BattleAreaConfig.BattleAreaCenter.x,
-                    position.y + BattleAreaConfig.BattleAreaCenter.y,
-                    0
-                );
+                Vector3 worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, position);
                 self.GameObject.transform.position = worldPos;
             }
         }

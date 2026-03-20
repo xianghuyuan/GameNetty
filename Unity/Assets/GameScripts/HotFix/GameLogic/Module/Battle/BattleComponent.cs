@@ -51,7 +51,7 @@ namespace ET
             // 创建新战斗
             Battle battle = self.AddChildWithId<Battle, long, int>(battleId, battleId, battleType);
             self.CurrentBattle = battle;
-            
+            battle.Start();
             Log.Info($"创建战斗: BattleId={battleId}, Type={battleType}");
             
             return battle;

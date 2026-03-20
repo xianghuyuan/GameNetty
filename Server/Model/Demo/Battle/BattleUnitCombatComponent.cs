@@ -1,5 +1,7 @@
 namespace ET.Server
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// 战斗单位战斗组件
     /// 管理攻击冷却、攻击范围等战斗属性
@@ -26,5 +28,7 @@ namespace ET.Server
         /// 是否可以攻击
         /// </summary>
         public bool CanAttack { get; set; } = true;
+
+        public Dictionary<int, long> SkillCooldownEnds { get; } = new();
     }
 }

@@ -50,12 +50,8 @@ namespace ET
             
             view.GameObject.name = $"Unit_{unit.Id}";
             
-            // 设置位置（2D 游戏：服务端 X/Y 直接作为世界坐标）
-            Vector3 worldPos = new Vector3(
-                view.Position.x + BattleAreaConfig.BattleAreaCenter.x,
-                view.Position.y + BattleAreaConfig.BattleAreaCenter.y,
-                0
-            );
+            // 使用服务端直传的战斗世界坐标，客户端仅做 XZ -> XY 映射
+            Vector3 worldPos = BattleAreaConfig.GetWorldPosition(view.Camp, view.Position);
             view.GameObject.transform.position = worldPos;
             
             // 设置阵营

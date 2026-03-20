@@ -15,118 +15,58 @@ namespace ET.Server
                 return;
             }
             
-            BattleRoom battleRoom = roomManager.GetBattleRoomById(request.targetId);
-            if (battleRoom == null)
+            // 找到玩家所在的战斗房间
+            BattleRoom battleRoom = null;
+            BattleUnit attacker = null;
+            
+            foreach (var roomRef in roomManager.BattleRoomIdToBattleRoom.Values)
             {
-                foreach (var roomRef in scene.GetComponent<BattleRoomManagerComponent>().BattleRoomIdToBattleRoom.Values)
+                BattleRoom room = roomRef;
+                if (room == null) continue;
+                
+                foreach (var kv in room.Units)
                 {
-                    BattleRoom room = roomRef;
-                    if (room != null)
+                    BattleUnit unit = kv.Value;
+                    if (unit != null && !unit.IsDead && unit.Camp == UnitCamp.Friend)
                     {
+                        attacker = unit;
                         battleRoom = room;
                         break;
                     }
                 }
+                if (attacker != null) break;
             }
             
-            if (battleRoom == null)
+            if (battleRoom == null || attacker == null)
             {
                 response.Error = ErrorCode.ERR_BattleNotInBattle;
                 response.Message = "Not in battle";
                 return;
             }
             
-            BattleUnit attacker = null;
-            BattleUnit target = null;
-            
-            foreach (var kv in battleRoom.Units)
+            if (!BattleSkillHelper.TryExecuteNormalAttack(attacker, request.targetId, out BattleSkillHelper.SkillExecutionResult executionResult))
             {
-                BattleUnit battleUnit = kv.Value;
-                if (battleUnit != null && !battleUnit.IsDead)
-                {
-                    if (battleUnit.Camp == UnitCamp.Friend && attacker == null)
-                    {
-                        attacker = battleUnit;
-                    }
-                    else if (battleUnit.Id == request.targetId)
-                    {
-                        target = battleUnit;
-                    }
-                }
-            }
-            
-            if (attacker == null)
-            {
-                response.Error = ErrorCode.ERR_BattleUnitNotFound;
-                response.Message = "Attacker not found";
+                response.Error = executionResult.Error;
+                response.Message = executionResult.Message;
                 return;
             }
-            
-            if (target == null || target.IsDead)
-            {
-                response.Error = ErrorCode.ERR_BattleTargetNotFound;
-                response.Message = "Target not found or dead";
-                return;
-            }
-            
-            if (target.Camp == attacker.Camp)
-            {
-                response.Error = ErrorCode.ERR_BattleCannotAttackAlly;
-                response.Message = "Cannot attack ally";
-                return;
-            }
-            
-            BattleUnitCombatComponent combat = attacker.GetComponent<BattleUnitCombatComponent>();
-            if (combat == null || !combat.IsAttackReady())
-            {
-                response.Error = ErrorCode.ERR_BattleAttackNotReady;
-                response.Message = "Attack not ready";
-                return;
-            }
-            
-            int damage = CalculateDamage(attacker, target);
-            target.TakeDamage(damage);
-            
-            combat.StartAttackCooldown();
+
+            BattleUnit mainTarget = executionResult.MainTarget;
+            NumericComponent attackerNumeric = attacker.GetComponent<NumericComponent>();
+            NumericComponent mainTargetNumeric = mainTarget.GetComponent<NumericComponent>();
             
             response.result = CombatResultProto.Create();
             response.result.attackerId = attacker.Id;
-            response.result.targetId = target.Id;
-            response.result.damage = damage;
-            
-            NumericComponent attackerNumeric = attacker.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-            
+            response.result.targetId = mainTarget.Id;
+            response.result.damage = executionResult.TotalDamage;
             response.result.attackerCurrentHp = attackerNumeric?.GetAsInt(NumericType.Hp) ?? 0;
-            response.result.targetCurrentHp = targetNumeric?.GetAsInt(NumericType.Hp) ?? 0;
-            response.result.targetDead = target.IsDead;
+            response.result.targetCurrentHp = mainTargetNumeric?.GetAsInt(NumericType.Hp) ?? 0;
+            response.result.targetDead = mainTarget.IsDead;
             response.result.attackerDead = attacker.IsDead;
             
-            Log.Debug($"玩家攻击: Attacker={attacker.Id}, Target={target.Id}, Damage={damage}");
+            Log.Info($"玩家技能化普攻: Attacker={attacker.Id}, SkillId={executionResult.SkillId}, Targets={executionResult.HitTargetsCount}, TotalDamage={executionResult.TotalDamage}");
             
             await ETTask.CompletedTask;
-        }
-        
-        private static int CalculateDamage(BattleUnit attacker, BattleUnit target)
-        {
-            NumericComponent attackerNumeric = attacker.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-            
-            if (attackerNumeric == null || targetNumeric == null)
-            {
-                return 1;
-            }
-            
-            int attack = attackerNumeric.GetAsInt(NumericType.Attack);
-            int defense = targetNumeric.GetAsInt(NumericType.Defense);
-            
-            int damage = attack - defense;
-            if (damage < 1)
-            {
-                damage = 1;
-            }
-            
-            return damage;
         }
     }
 }

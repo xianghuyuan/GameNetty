@@ -12,7 +12,7 @@ using TEngine;
 
 namespace GameLogic
 {
-	public partial class BattleMonsterinfoUI : UIWindow
+	public partial class BattleMonsterInfoUI : UIWidget
 	{
 		#region 脚本工具生成的代码
 
@@ -20,7 +20,6 @@ namespace GameLogic
 		private TextMeshProUGUI m_tmpHP = null!;
 		private TextMeshProUGUI m_tmpAk = null!;
 		private TextMeshProUGUI m_tmpAkDistance = null!;
-		private Slider m_slider = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -33,15 +32,11 @@ namespace GameLogic
 			m_tmpHP = m_bindComponent.GetComponent<TextMeshProUGUI>(0);
 			m_tmpAk = m_bindComponent.GetComponent<TextMeshProUGUI>(1);
 			m_tmpAkDistance = m_bindComponent.GetComponent<TextMeshProUGUI>(2);
-			m_slider = m_bindComponent.GetComponent<Slider>(3);
-			m_slider.onValueChanged.AddListener(OnSliderChange);
 		}
 
 		#endregion
 
 		#region 事件
-
-		private partial void OnSliderChange(float value);
 
 		#endregion
 	}

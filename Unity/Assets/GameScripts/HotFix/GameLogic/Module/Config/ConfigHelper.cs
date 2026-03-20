@@ -30,10 +30,28 @@ namespace ET
         public static AIConfigCategory AIConfig => tables?.AIConfigCategory;
         
         /// <summary>
+        /// 怪物配置表快捷访问
+        /// 使用：ConfigHelper.MonsterUnitConfig.Get(id)
+        /// </summary>
+        public static MonsterUnitConfigCategory MonsterUnitConfig => tables?.MonsterUnitConfigCategory;
+
+        /// <summary>
         /// 资源配置表快捷访问
         /// 使用：ConfigHelper.ResourceConfig.Get(id)
         /// </summary>
         public static ResourceConfigCategory ResourceConfig => tables?.ResourceConfigCategory;
+
+        public static UnitCombatConfigCategory UnitCombatConfig => tables?.UnitCombatConfigCategory;
+
+        public static SkillConfigCategory SkillConfig => tables?.SkillConfigCategory;
+
+        public static SkillTargetingConfigCategory SkillTargetingConfig => tables?.SkillTargetingConfigCategory;
+
+        public static SkillCastCheckConfigCategory SkillCastCheckConfig => tables?.SkillCastCheckConfigCategory;
+
+        public static SkillEffectGroupConfigCategory SkillEffectGroupConfig => tables?.SkillEffectGroupConfigCategory;
+
+        public static SkillEffectConfigCategory SkillEffectConfig => tables?.SkillEffectConfigCategory;
         
         /// <summary>
         /// 清理配置引用

@@ -1,6 +1,6 @@
 namespace GameLogic
 {
-    public partial class BattlePlayerInfoUI : UIWindow
+    public partial class BattlePlayerInfoUI : UIWidget
     {
         private long _battleUnitId;
         
@@ -19,7 +19,6 @@ namespace GameLogic
         public void SetData(long hp, long maxHp, long attack, float range = 1.5f)
         {
             m_tmpHP.text = $"HP: {hp}/{maxHp}";
-            m_slider.value = maxHp > 0 ? (float)hp / maxHp : 0;
             m_tmpAk.text = $"ATK: {attack}";
             m_tmpAkDistance.text = $"Range: {range}";
         }
@@ -30,11 +29,6 @@ namespace GameLogic
         public void RefreshData()
         {
             // 此方法需要在ET上下文中调用，由外部传入数据
-        }
-        
-        private partial void OnSliderChange(float value)
-        {
-            // 血条变化不需要额外处理
         }
     }
 }

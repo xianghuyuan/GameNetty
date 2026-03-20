@@ -385,6 +385,21 @@ namespace GameLogic
             OnSetWindowVisible();
         }
         
+        /// <summary>
+        /// 关闭窗口。
+        /// </summary>
+        /// <param name="window">窗口实例</param>
+        public void CloseUI(UIWindow window)
+        {
+            if (window == null)
+                return;
+
+            window.InternalDestroy();
+            Pop(window);
+            OnSortWindowDepth(window.WindowLayer);
+            OnSetWindowVisible();
+        }
+        
         public void HideUI<T>() where T : UIWindow
         {
             HideUI(typeof(T));

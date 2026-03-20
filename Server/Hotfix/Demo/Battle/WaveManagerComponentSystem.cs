@@ -123,8 +123,8 @@ namespace ET.Server
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             
+            // 卷轴战斗中当前只使用 X 坐标，PositionZ 暂时保留但不参与布局。
             float centerX = spawnConfig.PositionX;
-            float centerZ = spawnConfig.PositionZ;
             float spreadRange = spawnConfig.SpreadRange;
             
             // 收集本批次创建的怪物信息
@@ -135,16 +135,15 @@ namespace ET.Server
                 for (int i = 0; i < monsterInfo.Count; i++)
                 {
                     float offsetX = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
-                    float offsetZ = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
-                    
-                    Vector3 position = new Vector3(centerX + offsetX, 0, centerZ + offsetZ);
+
+                    Vector3 position = new Vector3(centerX + offsetX, 0, 0);
                     BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterInfo.MonsterId, position);
                     
                     battleRoom.Units[monster.Id] = monster;
                     self.CurrentWaveMonsterIds.Add(monster.Id);
                     
                     // 使用统一方法创建单位信息（包含数值）
-                    BattleUnitInfo unitInfo = BattleRoomSystem.CreateBattleUnitInfo(monster);
+                    BattleUnitInfo unitInfo = BattleUnitHelper.CreateBattleUnitInfo(monster);
                     battleUnitInfos.Add(unitInfo);
                     
                     Log.Debug($"生成怪物: MonsterId={monster.Id}, ConfigId={monsterInfo.MonsterId}, Position={position}");

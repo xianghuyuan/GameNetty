@@ -34,7 +34,11 @@ namespace ET
                 numeric.Set(NumericType.MaxHp, unitInfo.maxHp);
                 numeric.Set(NumericType.Attack, unitInfo.attack);
 
-                Log.Debug($"创建战斗单位: UnitId={unit.Id}, ConfigId={unit.ConfigId}, Camp={unit.Camp}, HP={unitInfo.hp}/{unitInfo.maxHp}, ATK={unitInfo.attack}");
+                // 添加战斗组件，使用带参数的 Awake 进行设置
+                unit.AddComponent<BattleUnitCombatComponent, float>(unitInfo.attackRange);
+                unit.AddComponent<BattleMoveComponent>();
+
+                Log.Debug($"创建战斗单位: UnitId={unit.Id}, ConfigId={unit.ConfigId}, Camp={unit.Camp}, HP={unitInfo.hp}/{unitInfo.maxHp}, ATK={unitInfo.attack}, Range={unitInfo.attackRange}");
 
                 // 发布战斗单位创建事件，供表现层订阅
                 EventSystem.Instance.Publish(root, new BattleUnitCreated

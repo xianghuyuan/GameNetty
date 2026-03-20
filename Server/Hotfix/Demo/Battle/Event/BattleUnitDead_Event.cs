@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace ET.Server
 {
     [Event(SceneType.Battle)]
@@ -7,6 +9,7 @@ namespace ET.Server
     {
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
         {
+            Log.Debug("攻击伤害计算");
             BattleUnit deadUnit = args.BattleUnit;
             if (deadUnit == null)
             {

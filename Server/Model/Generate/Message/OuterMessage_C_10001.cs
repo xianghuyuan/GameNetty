@@ -4787,6 +4787,106 @@ namespace ET
         }
     }
 
+    // 战斗单位位置同步（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BattleUnitPositionSync)]
+    public partial class M2C_BattleUnitPositionSync : MessageObject, IMessage
+    {
+        public static M2C_BattleUnitPositionSync Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BattleUnitPositionSync), isFromPool) as M2C_BattleUnitPositionSync;
+        }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 单位ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long unitId { get; set; }
+
+        /// <summary>
+        /// 最新位置
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.unitId = default;
+            this.position = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 战斗单位移动指令（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BattleUnitMoveCommand)]
+    public partial class M2C_BattleUnitMoveCommand : MessageObject, IMessage
+    {
+        public static M2C_BattleUnitMoveCommand Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BattleUnitMoveCommand), isFromPool) as M2C_BattleUnitMoveCommand;
+        }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 单位ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long unitId { get; set; }
+
+        /// <summary>
+        /// 移动目标点
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public Unity.Mathematics.float3 targetPosition { get; set; }
+
+        /// <summary>
+        /// 移动速度（米/秒）
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public float moveSpeed { get; set; }
+
+        /// <summary>
+        /// true=开始/更新移动, false=停止移动
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public bool isMoving { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.unitId = default;
+            this.targetPosition = default;
+            this.moveSpeed = default;
+            this.isMoving = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
     // 单位死亡同步（服务器推送）
     [MemoryPackable]
     [Message(OuterMessage.M2C_UnitDead)]
@@ -5081,9 +5181,11 @@ namespace ET
         public const ushort M2C_BuffRemove = 10133;
         public const ushort M2C_BuffStackUpdate = 10134;
         public const ushort M2C_UnitHpSync = 10135;
-        public const ushort M2C_UnitDead = 10136;
-        public const ushort M2C_SkillCast = 10137;
-        public const ushort M2C_MonsterStateChange = 10138;
-        public const ushort M2C_RoomRewardSync = 10139;
+        public const ushort M2C_BattleUnitPositionSync = 10136;
+        public const ushort M2C_BattleUnitMoveCommand = 10137;
+        public const ushort M2C_UnitDead = 10138;
+        public const ushort M2C_SkillCast = 10139;
+        public const ushort M2C_MonsterStateChange = 10140;
+        public const ushort M2C_RoomRewardSync = 10141;
     }
 }

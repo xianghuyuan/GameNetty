@@ -19,12 +19,32 @@ public partial class Tables
     /// 资源配置
     /// </summary>
     public ResourceConfigCategory ResourceConfigCategory {get; }
+    public MonsterUnitConfigCategory MonsterUnitConfigCategory {get; }
+    public SpawnConfigCategory SpawnConfigCategory {get; }
+    public StageConfigCategory StageConfigCategory {get; }
+    public WaveConfigCategory WaveConfigCategory {get; }
+    public UnitCombatConfigCategory UnitCombatConfigCategory {get; }
+    public SkillConfigCategory SkillConfigCategory {get; }
+    public SkillTargetingConfigCategory SkillTargetingConfigCategory {get; }
+    public SkillCastCheckConfigCategory SkillCastCheckConfigCategory {get; }
+    public SkillEffectGroupConfigCategory SkillEffectGroupConfigCategory {get; }
+    public SkillEffectConfigCategory SkillEffectConfigCategory {get; }
 
     public Tables(System.Func<string, ByteBuf> loader)
     {
         AIConfigCategory = new AIConfigCategory(loader("AIConfigCategory"));
         UnitConfigCategory = new UnitConfigCategory(loader("UnitConfigCategory"));
         ResourceConfigCategory = new ResourceConfigCategory(loader("ResourceConfigCategory"));
+        MonsterUnitConfigCategory = new MonsterUnitConfigCategory(loader("MonsterUnitConfigCategory"));
+        SpawnConfigCategory = new SpawnConfigCategory(loader("SpawnConfigCategory"));
+        StageConfigCategory = new StageConfigCategory(loader("StageConfigCategory"));
+        WaveConfigCategory = new WaveConfigCategory(loader("WaveConfigCategory"));
+        UnitCombatConfigCategory = new UnitCombatConfigCategory(loader("UnitCombatConfigCategory"));
+        SkillConfigCategory = new SkillConfigCategory(loader("SkillConfigCategory"));
+        SkillTargetingConfigCategory = new SkillTargetingConfigCategory(loader("SkillTargetingConfigCategory"));
+        SkillCastCheckConfigCategory = new SkillCastCheckConfigCategory(loader("SkillCastCheckConfigCategory"));
+        SkillEffectGroupConfigCategory = new SkillEffectGroupConfigCategory(loader("SkillEffectGroupConfigCategory"));
+        SkillEffectConfigCategory = new SkillEffectConfigCategory(loader("SkillEffectConfigCategory"));
         ResolveRef();
     }
     
@@ -33,6 +53,16 @@ public partial class Tables
         AIConfigCategory.ResolveRef(this);
         UnitConfigCategory.ResolveRef(this);
         ResourceConfigCategory.ResolveRef(this);
+        MonsterUnitConfigCategory.ResolveRef(this);
+        SpawnConfigCategory.ResolveRef(this);
+        StageConfigCategory.ResolveRef(this);
+        WaveConfigCategory.ResolveRef(this);
+        UnitCombatConfigCategory.ResolveRef(this);
+        SkillConfigCategory.ResolveRef(this);
+        SkillTargetingConfigCategory.ResolveRef(this);
+        SkillCastCheckConfigCategory.ResolveRef(this);
+        SkillEffectGroupConfigCategory.ResolveRef(this);
+        SkillEffectConfigCategory.ResolveRef(this);
     }
 }
 

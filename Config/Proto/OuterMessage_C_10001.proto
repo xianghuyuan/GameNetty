@@ -1047,6 +1047,24 @@ message M2C_UnitHpSync // IMessage
     int64 shieldValue = 4;      // 护盾值
 }
 
+// 战斗单位位置同步（服务器推送）
+message M2C_BattleUnitPositionSync // IMessage
+{
+    int64 battleId = 1;                     // 战斗ID
+    int64 unitId = 2;                       // 单位ID
+    Unity.Mathematics.float3 position = 3;  // 最新位置
+}
+
+// 战斗单位移动指令（服务器推送）
+message M2C_BattleUnitMoveCommand // IMessage
+{
+    int64 battleId = 1;                          // 战斗ID
+    int64 unitId = 2;                            // 单位ID
+    Unity.Mathematics.float3 targetPosition = 3; // 移动目标点
+    float moveSpeed = 4;                         // 移动速度（米/秒）
+    bool isMoving = 5;                           // true=开始/更新移动, false=停止移动
+}
+
 // 单位死亡同步（服务器推送）
 message M2C_UnitDead // IMessage
 {

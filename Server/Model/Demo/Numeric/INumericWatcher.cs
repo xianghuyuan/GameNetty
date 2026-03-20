@@ -2,6 +2,6 @@
 {
 	public interface INumericWatcher
 	{
-		void Run(Unit unit, NumbericChange args);
+		void Run(BattleUnit unit, NumbericChange args);
 	}
 }
