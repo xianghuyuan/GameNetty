@@ -4,9 +4,10 @@ namespace GameLogic
 {
     public partial class BattleUI
     {
-        private partial void OnClickBeginBtn()
+        private async partial void OnClickBeginBtn()
         {
-            BattleHelper.StartBattle(global::Init.Root).Coroutine();
+            await BattleHelper.StartBattle(global::Init.Root);
+            BattleHelper.BattleReady(global::Init.Root).Coroutine();
         }
     }
 }

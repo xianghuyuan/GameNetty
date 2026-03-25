@@ -7,8 +7,6 @@ namespace ET.Server
     [FriendOf(typeof(BattleUnit))]
     public static partial class BattleMoveComponentSystem
     {
-        private const float MoveCommandTargetThreshold = 0.25f;
-
         [EntitySystem]
         private static void Awake(this BattleMoveComponent self)
         {
@@ -18,8 +16,6 @@ namespace ET.Server
         [EntitySystem]
         private static void Destroy(this BattleMoveComponent self)
         {
-            self.IsMoving = false;
-            self.IsMoveCommandActive = false;
         }
 
         public static void StartMove(this BattleMoveComponent self, Vector3 targetPosition)
@@ -29,50 +25,23 @@ namespace ET.Server
             {
                 return;
             }
-
             NumericComponent numeric = owner.GetComponent<NumericComponent>();
             float moveSpeed = numeric?.GetAsFloat(NumericType.Speed) ?? self.MoveSpeed;
             if (moveSpeed <= 0f)
             {
                 moveSpeed = self.MoveSpeed;
             }
-
-            self.LastUpdateTime = TimeInfo.Instance.ServerFrameTime();
-            self.TargetPosition = targetPosition;
             self.MoveSpeed = moveSpeed;
-            self.IsMoving = true;
-
-            if (!self.IsMoveCommandActive || BattleDistanceHelper.GetDistance(self.LastMoveCommandTarget, targetPosition) >= MoveCommandTargetThreshold)
-            {
-                BattleUnitHelper.BroadcastMoveCommand(owner, targetPosition, moveSpeed, true);
-                self.IsMoveCommandActive = true;
-                self.LastMoveCommandTarget = targetPosition;
-            }
         }
 
         public static void StopMove(this BattleMoveComponent self)
         {
-            BattleUnit owner = self.GetParent<BattleUnit>();
-            self.LastUpdateTime = TimeInfo.Instance.ServerFrameTime();
-            self.IsMoving = false;
-
-            if (!self.IsMoveCommandActive || owner == null)
-            {
-                return;
-            }
-
-            self.IsMoveCommandActive = false;
-            self.LastMoveCommandTarget = owner.Position;
-            BattleUnitHelper.BroadcastMoveCommand(owner, owner.Position, 0f, false);
+            self.MoveSpeed = 0f;
         }
 
-        public static void Update(this BattleMoveComponent self)
+        [EntitySystem]
+        private static void Update(this BattleMoveComponent self)
         {
-            if (!self.IsMoving)
-            {
-                return;
-            }
-
             BattleUnit owner = self.GetParent<BattleUnit>();
             if (owner == null || owner.IsDead)
             {
@@ -111,6 +80,7 @@ namespace ET.Server
             if (BattleDistanceHelper.GetDistance(owner.Position, self.TargetPosition) < 0.01f)
             {
                 self.StopMove();
+                EventSystem.Instance.Publish(self.Scene<BattleRoom>()!, new ReachTargetEvent { Unit = owner });
             }
         }
     }

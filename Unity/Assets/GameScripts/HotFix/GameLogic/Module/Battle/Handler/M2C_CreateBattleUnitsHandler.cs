@@ -1,5 +1,8 @@
 namespace ET
 {
+    /// <summary>
+    /// 消息推送
+    /// </summary>
     [MessageHandler(SceneType.Main)]
     public class M2C_CreateBattleUnitsHandler : MessageHandler<Scene, M2C_CreateBattleUnits>
     {

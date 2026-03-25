@@ -82,22 +82,19 @@ namespace ET.Server
             unit.AddComponent<NumericComponent>();
             unit.AddComponent<NumericNoticeComponent>();
             unit.AddComponent<BattleMoveComponent>();
-            unit.AddComponent<BattleActionDecisionComponent>();
+            
             
             // 添加战斗组件
             BattleUnitCombatComponent combatComp = unit.AddComponent<BattleUnitCombatComponent>();
             combatComp.AttackCooldown = 1000;
             combatComp.AttackRange = 2.5f;
-
+            unit.AddComponent<BattleActionDecisionComponent>();
             // 初始化属性
             InitUnitNumeric(unit, configId);
 
             BattleSkillHelper.ApplyNormalAttackConfig(unit, combatComp);
-
-            BattleAIComponent aiComp = unit.AddComponent<BattleAIComponent>();
-
-            PlayerCombatModeComponent modeComponent = unit.AddComponent<PlayerCombatModeComponent>();
-            modeComponent.AutoAI = aiComp;
+            
+            unit.AddComponent<PlayerCombatModeComponent>();
         
             return unit;
         }
@@ -114,21 +111,18 @@ namespace ET.Server
             unit.AddComponent<NumericComponent>();
             unit.AddComponent<NumericNoticeComponent>();
             unit.AddComponent<BattleMoveComponent>();
-            unit.AddComponent<BattleActionDecisionComponent>();
+            
             
             // 添加战斗组件
             BattleUnitCombatComponent combatComp = unit.AddComponent<BattleUnitCombatComponent>();
             combatComp.AttackCooldown = 1500;
             combatComp.AttackRange = 2.0f;
-        
+            unit.AddComponent<BattleActionDecisionComponent>();
             // 初始化属性
             InitMonsterNumeric(unit, configId);
 
             BattleSkillHelper.ApplyNormalAttackConfig(unit, combatComp);
-
-            // 添加简单AI组件
-            unit.AddComponent<BattleAIComponent>();
-        
+            
             return unit;
         }
         // 初始化英雄数值（从 UnitConfig 读取）

@@ -37,7 +37,7 @@ namespace ET.Server
             return unitInfo;
         }
 
-        public static void BroadcastMoveCommand(BattleUnit unit, Vector3 targetPosition, float moveSpeed, bool isMoving)
+        public static void BroadcastMoveCommand(BattleUnit unit, Vector3 targetPosition, float moveSpeed, bool isMoving, float duration, float moveCoefficient)
         {
             if (unit == null)
             {
@@ -56,9 +56,153 @@ namespace ET.Server
             message.targetPosition = new float3(targetPosition.X, targetPosition.Y, targetPosition.Z);
             message.moveSpeed = moveSpeed;
             message.isMoving = isMoving;
+            message.duration = duration;
+            message.moveCoefficient = moveCoefficient;
 
             Scene mapScene = battleRoom.Root();
             UnitComponent unitComponent = mapScene.GetComponent<UnitComponent>();
+            foreach (long playerId in battleRoom.PlayerIds)
+            {
+                Unit player = unitComponent.Get(playerId);
+                if (player != null)
+                {
+                    MapMessageHelper.SendToClient(player, message);
+                }
+            }
+        }
+
+        public static void BroadcastSkillCast(BattleUnit caster, int skillId, long targetId, Vector3 targetPosition)
+        {
+            if (caster == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = caster.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+            
+            M2C_SkillCast message = M2C_SkillCast.Create();
+            message.casterId = caster.Id;
+            message.skillId = skillId;
+            message.targetId = targetId;
+            message.targetPos = new float3(targetPosition.X, targetPosition.Y, targetPosition.Z);
+
+            BroadcastToPlayers(battleRoom, message);
+        }
+
+        public static void BroadcastDamage(BattleUnit attacker, BattleUnit target, int damage, int damageType)
+        {
+            if (attacker == null || target == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = attacker.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            NumericComponent numeric = target.GetComponent<NumericComponent>();
+
+            M2C_Damage message = M2C_Damage.Create();
+            message.attackerId = attacker.Id;
+            message.targetId = target.Id;
+            message.damage = damage;
+            message.isCrit = false;
+            message.targetCurrentHp = numeric?.GetAsInt(NumericType.Hp) ?? 0;
+            message.targetMaxHp = numeric?.GetAsInt(NumericType.MaxHp) ?? 0;
+            message.targetDead = target.IsDead;
+            message.damageType = damageType;
+
+            BroadcastToPlayers(battleRoom, message);
+        }
+
+        public static void BroadcastUnitDead(BattleUnit unit, long killerId)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = unit.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            M2C_UnitDead message = M2C_UnitDead.Create();
+            message.unitId = unit.Id;
+            message.killerId = killerId;
+
+            BroadcastToPlayers(battleRoom, message);
+        }
+        
+        /// <summary>
+        /// 广播单位冻结状态
+        /// </summary>
+        public static void BroadcastUnitFrozen(BattleUnit unit, int durationMs)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = unit.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            M2C_UnitFrozen message = M2C_UnitFrozen.Create();
+            message.unitId = unit.Id;
+            message.durationMs = durationMs;
+
+            BroadcastToPlayers(battleRoom, message);
+        }
+        
+        /// <summary>
+        /// 广播单位击退
+        /// </summary>
+        public static void BroadcastKnockback(BattleUnit unit, float distance, float direction)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = unit.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            M2C_UnitKnockback message = M2C_UnitKnockback.Create();
+            message.unitId = unit.Id;
+            message.distance = distance;
+            message.direction = direction;
+            message.newPosition = new float3(unit.Position.X, unit.Position.Y, unit.Position.Z);
+
+            BroadcastToPlayers(battleRoom, message);
+        }
+
+        private static void BroadcastToPlayers(BattleRoom battleRoom, IMessage message)
+        {
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            Scene mapScene = battleRoom.Root();
+            UnitComponent unitComponent = mapScene.GetComponent<UnitComponent>();
+            if (unitComponent == null)
+            {
+                return;
+            }
+
             foreach (long playerId in battleRoom.PlayerIds)
             {
                 Unit player = unitComponent.Get(playerId);

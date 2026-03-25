@@ -29,7 +29,7 @@ namespace ET
             
             Log.Info($"战斗开始: BattleId={self.BattleId}, Type={self.BattleType}");
             
-            // 触发战斗开始事件
+            //创建实体
             EventSystem.Instance.Publish(self.Scene(), new BattleStart { Battle = self });
         }
         

@@ -22,6 +22,7 @@ namespace ET
             CastRange = _buf.ReadFloat();
             EdgeDistance = _buf.ReadFloat();
             UseCollisionRadius = _buf.ReadBool();
+            SearchRadius = _buf.ReadFloat();
             SectorAngle = _buf.ReadFloat();
             TargetCampRelation = _buf.ReadInt();
             RequireAlive = _buf.ReadBool();
@@ -67,6 +68,11 @@ namespace ET
         public readonly bool UseCollisionRadius;
 
         /// <summary>
+        /// 搜索半径
+        /// </summary>
+        public readonly float SearchRadius;
+
+        /// <summary>
         /// 扇形角度
         /// </summary>
         public readonly float SectorAngle;
@@ -104,6 +110,7 @@ namespace ET
             + "CastRange:" + CastRange + ","
             + "EdgeDistance:" + EdgeDistance + ","
             + "UseCollisionRadius:" + UseCollisionRadius + ","
+            + "SearchRadius:" + SearchRadius + ","
             + "SectorAngle:" + SectorAngle + ","
             + "TargetCampRelation:" + TargetCampRelation + ","
             + "RequireAlive:" + RequireAlive + ","

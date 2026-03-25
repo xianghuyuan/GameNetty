@@ -18,6 +18,7 @@ namespace GameLogic
 
 		private UIBindComponent m_bindComponent;
 		private Button m_btnBegin = null!;
+		private TextMeshProUGUI m_tmpBegin = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -28,6 +29,7 @@ namespace GameLogic
 				return;
 			}
 			m_btnBegin = m_bindComponent.GetComponent<Button>(0);
+			m_tmpBegin = m_bindComponent.GetComponent<TextMeshProUGUI>(1);
 			m_btnBegin.onClick.AddListener(OnClickBeginBtn);
 		}
 

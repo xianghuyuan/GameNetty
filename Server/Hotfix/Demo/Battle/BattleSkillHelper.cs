@@ -24,6 +24,9 @@ namespace ET.Server
         private const int FormulaTypeAttackMinusDefense = 1;
         private const int FormulaTypeFixedValue = 2;
 
+        private const int MonsterTypeElite = 2;
+        private const int MonsterTypeBoss = 3;
+
         public struct SkillExecutionResult
         {
             public int Error;
@@ -42,6 +45,7 @@ namespace ET.Server
             public SkillTargetingConfig TargetingConfig;
             public BattleUnit Target;
             public Vector3 DesiredCastPosition;
+            public float DesiredCastDistance;
             public float RequiredMoveDistance;
         }
 
@@ -97,7 +101,14 @@ namespace ET.Server
             return IsInSkillRange(caster, target, targetingConfig);
         }
 
-        public static bool TrySelectBestAutoSkillPlan(BattleUnit caster, out AutoCastPlan plan)
+        /// <summary>
+        /// 遍历所有单位选目标
+        /// </summary>
+        /// <param name="caster"></param>
+        /// <param name="preferredTarget"></param>
+        /// <param name="plan"></param>
+        /// <returns></returns>
+        public static bool TrySelectBestAutoSkillPlan(BattleUnit caster, BattleUnit preferredTarget, out AutoCastPlan plan)
         {
             plan = default;
 
@@ -114,18 +125,25 @@ namespace ET.Server
                 return false;
             }
 
+            AutoBattleStrategyConfig strategyConfig = unitCombatConfig.AutoBattleStrategyIdConfig;
+
             List<int> autoSkillIds = GetAutoSkillIds(unitCombatConfig);
             if (autoSkillIds.Count == 0)
             {
                 return false;
             }
 
-            if (TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, true, out plan))
+            if (TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, strategyConfig, preferredTarget, true, out plan))
             {
                 return true;
             }
 
-            return TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, false, out plan);
+            if (strategyConfig != null && !strategyConfig.AllowPreMoveOnCooldown)
+            {
+                return false;
+            }
+
+            return TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, strategyConfig, preferredTarget, false, out plan);
         }
 
         public static BattleUnit FindPlayerBattleUnit(BattleRoom battleRoom, long ownerId)
@@ -162,7 +180,8 @@ namespace ET.Server
             return TryExecuteSkill(caster, unitCombatConfig.NormalAttackSkillId, explicitTargetId, out result);
         }
 
-        public static bool TryExecuteSkill(BattleUnit caster, int skillId, long explicitTargetId, out SkillExecutionResult result)
+        public static bool TryExecuteSkill(BattleUnit caster, int skillId, long explicitTargetId, out SkillExecutionResult result,
+            bool ignoreAutoModeLimit = false)
         {
             result = default;
 
@@ -224,7 +243,7 @@ namespace ET.Server
                 return false;
             }
 
-            if (castCheckConfig.CheckAutoModeLimit)
+            if (!ignoreAutoModeLimit && castCheckConfig.CheckAutoModeLimit)
             {
                 PlayerCombatModeComponent modeComponent = caster.GetComponent<PlayerCombatModeComponent>();
                 if (modeComponent != null && modeComponent.IsAutoBattle)
@@ -243,16 +262,19 @@ namespace ET.Server
                 return false;
             }
 
+            BattleUnit mainTarget = targets[0];
+            BattleUnitHelper.BroadcastSkillCast(caster, skillId, mainTarget.Id, mainTarget.Position);
+
             int totalDamage = 0;
             foreach (BattleUnit target in targets)
             {
-                totalDamage += ApplyEffects(caster, target, effectGroupConfig);
+                totalDamage += ApplyEffects(caster, target, effectGroupConfig, skillConfig);
             }
 
             long cooldownEnd = combat.StartSkillCooldown(skillConfig);
 
             result.SkillId = skillId;
-            result.MainTarget = targets[0];
+            result.MainTarget = mainTarget;
             result.HitTargetsCount = targets.Count;
             result.TotalDamage = totalDamage;
             result.CooldownEnd = cooldownEnd;
@@ -260,7 +282,7 @@ namespace ET.Server
         }
 
         private static bool TryBuildAutoCastPlan(BattleUnit caster, BattleRoom battleRoom, BattleUnitCombatComponent combat,
-            List<int> autoSkillIds, bool readyOnly, out AutoCastPlan bestPlan)
+            List<int> autoSkillIds, AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget, bool readyOnly, out AutoCastPlan bestPlan)
         {
             bestPlan = default;
             bool found = false;
@@ -285,8 +307,8 @@ namespace ET.Server
 
                     float distance = GetDistance(caster.Position, target.Position);
 
-                    float allowedDistance = GetAllowedCastDistance(caster, target, targetingConfig);
-                    float requiredMoveDistance = System.MathF.Max(0f, distance - allowedDistance);
+                    float desiredCastDistance = GetDesiredCastDistance(caster, target, targetingConfig);
+                    float requiredMoveDistance = System.MathF.Max(0f, distance - desiredCastDistance);
                     Vector3 desiredCastPosition = ComputeDesiredCastPosition(caster, target, targetingConfig);
 
                     AutoCastPlan candidate = new AutoCastPlan
@@ -296,10 +318,11 @@ namespace ET.Server
                         TargetingConfig = targetingConfig,
                         Target = target,
                         DesiredCastPosition = desiredCastPosition,
+                        DesiredCastDistance = desiredCastDistance,
                         RequiredMoveDistance = requiredMoveDistance,
                     };
 
-                    if (!found || IsBetterAutoCastPlan(candidate, bestPlan))
+                    if (!found || IsBetterAutoCastPlan(caster, candidate, bestPlan, strategyConfig, preferredTarget))
                     {
                         bestPlan = candidate;
                         found = true;
@@ -323,15 +346,6 @@ namespace ET.Server
                 return false;
             }
 
-            if (castCheckConfig.CheckAutoModeLimit)
-            {
-                PlayerCombatModeComponent modeComponent = caster.GetComponent<PlayerCombatModeComponent>();
-                if (modeComponent != null && modeComponent.IsAutoBattle)
-                {
-                    return false;
-                }
-            }
-
             if (readyOnly && castCheckConfig.CheckCooldown && !combat.IsSkillReady(skillConfig))
             {
                 return false;
@@ -340,8 +354,31 @@ namespace ET.Server
             return true;
         }
 
-        private static bool IsBetterAutoCastPlan(AutoCastPlan candidate, AutoCastPlan current)
+        private static bool IsBetterAutoCastPlan(BattleUnit caster, AutoCastPlan candidate, AutoCastPlan current,
+            AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget)
         {
+            if (TryCompareCurrentTargetPreference(candidate, current, strategyConfig, preferredTarget, out bool candidateWinsByCurrentTarget))
+            {
+                return candidateWinsByCurrentTarget;
+            }
+
+            int candidateTargetWeight = GetTargetTypeWeight(candidate.Target, strategyConfig);
+            int currentTargetWeight = GetTargetTypeWeight(current.Target, strategyConfig);
+            if (candidateTargetWeight != currentTargetWeight)
+            {
+                return candidateTargetWeight > currentTargetWeight;
+            }
+
+            if (TryCompareSkillSelectionRule(candidate, current, strategyConfig, out bool candidateWinsBySkillRule))
+            {
+                return candidateWinsBySkillRule;
+            }
+
+            if (TryCompareTargetSelectionRule(caster, candidate, current, strategyConfig, out bool candidateWinsByTargetRule))
+            {
+                return candidateWinsByTargetRule;
+            }
+
             if (candidate.RequiredMoveDistance + 0.0001f < current.RequiredMoveDistance)
             {
                 return true;
@@ -365,6 +402,152 @@ namespace ET.Server
             }
 
             return (candidate.SkillConfig?.Priority ?? 0) > (current.SkillConfig?.Priority ?? 0);
+        }
+
+        private static bool TryCompareCurrentTargetPreference(AutoCastPlan candidate, AutoCastPlan current,
+            AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget, out bool candidateWins)
+        {
+            candidateWins = false;
+
+            if (preferredTarget == null || preferredTarget.IsDead || strategyConfig == null || !strategyConfig.PreferCurrentTarget)
+            {
+                return false;
+            }
+
+            bool candidateIsPreferredTarget = candidate.Target?.Id == preferredTarget.Id;
+            bool currentIsPreferredTarget = current.Target?.Id == preferredTarget.Id;
+            if (candidateIsPreferredTarget == currentIsPreferredTarget)
+            {
+                return false;
+            }
+
+            float tolerance = MathF.Max(0f, strategyConfig.TargetSwitchTolerance);
+            if (candidateIsPreferredTarget && candidate.RequiredMoveDistance <= current.RequiredMoveDistance + tolerance)
+            {
+                candidateWins = true;
+                return true;
+            }
+
+            if (currentIsPreferredTarget && current.RequiredMoveDistance <= candidate.RequiredMoveDistance + tolerance)
+            {
+                candidateWins = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryCompareSkillSelectionRule(AutoCastPlan candidate, AutoCastPlan current,
+            AutoBattleStrategyConfig strategyConfig, out bool candidateWins)
+        {
+            candidateWins = false;
+
+            AutoBattleSkillSelectRule rule = (AutoBattleSkillSelectRule)(strategyConfig?.SkillSelectRule ?? (int)AutoBattleSkillSelectRule.ShortestMoveThenPriority);
+            switch (rule)
+            {
+                case AutoBattleSkillSelectRule.HighestPriorityThenMove:
+                {
+                    int candidatePriority = candidate.SkillConfig?.Priority ?? 0;
+                    int currentPriority = current.SkillConfig?.Priority ?? 0;
+                    if (candidatePriority != currentPriority)
+                    {
+                        candidateWins = candidatePriority > currentPriority;
+                        return true;
+                    }
+
+                    if (MathF.Abs(candidate.RequiredMoveDistance - current.RequiredMoveDistance) > 0.0001f)
+                    {
+                        candidateWins = candidate.RequiredMoveDistance < current.RequiredMoveDistance;
+                        return true;
+                    }
+
+                    return false;
+                }
+                case AutoBattleSkillSelectRule.ShortestMoveThenPriority:
+                default:
+                {
+                    if (MathF.Abs(candidate.RequiredMoveDistance - current.RequiredMoveDistance) > 0.0001f)
+                    {
+                        candidateWins = candidate.RequiredMoveDistance < current.RequiredMoveDistance;
+                        return true;
+                    }
+
+                    int candidatePriority = candidate.SkillConfig?.Priority ?? 0;
+                    int currentPriority = current.SkillConfig?.Priority ?? 0;
+                    if (candidatePriority != currentPriority)
+                    {
+                        candidateWins = candidatePriority > currentPriority;
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        private static bool TryCompareTargetSelectionRule(BattleUnit caster, AutoCastPlan candidate, AutoCastPlan current,
+            AutoBattleStrategyConfig strategyConfig, out bool candidateWins)
+        {
+            candidateWins = false;
+
+            AutoBattleTargetSelectRule rule = (AutoBattleTargetSelectRule)(strategyConfig?.TargetSelectRule ?? (int)AutoBattleTargetSelectRule.NearestEnemy);
+            switch (rule)
+            {
+                case AutoBattleTargetSelectRule.LowestHp:
+                {
+                    int candidateHp = GetCurrentHp(candidate.Target);
+                    int currentHp = GetCurrentHp(current.Target);
+                    if (candidateHp != currentHp)
+                    {
+                        candidateWins = candidateHp < currentHp;
+                        return true;
+                    }
+
+                    break;
+                }
+                case AutoBattleTargetSelectRule.KeepCurrentThenNearest:
+                case AutoBattleTargetSelectRule.NearestEnemy:
+                default:
+                    break;
+            }
+
+            float candidateDistance = GetDistance(caster.Position, candidate.Target.Position);
+            float currentDistance = GetDistance(caster.Position, current.Target.Position);
+            if (MathF.Abs(candidateDistance - currentDistance) > 0.0001f)
+            {
+                candidateWins = candidateDistance < currentDistance;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static int GetTargetTypeWeight(BattleUnit target, AutoBattleStrategyConfig strategyConfig)
+        {
+            if (target == null || strategyConfig == null)
+            {
+                return 0;
+            }
+
+            int weight = 0;
+            int monsterType = GetMonsterType(target);
+            if (strategyConfig.PreferBoss && monsterType == MonsterTypeBoss)
+            {
+                weight += 200;
+            }
+
+            if (strategyConfig.PreferElite && monsterType == MonsterTypeElite)
+            {
+                weight += 100;
+            }
+
+            return weight;
+        }
+
+        private static int GetMonsterType(BattleUnit unit)
+        {
+            MonsterUnitConfig monsterConfig = MonsterUnitConfigCategory.Instance.GetOrDefault(unit.ConfigId);
+            return monsterConfig?.Type ?? 0;
         }
 
         private static List<int> GetAutoSkillIds(UnitCombatConfig unitCombatConfig)
@@ -467,7 +650,7 @@ namespace ET.Server
                 if (nearestEnemy == null)
                 {
                     error = hasEnemyCandidate ? ErrorCode.ERR_BattleTargetOutOfRange : ErrorCode.ERR_BattleTargetNotFound;
-                    message = hasEnemyCandidate ? "No target in search range" : "No target found";
+                    message = hasEnemyCandidate ? "No valid target in cast range" : "No target found";
                     return targets;
                 }
 
@@ -493,7 +676,7 @@ namespace ET.Server
             return targets;
         }
 
-        private static int ApplyEffects(BattleUnit caster, BattleUnit target, SkillEffectGroupConfig effectGroupConfig)
+        private static int ApplyEffects(BattleUnit caster, BattleUnit target, SkillEffectGroupConfig effectGroupConfig, SkillConfig skillConfig)
         {
             int totalDamage = 0;
 
@@ -509,8 +692,15 @@ namespace ET.Server
                 {
                     case EffectTypeDamage:
                     {
+                        bool wasAlive = !target.IsDead;
                         int damage = CalculateDamage(caster, target, effectConfig);
                         target.TakeDamage(damage);
+                        BattleUnitHelper.BroadcastDamage(caster, target, damage, GetDamageType(skillConfig));
+                        if (wasAlive && target.IsDead)
+                        {
+                            BattleUnitHelper.BroadcastUnitDead(target, caster.Id);
+                        }
+
                         totalDamage += damage;
                         break;
                     }
@@ -553,6 +743,16 @@ namespace ET.Server
             }
 
             return damage;
+        }
+
+        private static int GetDamageType(SkillConfig skillConfig)
+        {
+            if (skillConfig == null)
+            {
+                return 1;
+            }
+
+            return skillConfig.SkillKind == 1 ? 0 : 1;
         }
 
         private static bool IsTargetValid(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
@@ -603,11 +803,31 @@ namespace ET.Server
             return allowedDistance;
         }
 
-        private static Vector3 ComputeDesiredCastPosition(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
+        private static float GetDesiredCastDistance(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             float allowedDistance = GetAllowedCastDistance(caster, target, targetingConfig);
+            float engageBuffer = MathF.Min(0.25f, allowedDistance * 0.2f);
+            float slotOffset = GetEngageSlotOffset(caster, target);
+            float desiredDistance = allowedDistance - engageBuffer - slotOffset;
+            return desiredDistance > 0f ? desiredDistance : allowedDistance;
+        }
+
+        private static float GetEngageSlotOffset(BattleUnit caster, BattleUnit target)
+        {
+            if (caster == null || target == null)
+            {
+                return 0f;
+            }
+
+            int slotIndex = (int)(Math.Abs(caster.Id ^ target.Id) % 4);
+            return slotIndex * 0.08f;
+        }
+
+        public static Vector3 ComputeDesiredCastPosition(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
+        {
+            float desiredDistance = GetDesiredCastDistance(caster, target, targetingConfig);
             float direction = caster.Position.X <= target.Position.X ? -1f : 1f;
-            return new Vector3(target.Position.X + direction * allowedDistance, caster.Position.Y, caster.Position.Z);
+            return new Vector3(target.Position.X + direction * desiredDistance, caster.Position.Y, caster.Position.Z);
         }
 
         private static void SortTargets(BattleUnit caster, List<BattleUnit> targets, int sortRule)

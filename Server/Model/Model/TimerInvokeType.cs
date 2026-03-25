@@ -34,5 +34,6 @@
         public const int PlayerAITick = 321; // 玩家AI心跳
         
         public const int StateMachineUpdate = 322; // 状态机更新
+        public const int FreezeEnd = 323;          // 冻结结束
     }
 }

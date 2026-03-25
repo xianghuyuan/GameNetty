@@ -43,6 +43,16 @@ namespace ET
             _hudWindow.UpdateUnitWidget(unit);
         }
 
+        public static void OnControlModeChanged(long unitId, int newMode)
+        {
+            if (_hudWindow == null)
+            {
+                return;
+            }
+
+            _hudWindow.SetControlMode(newMode);
+        }
+
         /// <summary>
         /// 关闭并清理指定单位的UI
         /// </summary>

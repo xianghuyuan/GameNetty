@@ -17,16 +17,20 @@ namespace ET
         private static void Destroy(this BattleMoveComponent self)
         {
             self.IsMoving = false;
+            self.FollowTargetUnitId = 0;
             self.CommandVersion++;
         }
 
-        public static void ApplyMoveCommand(this BattleMoveComponent self, Scene root, float3 targetPosition, float moveSpeed)
+        public static void ApplyMoveCommand(this BattleMoveComponent self, Scene root, float3 targetPosition, float moveSpeed,
+            float duration, float moveCoefficient)
         {
-            self.CommandVersion++;
-            self.IsMoving = true;
             self.TargetPosition = targetPosition;
             self.MoveSpeed = moveSpeed;
-            self.MoveAsync(root, self.CommandVersion).Coroutine();
+            self.Duration = duration;
+            self.MoveCoefficient = moveCoefficient;
+            self.StartTime = Time.time;
+            self.IsMoving = true;
+            self.MoveAsync().Coroutine();
         }
 
         public static void StopMove(this BattleMoveComponent self, float3 finalPosition)
@@ -34,6 +38,7 @@ namespace ET
             self.CommandVersion++;
             self.IsMoving = false;
             self.TargetPosition = finalPosition;
+            self.FollowTargetUnitId = 0;
 
             BattleUnit unit = self.GetParent<BattleUnit>();
             if (unit == null)
@@ -48,54 +53,17 @@ namespace ET
             viewComponent?.UpdateViewPosition(unit.Id, finalPosition);
         }
 
-        private static async ETTask MoveAsync(this BattleMoveComponent self, Scene root, int version)
+        private static async ETTask MoveAsync(this BattleMoveComponent self)
         {
-            TimerComponent timerComponent = root.GetComponent<TimerComponent>();
-            if (timerComponent == null)
+            BattleUnit unit = self.GetParent<BattleUnit>();
+            if (unit == null)
             {
                 return;
             }
-
-            while (!self.IsDisposed && self.IsMoving && version == self.CommandVersion)
-            {
-                await timerComponent.WaitFrameAsync();
-
-                if (self.IsDisposed || !self.IsMoving || version != self.CommandVersion)
-                {
-                    break;
-                }
-
-                BattleUnit unit = self.GetParent<BattleUnit>();
-                if (unit == null || unit.IsDisposed || unit.IsDead)
-                {
-                    break;
-                }
-
-                float deltaX = self.TargetPosition.x - unit.Position.x;
-                float distance = math.abs(deltaX);
-                if (distance <= 0.0001f)
-                {
-                    unit.Position = self.TargetPosition;
-                    self.IsMoving = false;
-                }
-                else
-                {
-                    float moveDistance = self.MoveSpeed * Time.deltaTime;
-                    if (moveDistance <= 0f || moveDistance >= distance)
-                    {
-                        unit.Position = self.TargetPosition;
-                        self.IsMoving = false;
-                    }
-                    else
-                    {
-                        unit.Position = new float3(unit.Position.x + math.sign(deltaX) * moveDistance, unit.Position.y, unit.Position.z);
-                    }
-                }
-
-                Battle battle = unit.GetParent<Battle>();
-                BattleUnitViewComponent viewComponent = battle?.GetComponent<BattleUnitViewComponent>();
-                viewComponent?.UpdateViewPosition(unit.Id, unit.Position);
-            }
+            Debug.Log(string.Format($"创建移动任务，当前位置:{unit.Position.x}，目标位置{self.TargetPosition.x}"));
+            Battle battle = unit.GetParent<Battle>();
+            BattleUnitViewComponent viewComponent = battle?.GetComponent<BattleUnitViewComponent>();
+            viewComponent?.UpdateViewPosition(unit.Id, unit.Position,self.Duration);
         }
     }
 }

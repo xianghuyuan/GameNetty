@@ -4870,6 +4870,18 @@ namespace ET
         [MemoryPackOrder(4)]
         public bool isMoving { get; set; }
 
+        /// <summary>
+        /// 移动所需时间（秒）
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public float duration { get; set; }
+
+        /// <summary>
+        /// 移动系数（减速时 >1，加速时 <1）
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public float moveCoefficient { get; set; }
+
         public override void Dispose()
         {
             if (!this.IsFromPool)
@@ -4882,6 +4894,8 @@ namespace ET
             this.targetPosition = default;
             this.moveSpeed = default;
             this.isMoving = default;
+            this.duration = default;
+            this.moveCoefficient = default;
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -5045,6 +5059,159 @@ namespace ET
         }
     }
 
+    // 单位冻结状态同步（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_UnitFrozen)]
+    public partial class M2C_UnitFrozen : MessageObject, IMessage
+    {
+        public static M2C_UnitFrozen Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_UnitFrozen), isFromPool) as M2C_UnitFrozen;
+        }
+
+        /// <summary>
+        /// 冻结单位ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long unitId { get; set; }
+
+        /// <summary>
+        /// 冻结持续时间（毫秒）
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public int durationMs { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.unitId = default;
+            this.durationMs = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 单位击退同步（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_UnitKnockback)]
+    public partial class M2C_UnitKnockback : MessageObject, IMessage
+    {
+        public static M2C_UnitKnockback Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_UnitKnockback), isFromPool) as M2C_UnitKnockback;
+        }
+
+        /// <summary>
+        /// 被击退单位ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long unitId { get; set; }
+
+        /// <summary>
+        /// 击退距离
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public float distance { get; set; }
+
+        /// <summary>
+        /// 击退方向（正负号）
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public float direction { get; set; }
+
+        /// <summary>
+        /// 击退后位置
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public Unity.Mathematics.float3 newPosition { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.unitId = default;
+            this.distance = default;
+            this.direction = default;
+            this.newPosition = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 客户端战斗单位创建完成，通知服务端可以开始战斗
+    [MemoryPackable]
+    [Message(OuterMessage.C2M_BattleReady)]
+    [ResponseType(nameof(M2C_BattleReady))]
+    public partial class C2M_BattleReady : MessageObject, ILocationRequest
+    {
+        public static C2M_BattleReady Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(C2M_BattleReady), isFromPool) as C2M_BattleReady;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        /// <summary>
+        /// 战斗房间ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long battleId { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.battleId = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BattleReady)]
+    public partial class M2C_BattleReady : MessageObject, ILocationResponse
+    {
+        public static M2C_BattleReady Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BattleReady), isFromPool) as M2C_BattleReady;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        [MemoryPackOrder(1)]
+        public int Error { get; set; }
+
+        [MemoryPackOrder(2)]
+        public string Message { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.Error = default;
+            this.Message = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
     public static class OuterMessage
     {
         public const ushort HttpGetRouterResponse = 10002;
@@ -5187,5 +5354,9 @@ namespace ET
         public const ushort M2C_SkillCast = 10139;
         public const ushort M2C_MonsterStateChange = 10140;
         public const ushort M2C_RoomRewardSync = 10141;
+        public const ushort M2C_UnitFrozen = 10142;
+        public const ushort M2C_UnitKnockback = 10143;
+        public const ushort C2M_BattleReady = 10144;
+        public const ushort M2C_BattleReady = 10145;
     }
 }

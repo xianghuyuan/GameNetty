@@ -20,6 +20,7 @@ namespace ET
             ConfigId = _buf.ReadInt();
             NormalAttackSkillId = _buf.ReadInt();
             {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoSkillIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoSkillIds[__index0] = __e0;}}
+            AutoBattleStrategyId = _buf.ReadInt();
             MoveSpeed = _buf.ReadFloat();
             AutoCastNormalAttack = _buf.ReadBool();
             DefaultTargetPolicy = _buf.ReadString();
@@ -59,6 +60,16 @@ namespace ET
         public readonly int[] AutoSkillIds;
 
         /// <summary>
+        /// 自动战斗策略配置ID
+        /// </summary>
+        public readonly int AutoBattleStrategyId;
+
+        /// <summary>
+        /// 自动战斗策略配置ID
+        /// </summary>
+        public AutoBattleStrategyConfig AutoBattleStrategyIdConfig => AutoBattleStrategyConfigCategory.Instance.GetOrDefault(AutoBattleStrategyId);
+
+        /// <summary>
         /// 移动速度（米/秒）
         /// </summary>
         public readonly float MoveSpeed;
@@ -89,6 +100,7 @@ namespace ET
             + "ConfigId:" + ConfigId + ","
             + "NormalAttackSkillId:" + NormalAttackSkillId + ","
             + "AutoSkillIds:" + Luban.StringUtil.CollectionToString(AutoSkillIds) + ","
+            + "AutoBattleStrategyId:" + AutoBattleStrategyId + ","
             + "MoveSpeed:" + MoveSpeed + ","
             + "AutoCastNormalAttack:" + AutoCastNormalAttack + ","
             + "DefaultTargetPolicy:" + DefaultTargetPolicy + ","

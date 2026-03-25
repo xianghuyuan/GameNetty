@@ -22,6 +22,63 @@ namespace ET
 
     public static class NumericNoticeMessageHelper
     {
+        public static string GetNumericTypeName(int numericType)
+        {
+            return numericType switch
+            {
+                NumericType.Speed => "Speed/速度",
+                NumericType.Hp => "Hp/生命值",
+                NumericType.MaxHp => "MaxHp/最大生命值",
+                NumericType.AOI => "AOI/视野范围",
+                NumericType.Level => "Level/等级",
+                NumericType.Attack => "Attack/攻击力",
+                NumericType.Defense => "Defense/防御力",
+                NumericType.Mp => "Mp/魔法值",
+                NumericType.MaxMp => "MaxMp/最大魔法值",
+                NumericType.CritRate => "CritRate/暴击率",
+                NumericType.CritDamage => "CritDamage/暴击伤害",
+                NumericType.AttackSpeed => "AttackSpeed/攻速",
+                NumericType.MoveSpeed => "MoveSpeed/移动速度",
+                NumericType.LifeSteal => "LifeSteal/吸血",
+                NumericType.DamageReduction => "DamageReduction/伤害减免",
+                NumericType.Penetration => "Penetration/穿透",
+                NumericType.HpRegen => "HpRegen/生命回复",
+                NumericType.MpRegen => "MpRegen/魔法回复",
+                NumericType.Exp => "Exp/经验值",
+                _ => $"Unknown/{numericType}",
+            };
+        }
+
+        public static string FormatSingleNumericNotice(M2C_NoticeUnitNumeric message)
+        {
+            return $"[收到消息注释] M2C_NoticeUnitNumeric -> 单位 {message.UnitId} 的 {GetNumericTypeName(message.NumericType)}({message.NumericType}) 同步为 {message.NewValue}";
+        }
+
+        public static string FormatMultiNumericNotice(M2C_NoticeUnitNumericList message)
+        {
+            int count = message.NumericTypeList.Count;
+            if (message.NewValueList.Count < count)
+            {
+                count = message.NewValueList.Count;
+            }
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append($"[收到消息注释] M2C_NoticeUnitNumericList -> 单位 {message.UnitId} 数值同步:");
+            for (int i = 0; i < count; ++i)
+            {
+                if (i > 0)
+                {
+                    builder.Append("; ");
+                }
+
+                int numericType = message.NumericTypeList[i];
+                long newValue = message.NewValueList[i];
+                builder.Append($"{GetNumericTypeName(numericType)}({numericType})={newValue}");
+            }
+
+            return builder.ToString();
+        }
+
         public static Unit GetUnit(Scene root, long unitId)
         {
             CurrentScenesComponent currentScenesComponent = root.GetComponent<CurrentScenesComponent>();
@@ -48,6 +105,8 @@ namespace ET
     {
         protected override async ETTask Run(Scene root, M2C_NoticeUnitNumeric message)
         {
+            Log.Info(NumericNoticeMessageHelper.FormatSingleNumericNotice(message));
+
             Unit unit = NumericNoticeMessageHelper.GetUnit(root, message.UnitId);
             if (unit != null)
             {
@@ -72,6 +131,8 @@ namespace ET
     {
         protected override async ETTask Run(Scene root, M2C_NoticeUnitNumericList message)
         {
+            Log.Info(NumericNoticeMessageHelper.FormatMultiNumericNotice(message));
+
             Unit unit = NumericNoticeMessageHelper.GetUnit(root, message.UnitId);
             if (unit != null)
             {

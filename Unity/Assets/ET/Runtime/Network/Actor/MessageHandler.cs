@@ -23,7 +23,7 @@ namespace ET
             try
             {
                 string json = JsonHelper.ToJson(msg);
-                Log.Info($"[收到消息] {typeof(Message).Name}: {json}");
+                Log.Warning($"[收到消息] {typeof(Message).Name}: {json}");
             }
             catch (Exception ex)
             {

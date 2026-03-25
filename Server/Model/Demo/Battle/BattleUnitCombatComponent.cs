@@ -4,7 +4,10 @@ namespace ET.Server
 
     /// <summary>
     /// 战斗单位战斗组件
-    /// 管理攻击冷却、攻击范围等战斗属性
+    /// 攻击冷却
+    /// 攻击范围
+    /// 技能CD
+    /// 是否可攻击
     /// </summary>
     [ComponentOf(typeof(BattleUnit))]
     public class BattleUnitCombatComponent : Entity, IAwake, IDestroy

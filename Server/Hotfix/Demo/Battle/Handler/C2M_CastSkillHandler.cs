@@ -59,8 +59,6 @@ namespace ET.Server
 
             response.cooldownEnd = executionResult.CooldownEnd;
 
-            Log.Info($"玩家释放技能成功: UnitId={caster.Id}, SkillId={request.skillId}, TargetId={executionResult.MainTarget?.Id ?? 0}, Damage={executionResult.TotalDamage}");
-
             await ETTask.CompletedTask;
         }
     }

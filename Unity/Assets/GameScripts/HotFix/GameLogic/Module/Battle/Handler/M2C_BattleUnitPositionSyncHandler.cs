@@ -1,5 +1,8 @@
 namespace ET
 {
+    /// <summary>
+    /// 位置校准
+    /// </summary>
     [MessageHandler(SceneType.Main)]
     public class M2C_BattleUnitPositionSyncHandler : MessageHandler<Scene, M2C_BattleUnitPositionSync>
     {

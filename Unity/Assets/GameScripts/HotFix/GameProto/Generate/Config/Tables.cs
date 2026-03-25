@@ -29,6 +29,11 @@ public partial class Tables
     public SkillCastCheckConfigCategory SkillCastCheckConfigCategory {get; }
     public SkillEffectGroupConfigCategory SkillEffectGroupConfigCategory {get; }
     public SkillEffectConfigCategory SkillEffectConfigCategory {get; }
+    /// <summary>
+    /// 自动战斗策略配置
+    /// </summary>
+    public AutoBattleStrategyConfigCategory AutoBattleStrategyConfigCategory {get; }
+    public BattleGlobalConfigCategory BattleGlobalConfigCategory {get; }
 
     public Tables(System.Func<string, ByteBuf> loader)
     {
@@ -45,6 +50,8 @@ public partial class Tables
         SkillCastCheckConfigCategory = new SkillCastCheckConfigCategory(loader("SkillCastCheckConfigCategory"));
         SkillEffectGroupConfigCategory = new SkillEffectGroupConfigCategory(loader("SkillEffectGroupConfigCategory"));
         SkillEffectConfigCategory = new SkillEffectConfigCategory(loader("SkillEffectConfigCategory"));
+        AutoBattleStrategyConfigCategory = new AutoBattleStrategyConfigCategory(loader("AutoBattleStrategyConfigCategory"));
+        BattleGlobalConfigCategory = new BattleGlobalConfigCategory(loader("BattleGlobalConfigCategory"));
         ResolveRef();
     }
     
@@ -63,6 +70,8 @@ public partial class Tables
         SkillCastCheckConfigCategory.ResolveRef(this);
         SkillEffectGroupConfigCategory.ResolveRef(this);
         SkillEffectConfigCategory.ResolveRef(this);
+        AutoBattleStrategyConfigCategory.ResolveRef(this);
+        BattleGlobalConfigCategory.ResolveRef(this);
     }
 }
 

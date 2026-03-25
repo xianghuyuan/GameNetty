@@ -39,7 +39,12 @@ namespace ET
             Log.Info($"开始战斗成功, BattleId: {response.battleId}, 等待服务端发送波次信息");
             return response.battleId;
         }
-        
+
+        public static async ETTask BattleReady(Scene scene)
+        {
+            C2M_BattleReady request = C2M_BattleReady.Create();
+            scene.GetComponent<ClientSenderComponent>().Call(request).Coroutine();
+        }
         /// <summary>
         /// 队长开启组队战斗
         /// </summary>

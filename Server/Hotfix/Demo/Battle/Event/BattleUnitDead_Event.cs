@@ -5,11 +5,11 @@ namespace ET.Server
     [Event(SceneType.Battle)]
     [FriendOf(typeof(WaveManagerComponent))]
     [FriendOf(typeof(BattleRoom))]
+    [FriendOf(typeof(SlotManagerComponent))]
     public class BattleUnitDead_Event : AEvent<Scene, BattleUnitDead>
     {
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
         {
-            Log.Debug("攻击伤害计算");
             BattleUnit deadUnit = args.BattleUnit;
             if (deadUnit == null)
             {
@@ -22,7 +22,33 @@ namespace ET.Server
                 return;
             }
             
-            Log.Info($"战斗单位死亡: UnitId={deadUnit.Id}, Camp={deadUnit.Camp}, ConfigId={deadUnit.ConfigId}");
+            // 通知所有以该单位为目标的角色重新决策
+            foreach (var kv in battleRoom.Units)
+            {
+                BattleUnit unit = kv.Value;
+                if (unit == null || unit.IsDead)
+                {
+                    continue;
+                }
+
+                BattleActionDecisionComponent decision = unit.GetComponent<BattleActionDecisionComponent>();
+                if (decision != null)
+                {
+                    BattleUnit currentTarget = decision.CurrentTarget;
+                    if (currentTarget != null && currentTarget.Id == deadUnit.Id)
+                    {
+                        decision.MakeDecision();
+                    }
+                }
+            }
+
+            // 释放该单位占用的站位插槽
+            SlotManagerComponent slotManager = battleRoom.GetComponent<SlotManagerComponent>();
+            if (slotManager != null)
+            {
+                slotManager.ReleaseSlot(deadUnit.Id);
+                slotManager.ReleaseAllSlotsForTarget(deadUnit.Id);
+            }
             
             if (deadUnit.Camp == UnitCamp.Enemy)
             {
@@ -56,8 +82,6 @@ namespace ET.Server
         
         private async ETTask OnBattleFailed(BattleRoom battleRoom)
         {
-            Log.Info($"战斗失败: BattleRoomId={battleRoom.Id}");
-            
             battleRoom.State = BattleState.End;
             
             M2C_BattleEnd battleEndMsg = M2C_BattleEnd.Create();

@@ -21,11 +21,6 @@ namespace ET.Server
         public BattleMode Mode { get; set; } = BattleMode.Manual;
         
         /// <summary>
-        /// 自动战斗时的AI组件引用
-        /// </summary>
-        public EntityRef<BattleAIComponent> AutoAI { get; set; }
-        
-        /// <summary>
         /// 是否启用自动战斗
         /// </summary>
         public bool IsAutoBattle => Mode == BattleMode.Auto;

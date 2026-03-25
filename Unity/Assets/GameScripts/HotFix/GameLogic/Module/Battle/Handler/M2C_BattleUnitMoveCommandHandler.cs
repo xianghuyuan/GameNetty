@@ -1,5 +1,8 @@
 namespace ET
 {
+    /// <summary>
+    /// 移动指令
+    /// </summary>
     [MessageHandler(SceneType.Main)]
     public class M2C_BattleUnitMoveCommandHandler : MessageHandler<Scene, M2C_BattleUnitMoveCommand>
     {
@@ -7,6 +10,8 @@ namespace ET
         {
             BattleComponent battleComponent = root.GetComponent<BattleComponent>();
             Battle battle = battleComponent?.GetCurrentBattle();
+            Log.Info(BattleMessageLogHelper.FormatMoveCommand(battle, message));
+
             if (battle == null || battle.BattleId != message.battleId)
             {
                 await ETTask.CompletedTask;
@@ -29,7 +34,7 @@ namespace ET
 
             if (message.isMoving)
             {
-                moveComponent.ApplyMoveCommand(root, message.targetPosition, message.moveSpeed);
+                moveComponent.ApplyMoveCommand(root, message.targetPosition, message.moveSpeed, message.duration, message.moveCoefficient);
             }
             else
             {

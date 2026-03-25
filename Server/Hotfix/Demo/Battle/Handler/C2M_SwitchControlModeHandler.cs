@@ -63,8 +63,6 @@ namespace ET.Server
             broadcastMsg.NewMode = (int)modeComponent.Mode;
             battleRoom.BroadcastToPlayers(broadcastMsg);
             
-            Log.Info($"玩家切换战斗模式: UnitId={playerUnit.Id}, Mode={modeComponent.Mode}");
-            
             await ETTask.CompletedTask;
         }
     }

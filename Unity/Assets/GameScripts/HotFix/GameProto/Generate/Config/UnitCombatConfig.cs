@@ -21,6 +21,8 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
         NormalAttackSkillId = _buf.ReadInt();
         NormalAttackSkillId_Ref = null;
         {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoSkillIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoSkillIds[__index0] = __e0;}}
+        AutoBattleStrategyId = _buf.ReadInt();
+        AutoBattleStrategyId_Ref = null;
         MoveSpeed = _buf.ReadFloat();
         AutoCastNormalAttack = _buf.ReadBool();
         DefaultTargetPolicy = _buf.ReadString();
@@ -50,6 +52,11 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
     /// </summary>
     public readonly int[] AutoSkillIds;
     /// <summary>
+    /// 自动战斗策略配置ID
+    /// </summary>
+    public readonly int AutoBattleStrategyId;
+    public AutoBattleStrategyConfig AutoBattleStrategyId_Ref;
+    /// <summary>
     /// 移动速度（米/秒）
     /// </summary>
     public readonly float MoveSpeed;
@@ -72,6 +79,7 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
     public  void ResolveRef(Tables tables)
     {
         NormalAttackSkillId_Ref = tables.SkillConfigCategory.GetOrDefault(NormalAttackSkillId);
+        AutoBattleStrategyId_Ref = tables.AutoBattleStrategyConfigCategory.GetOrDefault(AutoBattleStrategyId);
     }
 
     public override string ToString()
@@ -81,6 +89,7 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
         + "ConfigId:" + ConfigId + ","
         + "NormalAttackSkillId:" + NormalAttackSkillId + ","
         + "AutoSkillIds:" + Luban.StringUtil.CollectionToString(AutoSkillIds) + ","
+        + "AutoBattleStrategyId:" + AutoBattleStrategyId + ","
         + "MoveSpeed:" + MoveSpeed + ","
         + "AutoCastNormalAttack:" + AutoCastNormalAttack + ","
         + "DefaultTargetPolicy:" + DefaultTargetPolicy + ","

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using ET;
+using TMPro;
 using TEngine;
+using UnityEngine;
 
 namespace GameLogic
 {
@@ -8,10 +10,12 @@ namespace GameLogic
     {
         private readonly Dictionary<long, BattlePlayerInfoUI> _playerWidgets = new();
         private readonly Dictionary<long, BattleMonsterInfoUI> _monsterWidgets = new();
+        private int? _currentControlMode;
 
         protected override void OnCreate()
         {
             ScriptGenerator();
+            EnsureControlModeLabel();
             BattleUIHelper.BindHUD(this);
         }
 
@@ -25,6 +29,11 @@ namespace GameLogic
         {
             if (unit.Camp == UnitCamp.Friend)
             {
+                if (!_currentControlMode.HasValue)
+                {
+                    SetControlMode(1);
+                }
+
                 if (_playerWidgets.ContainsKey(unit.Id)) return;
                 var widget = CreateWidgetByType<BattlePlayerInfoUI>(transform);
                 widget.SetBattleUnit(unit.Id);
@@ -87,6 +96,30 @@ namespace GameLogic
             foreach (var widget in _monsterWidgets.Values) widget.Destroy();
             _playerWidgets.Clear();
             _monsterWidgets.Clear();
+            _currentControlMode = null;
+            RefreshControlModeLabel();
+        }
+
+        public void SetControlMode(int mode)
+        {
+            _currentControlMode = mode;
+            RefreshControlModeLabel();
+        }
+
+        private void EnsureControlModeLabel()
+        {
+            RefreshControlModeLabel();
+        }
+
+        private void RefreshControlModeLabel()
+        {
+            string modeText = _currentControlMode switch
+            {
+                1 => "自动",
+                0 => "手动",
+                _ => "未知",
+            };
+            m_tmpControlMode.text = $"当前战斗模式：{modeText}";
         }
     }
 }

@@ -64,8 +64,6 @@ namespace ET.Server
             response.result.targetDead = mainTarget.IsDead;
             response.result.attackerDead = attacker.IsDead;
             
-            Log.Info($"玩家技能化普攻: Attacker={attacker.Id}, SkillId={executionResult.SkillId}, Targets={executionResult.HitTargetsCount}, TotalDamage={executionResult.TotalDamage}");
-            
             await ETTask.CompletedTask;
         }
     }

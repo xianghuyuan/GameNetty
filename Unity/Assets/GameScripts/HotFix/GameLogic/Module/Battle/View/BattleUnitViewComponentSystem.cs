@@ -56,10 +56,11 @@ namespace ET
             
             // 设置阵营
             view.GameObject.transform.localScale = new Vector3(view.Camp == UnitCamp.Friend ? 1f : -1f, 1f, 1f);
+            view.InitPresentation();
             
             self.Views[view.UnitId] = view;
             
-            Log.Info($"创建单位表现: UnitId={view.UnitId}, Camp={view.Camp}, Pos={worldPos}");
+            Log.Info($"创建单位 UnitId={view.UnitId}, Camp={view.Camp}, Pos={worldPos}");
             
             return view;
         }
@@ -78,13 +79,30 @@ namespace ET
         }
         
         /// <summary>
-        /// 更新单位位置
+        /// 更新单位位置，timer为0表示瞬移
         /// </summary>
-        public static void UpdateViewPosition(this BattleUnitViewComponent self, long unitId, float3 position)
+        public static void UpdateViewPosition(this BattleUnitViewComponent self, long unitId, float3 position,float timer = 0)
+        {
+            Debug.Log("更新位置");
+            if (self.Views.TryGetValue(unitId, out BattleUnitView view))
+            {
+                view.UpdatePosition(position,timer);
+            }
+        }
+
+        public static void PlayAttackFeedback(this BattleUnitViewComponent self, Scene root, long unitId)
         {
             if (self.Views.TryGetValue(unitId, out BattleUnitView view))
             {
-                view.UpdatePosition(position);
+                view.PlayAttackFeedback();
+            }
+        }
+
+        public static void PlayHitFeedback(this BattleUnitViewComponent self, Scene root, long unitId, int damage)
+        {
+            if (self.Views.TryGetValue(unitId, out BattleUnitView view))
+            {
+                view.PlayHitFeedback(damage);
             }
         }
         

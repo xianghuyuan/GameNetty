@@ -1063,6 +1063,8 @@ message M2C_BattleUnitMoveCommand // IMessage
     Unity.Mathematics.float3 targetPosition = 3; // 移动目标点
     float moveSpeed = 4;                         // 移动速度（米/秒）
     bool isMoving = 5;                           // true=开始/更新移动, false=停止移动
+    float duration = 6;                          // 移动所需时间（秒）
+    float moveCoefficient = 7;                   // 移动系数（减速时 >1，加速时 <1）
 }
 
 // 单位死亡同步（服务器推送）
@@ -1093,4 +1095,35 @@ message M2C_RoomRewardSync // IMessage
 {
     int64 AddMoney = 1;         // 本次增加的金币
     int64 TotalMoney = 2;       // 当前总金币
+}
+
+// 单位冻结状态同步（服务器推送）
+message M2C_UnitFrozen // IMessage
+{
+    int64 unitId = 1;           // 冻结单位ID
+    int32 durationMs = 2;       // 冻结持续时间（毫秒）
+}
+
+// 单位击退同步（服务器推送）
+message M2C_UnitKnockback // IMessage
+{
+    int64 unitId = 1;           // 被击退单位ID
+    float distance = 2;         // 击退距离
+    float direction = 3;        // 击退方向（正负号）
+    Unity.Mathematics.float3 newPosition = 4; // 击退后位置
+}
+
+// ResponseType M2C_BattleReady
+// 客户端战斗单位创建完成，通知服务端可以开始战斗
+message C2M_BattleReady // ILocationRequest
+{
+    int32 RpcId = 1;
+    int64 battleId = 2;     // 战斗房间ID
+}
+
+message M2C_BattleReady // ILocationResponse
+{
+    int32 RpcId = 1;
+    int32 Error = 2;
+    string Message = 3;
 }

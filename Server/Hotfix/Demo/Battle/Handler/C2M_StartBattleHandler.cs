@@ -1,3 +1,5 @@
+using System;
+
 namespace ET.Server
 {
     [MessageLocationHandler(SceneType.Map)]
@@ -25,13 +27,10 @@ namespace ET.Server
             roomManager.AddUnitToBattleRoom(unit.Id, battleRoom.Id);
             
             battleRoom.InitBattle(unit, request.stageId, request.battleType);
-            
-            battleRoom.State = BattleState.Fighting;
+            battleRoom.State = BattleState.Prepare;
             response.battleId = battleRoom.Id;
-            
             Log.Info($"玩家 {unit.Id} 开始战斗: BattleRoomId={battleRoom.Id}");
-            
-            battleRoom.StartFirstWaveDelayed().Coroutine();
+            battleRoom.StartFirstWave().Coroutine();
             await ETTask.CompletedTask;
         }
     }

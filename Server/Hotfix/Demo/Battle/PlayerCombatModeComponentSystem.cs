@@ -2,19 +2,17 @@ namespace ET.Server
 {
     [EntitySystemOf(typeof(PlayerCombatModeComponent))]
     [FriendOf(typeof(PlayerCombatModeComponent))]
-    [FriendOf(typeof(BattleAIComponent))]
     public static partial class PlayerCombatModeComponentSystem
     {
         [EntitySystem]
         private static void Awake(this PlayerCombatModeComponent self)
         {
-            self.Mode = BattleMode.Manual;
+            self.Mode = BattleMode.Auto;
         }
         
         [EntitySystem]
         private static void Destroy(this PlayerCombatModeComponent self)
         {
-            self.AutoAI = null;
         }
         
         /// <summary>
@@ -35,23 +33,13 @@ namespace ET.Server
                 return;
             }
 
-            BattleAIComponent ai = owner.GetComponent<BattleAIComponent>();
-            if (ai == null)
-            {
-                ai = owner.AddComponent<BattleAIComponent>();
-            }
-
-            self.AutoAI = ai;
-            
             if (mode == BattleMode.Auto)
             {
-                Log.Info($"玩家 {owner.Id} 切换到自动战斗模式");
             }
             else
             {
                 owner.GetComponent<BattleMoveComponent>()?.StopMove();
                 owner.GetComponent<BattleActionDecisionComponent>()?.Reset();
-                Log.Info($"玩家 {owner.Id} 切换到手动战斗模式");
             }
         }
         
