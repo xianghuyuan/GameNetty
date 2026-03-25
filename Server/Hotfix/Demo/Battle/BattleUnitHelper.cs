@@ -37,7 +37,7 @@ namespace ET.Server
             return unitInfo;
         }
 
-        public static void BroadcastMoveCommand(BattleUnit unit, Vector3 targetPosition, float moveSpeed, bool isMoving, float duration, float moveCoefficient)
+        public static void BroadcastMoveCommand(BattleUnit unit, Vector3 targetPosition, float moveSpeed, bool isMoving = true, float duration = 0.1f, float moveCoefficient = 1)
         {
             if (unit == null)
             {

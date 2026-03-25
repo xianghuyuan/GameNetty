@@ -48,12 +48,11 @@ namespace ET
 
             unit.Position = finalPosition;
 
-            Battle battle = unit.GetParent<Battle>();
-            BattleUnitViewComponent viewComponent = battle?.GetComponent<BattleUnitViewComponent>();
-            viewComponent?.UpdateViewPosition(unit.Id, finalPosition);
+            BattleUnitView view = unit.GetComponent<BattleUnitView>();
+            view?.UpdatePosition(finalPosition,0);
         }
 
-        private static async ETTask MoveAsync(this BattleMoveComponent self)
+        public static async ETTask MoveAsync(this BattleMoveComponent self)
         {
             BattleUnit unit = self.GetParent<BattleUnit>();
             if (unit == null)
@@ -61,9 +60,9 @@ namespace ET
                 return;
             }
             Debug.Log(string.Format($"创建移动任务，当前位置:{unit.Position.x}，目标位置{self.TargetPosition.x}"));
-            Battle battle = unit.GetParent<Battle>();
-            BattleUnitViewComponent viewComponent = battle?.GetComponent<BattleUnitViewComponent>();
-            viewComponent?.UpdateViewPosition(unit.Id, unit.Position,self.Duration);
+            
+            BattleUnitView view = unit.GetComponent<BattleUnitView>();
+            view?.UpdatePosition(unit.Position, self.Duration);
         }
     }
 }

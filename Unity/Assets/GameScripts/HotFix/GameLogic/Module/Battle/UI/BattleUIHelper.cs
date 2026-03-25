@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
 namespace ET
@@ -73,18 +72,6 @@ namespace ET
                 GameModule.UI.CloseUI<GameLogic.BattleHUDWindow>();
             }
             _hudWindow = null;
-        }
-    }
-
-    // --- 事件处理器 ---
-
-    [Event(SceneType.Main)]
-    public class BattleUnitCreated_UI : AEvent<Scene, BattleUnitCreated>
-    {
-        protected override async ETTask Run(Scene scene, BattleUnitCreated args)
-        {
-            BattleUIHelper.CreateUnitUI(args.Unit);
-            await ETTask.CompletedTask;
         }
     }
 

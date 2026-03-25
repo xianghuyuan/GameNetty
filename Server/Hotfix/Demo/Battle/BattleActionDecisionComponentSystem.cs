@@ -3,25 +3,44 @@ using System.Numerics;
 
 namespace ET.Server
 {
+    [Invoke(TimerInvokeType.BattleDecisionTick)]
+    public class BattleDecisionTimer : ATimer<BattleActionDecisionComponent>
+    {
+        protected override void Run(BattleActionDecisionComponent self)
+        {
+            BattleActionDecisionComponentSystem.OnDecisionTick(self);
+        }
+    }
+
     [EntitySystemOf(typeof(BattleActionDecisionComponent))]
     [FriendOf(typeof(BattleActionDecisionComponent))]
     [FriendOf(typeof(BattleUnit))]
     public static partial class BattleActionDecisionComponentSystem
     {
+        private const long DecisionTickInterval = 200; // 200ms 决策心跳
+        private const float TargetPositionThreshold = 0.1f; // 目标位置变化阈值
+
         [EntitySystem]
         private static void Awake(this BattleActionDecisionComponent self)
         {
+            self.DecisionTimerId = self.Root().GetComponent<TimerComponent>()
+                .NewRepeatedTimer(DecisionTickInterval, TimerInvokeType.BattleDecisionTick, self);
         }
 
         [EntitySystem]
         private static void Destroy(this BattleActionDecisionComponent self)
         {
+            long timerId = self.DecisionTimerId;
+            self.Root().GetComponent<TimerComponent>()?.Remove(ref timerId);
+            self.DecisionTimerId = 0;
             self.CurrentTarget = null;
         }
 
-        /// <summary>
-        /// 执行决策：选目标、选技能、发指令
-        /// </summary>
+        internal static void OnDecisionTick(BattleActionDecisionComponent self)
+        {
+            self.MakeDecision();
+        }
+
         public static void MakeDecision(this BattleActionDecisionComponent self)
         {
             BattleUnit owner = self.GetParent<BattleUnit>();
@@ -30,76 +49,121 @@ namespace ET.Server
                 return;
             }
 
-            // 懒检查当前目标有效性
             BattleUnit currentTarget = self.CurrentTarget;
             if (currentTarget != null && currentTarget.IsDead)
             {
                 self.CurrentTarget = null;
-                currentTarget = null;
             }
 
-            //没有选到目标
-            if (!BattleSkillHelper.TrySelectBestAutoSkillPlan(owner, currentTarget, out BattleSkillHelper.AutoCastPlan autoCastPlan))
+            if (!BattleSkillHelper.TrySelectBestAutoSkillPlan(owner, self.CurrentTarget, out BattleSkillHelper.AutoCastPlan plan))
             {
-                if (currentTarget != null)
+                if (self.LastTargetId != 0)
                 {
-                    EventSystem.Instance.Publish<BattleRoom, RequestStopMoveEvent>(self.Scene<BattleRoom>()!, new RequestStopMoveEvent { Unit = owner });
-                    self.CurrentTarget = null;
+                    self.PublishStopMove(owner);
+                    self.LastTargetId = 0;
+                    self.LastInSkillRange = false;
                 }
+                self.CurrentTarget = null;
                 return;
             }
 
-            BattleUnit newTarget = autoCastPlan.Target;
+            BattleUnit target = plan.Target;
+            bool inRange = BattleSkillHelper.IsInSkillRange(owner, target, plan.TargetingConfig);
 
-            // 目标变化
-            if (currentTarget == null || currentTarget.Id != newTarget.Id)
+            // 状态没变化：同一目标
+            if (self.LastTargetId == target.Id )
             {
-                long oldTargetId = currentTarget?.Id ?? 0;
-                self.CurrentTarget = newTarget;
+                return;
+            }
+
+            // 状态变化，更新记录
+            bool targetChanged = self.LastTargetId != target.Id;
+            self.LastTargetId = target.Id;
+            self.LastInSkillRange = inRange;
+            self.LastTargetPosition = target.Position;
+            self.CurrentTarget = target;
+
+            if (targetChanged)
+            {
+                long oldTargetId = self.LastTargetId;
                 EventSystem.Instance.Publish<BattleRoom, TargetChangedEvent>(self.Scene<BattleRoom>()!, new TargetChangedEvent
                 {
                     UnitId = owner.Id,
                     OldTargetId = oldTargetId,
-                    NewTargetId = newTarget.Id,
+                    NewTargetId = target.Id,
                 });
             }
 
-            // 判断是否在施法范围内
-            if (BattleSkillHelper.IsInSkillRange(owner, newTarget, autoCastPlan.TargetingConfig))
+            if (inRange)
             {
-                // 在范围内，停止移动，施法
-                EventSystem.Instance.Publish<BattleRoom, RequestStopMoveEvent>(self.Scene<BattleRoom>()!, new RequestStopMoveEvent { Unit = owner });
-                EventSystem.Instance.Publish<BattleRoom, RequestCastEvent>(self.Scene<BattleRoom>()!, new RequestCastEvent
-                {
-                    Unit = owner,
-                    SkillId = autoCastPlan.SkillId,
-                    TargetId = newTarget.Id,
-                });
+                self.PublishStopMove(owner);
+                self.PublishCast(owner, plan.SkillId, target.Id);
             }
             else
             {
-                // 不在范围，计算期望施法位置，移动过去
-                Vector3 desiredPosition = BattleSkillHelper.ComputeDesiredCastPosition(owner, newTarget, autoCastPlan.TargetingConfig);
-                EventSystem.Instance.Publish<BattleRoom, RequestMoveEvent>(self.Scene<BattleRoom>()!, new RequestMoveEvent
-                {
-                    Unit = owner,
-                    TargetPosition = desiredPosition,
-                });
+                Vector3 interceptPosition = ComputeInterceptPosition(owner, target, plan.TargetingConfig);
+                self.PublishMove(owner, interceptPosition);
             }
         }
 
+        private static void PublishStopMove(this BattleActionDecisionComponent self, BattleUnit owner)
+        {
+            EventSystem.Instance.Publish<BattleRoom, RequestStopMoveEvent>(self.Scene<BattleRoom>()!, new RequestStopMoveEvent { Unit = owner });
+        }
+
+        private static void PublishCast(this BattleActionDecisionComponent self, BattleUnit owner, int skillId, long targetId)
+        {
+            EventSystem.Instance.Publish<BattleRoom, RequestCastEvent>(self.Scene<BattleRoom>()!, new RequestCastEvent
+            {
+                Unit = owner,
+                SkillId = skillId,
+                TargetId = targetId,
+            });
+        }
+
+        private static void PublishMove(this BattleActionDecisionComponent self, BattleUnit owner, Vector3 position)
+        {
+            EventSystem.Instance.Publish<BattleRoom, RequestMoveEvent>(self.Scene<BattleRoom>()!, new RequestMoveEvent
+            {
+                Unit = owner,
+                TargetPosition = position,
+            });
+        }
+
         /// <summary>
-        /// 重置决策状态
+        /// var a1targetX = (Mathf.Abs(a1.positionX - b1.positionX) - a1.attackRange) / (a1.speed + b1.speed) * a1.speed;
         /// </summary>
+        /// <param name="owner"></param>
+        /// <param name="target"></param>
+        /// <param name="targetingConfig"></param>
+        /// <returns></returns>
+        private static Vector3 ComputeInterceptPosition(BattleUnit owner, BattleUnit target, SkillTargetingConfig targetingConfig)
+        {
+            NumericComponent ownerNumeric = owner.GetComponent<NumericComponent>();
+            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
+
+            float distance = MathF.Abs(owner.Position.X - target.Position.X);
+            float attackRange = targetingConfig?.CastRange ?? 1f;
+            float ownerSpeed = ownerNumeric?.GetAsFloat(NumericType.Speed) ?? 1f;
+            float targetSpeed = targetNumeric?.GetAsFloat(NumericType.Speed) ?? 0f;
+            
+            float effectiveDistance = distance - attackRange;
+            float relativeSpeed = ownerSpeed + targetSpeed;
+            float interceptX = effectiveDistance / relativeSpeed * ownerSpeed;
+            return new Vector3(interceptX, owner.Position.Y, owner.Position.Z);
+        }
+
         public static void Reset(this BattleActionDecisionComponent self)
         {
             BattleUnit owner = self.GetParent<BattleUnit>();
             BattleUnit currentTarget = self.CurrentTarget;
             if (owner != null && currentTarget != null)
             {
-                EventSystem.Instance.Publish<BattleRoom, RequestStopMoveEvent>(self.Scene<BattleRoom>()!, new RequestStopMoveEvent { Unit = owner });
+                self.PublishStopMove(owner);
             }
             self.CurrentTarget = null;
+            self.LastTargetId = 0;
+            self.LastInSkillRange = false;
         }
     }
 }

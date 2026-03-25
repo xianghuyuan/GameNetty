@@ -35,5 +35,9 @@
         
         public const int StateMachineUpdate = 322; // 状态机更新
         public const int FreezeEnd = 323;          // 冻结结束
+        
+        // 移动和决策定时器
+        public const int BattleMoveTick = 324;     // 战斗移动心跳 100ms
+        public const int BattleDecisionTick = 325; // 战斗决策心跳 200ms
     }
 }

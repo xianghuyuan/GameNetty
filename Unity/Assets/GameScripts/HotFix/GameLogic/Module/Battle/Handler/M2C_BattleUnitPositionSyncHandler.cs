@@ -35,8 +35,8 @@ namespace ET
             BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
             moveComponent?.StopMove(message.position);
 
-            BattleUnitViewComponent viewComponent = battle.GetComponent<BattleUnitViewComponent>();
-            viewComponent?.UpdateViewPosition(unit.Id, message.position);
+            BattleUnitView view = unit.GetComponent<BattleUnitView>();
+            view?.UpdatePosition(message.position,0);
 
             await ETTask.CompletedTask;
         }

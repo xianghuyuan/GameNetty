@@ -24,8 +24,8 @@ namespace ET
                 moveComponent.StopMove(caster.Position);
             }
 
-            BattleUnitViewComponent viewComponent = battle.GetComponent<BattleUnitViewComponent>();
-            viewComponent?.PlayAttackFeedback(root, message.casterId);
+            BattleUnitView view = caster.GetComponent<BattleUnitView>();
+            view?.PlayAttackFeedback();
             await ETTask.CompletedTask;
         }
     }

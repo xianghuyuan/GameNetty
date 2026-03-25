@@ -19,8 +19,8 @@ namespace ET
             target.SetNumeric(NumericType.MaxHp, message.targetMaxHp);
             target.SetNumeric(NumericType.Hp, message.targetCurrentHp);
 
-            BattleUnitViewComponent viewComponent = battle.GetComponent<BattleUnitViewComponent>();
-            viewComponent?.PlayHitFeedback(root, message.targetId, message.damage);
+            BattleUnitView view = target.GetComponent<BattleUnitView>();
+            view?.PlayHitFeedback(message.damage);
             await ETTask.CompletedTask;
         }
     }

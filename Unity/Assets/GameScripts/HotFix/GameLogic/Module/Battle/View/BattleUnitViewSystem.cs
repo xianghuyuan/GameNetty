@@ -1,7 +1,7 @@
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Unity.Mathematics;
 using UnityEngine;
-using TMPro;
 
 namespace ET
 {
@@ -12,7 +12,6 @@ namespace ET
         [EntitySystem]
         private static void Awake(this BattleUnitView self, UnitCamp camp, float3 position)
         {
-            self.UnitId = self.Id;
             self.Camp = camp;
             self.Position = position;
         }
@@ -28,6 +27,34 @@ namespace ET
             }
         }
 
+        public static async UniTask InitViewAsync(this BattleUnitView self)
+        {
+            BattleUnit unit = self.GetParent<BattleUnit>();
+            
+            self.GameObject = await GameModule.Resource.LoadGameObjectAsync(BattleAreaConfig.BattleUnitViewPrefabPath);
+            
+            if (self.GameObject == null)
+            {
+                Log.Error($"加载战斗单位 Prefab 失败: {BattleAreaConfig.BattleUnitViewPrefabPath}");
+                return;
+            }
+            
+            self.GameObject.name = $"Unit_{unit.Id}";
+            
+            Vector3 worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, self.Position);
+            self.GameObject.transform.position = worldPos;
+            
+            self.GameObject.transform.localScale = new Vector3(self.Camp == UnitCamp.Friend ? 1f : -1f, 1f, 1f);
+            self.InitPresentation();
+            BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
+            if (moveComponent == null)
+            {
+                moveComponent = unit.AddComponent<BattleMoveComponent>();
+            }
+            moveComponent.MoveAsync().Coroutine();
+            Log.Info($"创建单位表现 UnitId={unit.Id}, Camp={self.Camp}, Pos={worldPos}");
+        }
+
         public static void InitPresentation(this BattleUnitView self)
         {
             if (self.GameObject == null) return;
@@ -37,7 +64,7 @@ namespace ET
             self.DefaultScale = self.GameObject.transform.localScale;
         }
 
-        public static void UpdatePosition(this BattleUnitView self, float3 position,float timer)
+        public static void UpdatePosition(this BattleUnitView self, float3 position, float timer)
         {
             self.Position = position;
             if (self.GameObject == null) return;
@@ -51,7 +78,6 @@ namespace ET
             {
                 self.GameObject.transform.DOMove(worldPos, timer).SetEase(Ease.Linear).OnComplete(() => self.GameObject.transform.position = worldPos);
             }
-            
         }
 
         public static void SetColor(this BattleUnitView self, Color color)
@@ -86,27 +112,19 @@ namespace ET
             self.PresentationTweener = null;
         }
 
-        /// <summary>
-        /// 攻击和收击表现
-        /// </summary>
-        /// <param name="self"></param>
-        /// <param name="flashColor"></param>
-        /// <param name="scaleMultiplier"></param>
-        /// <param name="duration"></param>
         private static void PlayPulse(this BattleUnitView self, Color flashColor, float scaleMultiplier, float duration)
         {
-            if (self.GameObject == null) return;    
+            if (self.GameObject == null) return;
             
             Transform transform = self.GameObject.transform;
             SpriteRenderer sr = self.GameObject.GetComponentInChildren<SpriteRenderer>();
             
-            // 缩放脉冲
             Sequence scaleSeq = DOTween.Sequence();
             scaleSeq.Append(transform.DOScale(self.DefaultScale * scaleMultiplier, duration * 0.5f).SetEase(Ease.OutQuad));
             scaleSeq.Append(transform.DOScale(self.DefaultScale, duration * 0.5f).SetEase(Ease.InQuad));
             scaleSeq.Play();
             self.PresentationTweener = scaleSeq;
-            // 颜色闪烁
+            
             if (sr != null)
             {
                 sr.DOColor(flashColor, duration * 0.5f).SetEase(Ease.OutQuad)
