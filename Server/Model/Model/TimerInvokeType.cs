@@ -39,5 +39,6 @@
         // 移动和决策定时器
         public const int BattleMoveTick = 324;     // 战斗移动心跳 100ms
         public const int BattleDecisionTick = 325; // 战斗决策心跳 200ms
+        public const int CastingEnd = 326;         // 施法锁定结束
     }
 }

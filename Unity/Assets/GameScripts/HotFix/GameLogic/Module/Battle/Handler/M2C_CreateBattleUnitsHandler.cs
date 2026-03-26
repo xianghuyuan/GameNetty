@@ -37,7 +37,7 @@ namespace ET
                 unit.AddComponent<BattleMoveComponent>();
 
                 BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
-                await view.InitViewAsync();
+                view.InitViewAsync().Forget();
 
                 BattleUIHelper.CreateUnitUI(unit);
             }

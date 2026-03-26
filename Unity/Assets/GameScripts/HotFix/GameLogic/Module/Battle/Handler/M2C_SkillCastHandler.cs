@@ -1,5 +1,3 @@
-using Unity.Mathematics;
-
 namespace ET
 {
     [MessageHandler(SceneType.Main)]
@@ -18,14 +16,7 @@ namespace ET
                 return;
             }
 
-            BattleMoveComponent moveComponent = caster.GetComponent<BattleMoveComponent>();
-            if (moveComponent != null)
-            {
-                moveComponent.StopMove(caster.Position);
-            }
-
-            BattleUnitView view = caster.GetComponent<BattleUnitView>();
-            view?.PlayAttackFeedback();
+            EventSystem.Instance.Publish(root, new BattleUnitSkillCast { Unit = caster });
             await ETTask.CompletedTask;
         }
     }

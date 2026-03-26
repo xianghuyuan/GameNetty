@@ -18,6 +18,7 @@ namespace GameLogic
 
 		private UIBindComponent m_bindComponent;
 		private TextMeshProUGUI m_tmpControlMode = null!;
+		private Transform m_tfEnemy = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -28,6 +29,7 @@ namespace GameLogic
 				return;
 			}
 			m_tmpControlMode = m_bindComponent.GetComponent<TextMeshProUGUI>(0);
+			m_tfEnemy = m_bindComponent.GetComponent<Transform>(1);
 		}
 
 		#endregion

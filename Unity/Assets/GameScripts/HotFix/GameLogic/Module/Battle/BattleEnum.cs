@@ -67,30 +67,4 @@ namespace ET
         /// </summary>
         Ended = 4
     }
-    
-    /// <summary>
-    /// 波次状态
-    /// </summary>
-    public enum WaveState
-    {
-        /// <summary>
-        /// 无状态
-        /// </summary>
-        None = 0,
-        
-        /// <summary>
-        /// 开始中
-        /// </summary>
-        Starting = 1,
-        
-        /// <summary>
-        /// 战斗中
-        /// </summary>
-        Fighting = 2,
-        
-        /// <summary>
-        /// 已完成
-        /// </summary>
-        Completed = 3
-    }
 }

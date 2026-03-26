@@ -30,13 +30,17 @@ namespace ET
                 return;
             }
 
+            BattleMoveDebugLog.Write($"RecvPosSync unit={message.unitId} pos={message.position}");
             unit.Position = message.position;
 
             BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
             moveComponent?.StopMove(message.position);
 
-            BattleUnitView view = unit.GetComponent<BattleUnitView>();
-            view?.UpdatePosition(message.position,0);
+            EventSystem.Instance.Publish(root, new BattleUnitPositionSynced
+            {
+                Unit = unit,
+                Position = message.position,
+            });
 
             await ETTask.CompletedTask;
         }

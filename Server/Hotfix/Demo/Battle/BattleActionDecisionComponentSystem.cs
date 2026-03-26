@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace ET.Server
@@ -49,6 +50,19 @@ namespace ET.Server
                 return;
             }
 
+            // 施法中或冻结中，跳过决策
+            FreezeComponent freeze = owner.GetComponent<FreezeComponent>();
+            if (freeze != null && freeze.IsFrozen)
+            {
+                return;
+            }
+
+            CastingComponent casting = owner.GetComponent<CastingComponent>();
+            if (casting != null && casting.IsCasting)
+            {
+                return;
+            }
+
             BattleUnit currentTarget = self.CurrentTarget;
             if (currentTarget != null && currentTarget.IsDead)
             {
@@ -69,12 +83,6 @@ namespace ET.Server
 
             BattleUnit target = plan.Target;
             bool inRange = BattleSkillHelper.IsInSkillRange(owner, target, plan.TargetingConfig);
-
-            // 状态没变化：同一目标
-            if (self.LastTargetId == target.Id )
-            {
-                return;
-            }
 
             // 状态变化，更新记录
             bool targetChanged = self.LastTargetId != target.Id;
@@ -149,7 +157,8 @@ namespace ET.Server
             
             float effectiveDistance = distance - attackRange;
             float relativeSpeed = ownerSpeed + targetSpeed;
-            float interceptX = effectiveDistance / relativeSpeed * ownerSpeed;
+            float direction = owner.Position.X <= target.Position.X ? 1 : -1;
+            float interceptX = owner.Position.X +direction*(effectiveDistance / relativeSpeed * ownerSpeed);
             return new Vector3(interceptX, owner.Position.Y, owner.Position.Z);
         }
 

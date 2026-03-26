@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace ET
 {
     /// <summary>
@@ -10,8 +12,6 @@ namespace ET
         {
             BattleComponent battleComponent = root.GetComponent<BattleComponent>();
             Battle battle = battleComponent?.GetCurrentBattle();
-            Log.Info(BattleMessageLogHelper.FormatMoveCommand(battle, message));
-
             if (battle == null || battle.BattleId != message.battleId)
             {
                 await ETTask.CompletedTask;
@@ -26,6 +26,8 @@ namespace ET
                 return;
             }
 
+            BattleMoveDebugLog.Write(
+                $"RecvMoveCmd unit={message.unitId} isMoving={message.isMoving} logicalPos={unit.Position} target={message.targetPosition} speed={message.moveSpeed:F3} duration={message.duration:F3} coeff={message.moveCoefficient:F3}");
             BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
             if (moveComponent == null)
             {

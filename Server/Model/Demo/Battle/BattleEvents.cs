@@ -105,4 +105,12 @@ namespace ET.Server
         public long OldTargetId;
         public long NewTargetId;
     }
+
+    /// <summary>
+    /// 施法结束事件 - 当施法锁定结束时触发，通知决策组件重新决策
+    /// </summary>
+    public struct CastingEndEvent
+    {
+        public BattleUnit Unit;
+    }
 }

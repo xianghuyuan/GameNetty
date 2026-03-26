@@ -26,6 +26,7 @@ namespace ET
         {
             self.State = BattleState.Fighting;
             self.StartTime = TimeInfo.Instance.ClientNow();
+            BattleMoveDebugLog.StartSession(self.BattleId, self.BattleType);
             
             Log.Info($"战斗开始: BattleId={self.BattleId}, Type={self.BattleType}");
             

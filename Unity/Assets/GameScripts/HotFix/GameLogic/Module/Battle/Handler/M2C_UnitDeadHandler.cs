@@ -18,6 +18,7 @@ namespace ET
 
             battleUnit.IsDead = true;
             EventSystem.Instance.Publish(root, new BattleUnitDead { BattleUnit = battleUnit });
+            battleUnit.Dispose();
             await ETTask.CompletedTask;
         }
     }

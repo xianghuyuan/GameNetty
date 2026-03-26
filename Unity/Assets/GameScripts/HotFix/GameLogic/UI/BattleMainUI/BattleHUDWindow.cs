@@ -42,7 +42,7 @@ namespace GameLogic
             else
             {
                 if (_monsterWidgets.ContainsKey(unit.Id)) return;
-                var widget = CreateWidgetByType<BattleMonsterInfoUI>(transform);
+                var widget = CreateWidgetByType<BattleMonsterInfoUI>(m_tfEnemy);
                 widget.SetBattleUnit(unit.Id);
                 _monsterWidgets[unit.Id] = widget;
             }

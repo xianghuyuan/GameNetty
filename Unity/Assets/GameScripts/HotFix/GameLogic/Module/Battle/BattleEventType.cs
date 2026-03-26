@@ -1,9 +1,11 @@
+using Unity.Mathematics;
+
 namespace ET
 {
     /// <summary>
     /// 战斗事件定义
     /// </summary>
-    
+
     /// <summary>
     /// 战斗开始事件
     /// </summary>
@@ -11,7 +13,7 @@ namespace ET
     {
         public Battle Battle;
     }
-    
+
     /// <summary>
     /// 战斗结束事件
     /// </summary>
@@ -20,7 +22,7 @@ namespace ET
         public Battle Battle;
         public BattleResult Result;
     }
-    
+
     /// <summary>
     /// 波次开始事件
     /// </summary>
@@ -29,7 +31,7 @@ namespace ET
         public Battle Battle;
         public int WaveNumber;
     }
-    
+
     /// <summary>
     /// 波次完成事件
     /// </summary>
@@ -38,12 +40,58 @@ namespace ET
         public Battle Battle;
         public int WaveNumber;
     }
-    
+
     /// <summary>
     /// 战斗单位死亡事件
     /// </summary>
     public struct BattleUnitDead
     {
         public BattleUnit BattleUnit;
+    }
+
+    /// <summary>
+    /// 战斗单位移动开始事件
+    /// </summary>
+    public struct BattleUnitMoveStarted
+    {
+        public BattleUnit Unit;
+        public float3 From;
+        public float3 To;
+        public float Duration;
+    }
+
+    /// <summary>
+    /// 战斗单位移动停止事件
+    /// </summary>
+    public struct BattleUnitMoveStopped
+    {
+        public BattleUnit Unit;
+        public float3 FinalPosition;
+    }
+
+    /// <summary>
+    /// 战斗单位位置同步事件
+    /// </summary>
+    public struct BattleUnitPositionSynced
+    {
+        public BattleUnit Unit;
+        public float3 Position;
+    }
+
+    /// <summary>
+    /// 战斗单位释放技能事件
+    /// </summary>
+    public struct BattleUnitSkillCast
+    {
+        public BattleUnit Unit;
+    }
+
+    /// <summary>
+    /// 战斗单位受到伤害事件
+    /// </summary>
+    public struct BattleUnitDamaged
+    {
+        public BattleUnit Unit;
+        public int Damage;
     }
 }

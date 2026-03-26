@@ -1,5 +1,54 @@
 namespace ET.Server
 {
+    [Event(SceneType.Battle)]
+    [FriendOf(typeof(CastingComponent))]
+    public class CombatComponent_OnRequestCast : AEvent<BattleRoom, RequestCastEvent>
+    {
+        protected override async ETTask Run(BattleRoom scene,
+        RequestCastEvent args)
+        {
+            BattleUnit unit = args.Unit;
+
+            // 冻结或施法中，不执行
+            FreezeComponent freeze = unit.GetComponent<FreezeComponent>();
+            if (freeze != null && freeze.IsFrozen)
+            {
+                await ETTask.CompletedTask;
+                return;
+            }
+
+            CastingComponent casting = unit.GetComponent<CastingComponent>();
+            if (casting != null && casting.IsCasting)
+            {
+                await ETTask.CompletedTask;
+                return;
+            }
+
+            if (!BattleSkillHelper.CanAutoCastSkill(unit, args.SkillId))
+            {
+                await ETTask.CompletedTask;
+                return;
+            }
+
+            // 调用技能执行
+            if (BattleSkillHelper.TryExecuteSkill(unit, args.SkillId,
+                args.TargetId, out BattleSkillHelper.SkillExecutionResult result, true))
+            {
+                // 技能成功，挂载施法锁定
+                if (casting == null)
+                {
+                    casting = unit.AddComponent<CastingComponent>();
+                }
+
+                SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(args.SkillId);
+                int lockDuration = CastingComponentSystem.GetCastLockDuration(skillConfig?.CooldownMs ?? 1000);
+                casting.ApplyCasting(args.SkillId, lockDuration);
+            }
+
+            await ETTask.CompletedTask;
+        }
+    }
+    
     [EntitySystemOf(typeof(BattleUnitCombatComponent))]
     [FriendOf(typeof(BattleUnitCombatComponent))]
     public static partial class BattleUnitCombatComponentSystem

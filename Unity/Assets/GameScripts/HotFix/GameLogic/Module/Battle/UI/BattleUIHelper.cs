@@ -86,7 +86,7 @@ namespace ET
     }
 
     [Event(SceneType.Main)]
-    public class BattleUnitDead_UI : AEvent<Scene, BattleUnitDead>
+    public class BattleUnitDeadView : AEvent<Scene, BattleUnitDead>
     {
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
         {

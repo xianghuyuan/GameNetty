@@ -1,7 +1,6 @@
+using System.Collections.Generic;
 namespace ET.Server
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// 战斗单位战斗组件
     /// 攻击冷却

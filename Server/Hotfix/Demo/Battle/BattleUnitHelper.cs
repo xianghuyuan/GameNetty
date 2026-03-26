@@ -212,5 +212,29 @@ namespace ET.Server
                 }
             }
         }
+
+        /// <summary>
+        /// 广播位置校正
+        /// </summary>
+        public static void BroadcastPositionSync(BattleUnit unit)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            BattleRoom battleRoom = unit.GetParent<BattleRoom>();
+            if (battleRoom == null)
+            {
+                return;
+            }
+
+            M2C_BattleUnitPositionSync message = M2C_BattleUnitPositionSync.Create();
+            message.battleId = battleRoom.Id;
+            message.unitId = unit.Id;
+            message.position = new float3(unit.Position.X, unit.Position.Y, unit.Position.Z);
+
+            BroadcastToPlayers(battleRoom, message);
+        }
     }
 }

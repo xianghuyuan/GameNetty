@@ -180,6 +180,41 @@ namespace ET.Server
             return TryExecuteSkill(caster, unitCombatConfig.NormalAttackSkillId, explicitTargetId, out result);
         }
 
+        public static bool CanAutoCastSkill(BattleUnit caster, int skillId)
+        {
+            if (caster == null)
+            {
+                return false;
+            }
+
+            PlayerCombatModeComponent modeComponent = caster.GetComponent<PlayerCombatModeComponent>();
+            if (modeComponent == null || !modeComponent.IsAutoBattle)
+            {
+                return true;
+            }
+
+            UnitCombatConfig unitCombatConfig = UnitCombatConfigCategory.Instance.GetOrDefault(caster.ConfigId);
+            if (unitCombatConfig == null)
+            {
+                return false;
+            }
+
+            if (IsNormalAttackSkill(unitCombatConfig, skillId))
+            {
+                return unitCombatConfig.AutoCastNormalAttack;
+            }
+
+            foreach (int autoSkillId in unitCombatConfig.AutoSkillIds)
+            {
+                if (autoSkillId == skillId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static bool TryExecuteSkill(BattleUnit caster, int skillId, long explicitTargetId, out SkillExecutionResult result,
             bool ignoreAutoModeLimit = false)
         {
@@ -550,6 +585,11 @@ namespace ET.Server
             return monsterConfig?.Type ?? 0;
         }
 
+        private static bool IsNormalAttackSkill(UnitCombatConfig unitCombatConfig, int skillId)
+        {
+            return unitCombatConfig != null && unitCombatConfig.NormalAttackSkillId != 0 && unitCombatConfig.NormalAttackSkillId == skillId;
+        }
+
         private static List<int> GetAutoSkillIds(UnitCombatConfig unitCombatConfig)
         {
             List<int> result = new List<int>();
@@ -560,13 +600,25 @@ namespace ET.Server
 
             foreach (int skillId in unitCombatConfig.AutoSkillIds)
             {
-                if (skillId != 0 && !result.Contains(skillId))
+                if (skillId == 0)
+                {
+                    continue;
+                }
+
+                if (IsNormalAttackSkill(unitCombatConfig, skillId) && !unitCombatConfig.AutoCastNormalAttack)
+                {
+                    continue;
+                }
+
+                if (!result.Contains(skillId))
                 {
                     result.Add(skillId);
                 }
             }
 
-            if (unitCombatConfig.NormalAttackSkillId != 0 && !result.Contains(unitCombatConfig.NormalAttackSkillId))
+            if (unitCombatConfig.AutoCastNormalAttack
+                && unitCombatConfig.NormalAttackSkillId != 0
+                && !result.Contains(unitCombatConfig.NormalAttackSkillId))
             {
                 result.Add(unitCombatConfig.NormalAttackSkillId);
             }
