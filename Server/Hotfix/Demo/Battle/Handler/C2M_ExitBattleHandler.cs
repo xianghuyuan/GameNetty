@@ -49,9 +49,18 @@ namespace ET.Server
             }
             else
             {
-                // 通知其他玩家有人退出
-                // TODO: 广播玩家退出消息
-                Log.Info($"玩家退出，房间剩余玩家数: {battleRoom.PlayerIds.Count}");
+                BattleUnit playerBattleUnit = BattleSkillHelper.FindPlayerBattleUnit(battleRoom, unit.Id);
+                if (playerBattleUnit != null)
+                {
+                    M2C_UnitDead exitNotice = M2C_UnitDead.Create();
+                    exitNotice.unitId = playerBattleUnit.Id;
+                    exitNotice.killerId = 0;
+                    battleRoom.BroadcastToPlayers(exitNotice);
+
+                    battleRoom.RemoveUnit(playerBattleUnit.Id);
+                }
+
+                Log.Info($"Player exited, remaining players: {battleRoom.PlayerIds.Count}");
             }
             
             // 6. 响应客户端

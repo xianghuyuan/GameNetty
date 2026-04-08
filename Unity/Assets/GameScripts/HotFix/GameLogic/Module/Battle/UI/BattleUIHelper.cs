@@ -91,6 +91,13 @@ namespace ET
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
         {
             BattleUIHelper.CloseUnitUI(args.BattleUnit.Id);
+
+            var view = args.BattleUnit.GetComponent<BattleUnitView>();
+            if (view != null)
+            {
+                view.PlayDeathAnimation();
+            }
+
             await ETTask.CompletedTask;
         }
     }

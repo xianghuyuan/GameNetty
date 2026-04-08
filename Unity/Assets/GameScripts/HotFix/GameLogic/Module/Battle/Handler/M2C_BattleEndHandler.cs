@@ -21,6 +21,8 @@ namespace ET
 
             battle.State = BattleState.Ended;
 
+            BattleMoveDebugLog.Write($"[BattleEnd] battleId={message.battleId} success={message.success} duration={message.duration}s");
+
             Log.Info($"战斗结束: BattleId={message.battleId}, 成功={message.success}, 耗时={message.duration}秒");
 
             EventSystem.Instance.Publish(root, new BattleEnd

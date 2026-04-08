@@ -26,5 +26,8 @@ namespace ET
         
         // 是否死亡
         public bool IsDead { get; set; }
+
+        // 是否Boss单位（创建时根据 MonsterUnitConfig.Type 标记）
+        public bool IsBoss { get; set; }
     }
 }

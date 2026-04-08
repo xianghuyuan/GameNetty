@@ -20,9 +20,14 @@ namespace ET
         public static readonly Vector2 BattleAreaSize = new Vector2(16f, 9f);
         
         /// <summary>
-        /// 战斗单位 Prefab 路径
+        /// 玩家战斗单位 Prefab 路径
         /// </summary>
-        public const string BattleUnitViewPrefabPath = "BattleUnitView";
+        public const string HeroUnitViewPrefabPath = "HeroUnitView";
+
+        /// <summary>
+        /// 怪物战斗单位 Prefab 路径
+        /// </summary>
+        public const string MonsterUnitViewPrefabPath = "MonsterUnitView";
 
         public static Vector3 GetWorldPosition(UnitCamp camp, float3 position)
         {

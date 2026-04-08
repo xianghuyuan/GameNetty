@@ -19,7 +19,7 @@ namespace ET.Server
             }
 
             BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
-            moveComponent?.StartMove(args.TargetPosition);
+            moveComponent?.StartMove(args.TargetPosition, args.ChaseTargetId, args.ChaseAttackRange);
 
             await ETTask.CompletedTask;
         }
@@ -52,13 +52,16 @@ namespace ET.Server
     }
     
     /// <summary>
-    /// 击退事件处理器 - 停止移动并瞬移到击退位置
+    /// 击退事件处理器 - 停止移动并设置击退位置，带容错纠偏
     /// </summary>
     [Event(SceneType.Battle)]
     [FriendOf(typeof(BattleMoveComponent))]
     [FriendOf(typeof(BattleUnit))]
     public class KnockbackEvent_OnKnockback : AEvent<Scene, KnockbackEvent>
     {
+        private const float CorrectionThreshold = 0.2f;
+        private const float SmoothDuration = 0.1f;
+
         protected override async ETTask Run(Scene scene, KnockbackEvent args)
         {
             BattleUnit target = args.Target;
@@ -66,27 +69,35 @@ namespace ET.Server
             {
                 return;
             }
-            
+
             BattleMoveComponent moveComp = target.GetComponent<BattleMoveComponent>();
             if (moveComp == null)
             {
                 return;
             }
-            
-            // 停止当前移动
+
             moveComp.StopMove();
-            
-            // 计算击退目标位置并直接设置
+
             System.Numerics.Vector3 targetPosition = new System.Numerics.Vector3(
                 target.Position.X + args.Direction * args.Distance,
                 target.Position.Y,
                 target.Position.Z
             );
             target.Position = targetPosition;
-            
-            // 广播击退
+
+            BattleRoom battleRoom = target.GetParent<BattleRoom>();
+            BattleSpatialGrid spatialGrid = battleRoom?.GetComponent<BattleSpatialGrid>();
+            spatialGrid?.UpdatePosition(target.Id, targetPosition.X);
+
             BattleUnitHelper.BroadcastKnockback(target, args.Distance, args.Direction);
-            
+
+            M2C_ForceCorrectPos correctMsg = M2C_ForceCorrectPos.Create();
+            correctMsg.unitId = target.Id;
+            correctMsg.correctPosition = new Unity.Mathematics.float3(
+                target.Position.X, target.Position.Y, target.Position.Z);
+            correctMsg.smoothDuration = SmoothDuration;
+            battleRoom?.BroadcastToPlayers(correctMsg);
+
             await ETTask.CompletedTask;
         }
     }
@@ -192,7 +203,7 @@ namespace ET.Server
             self.MoveTimerId = 0;
         }
 
-        public static void StartMove(this BattleMoveComponent self, Vector3 targetPosition)
+        public static void StartMove(this BattleMoveComponent self, Vector3 targetPosition, long chaseTargetId = 0, float chaseAttackRange = 0f)
         {
             BattleUnit owner = self.GetParent<BattleUnit>();
             if (owner == null)
@@ -209,6 +220,8 @@ namespace ET.Server
 
             self.MoveSpeed = moveSpeed;
             self.TargetPosition = targetPosition;
+            self.ChaseTargetId = chaseTargetId;
+            self.ChaseAttackRange = chaseAttackRange;
             BattleUnitHelper.BroadcastMoveCommand(owner,targetPosition,moveSpeed);
         }
 
@@ -224,6 +237,8 @@ namespace ET.Server
             }
 
             self.MoveSpeed = 0f;
+            self.ChaseTargetId = 0;
+            self.ChaseAttackRange = 0f;
         }
 
         /// <summary>
@@ -235,6 +250,39 @@ namespace ET.Server
             if (owner == null || owner.IsDead || self.MoveSpeed <= 0f)
             {
                 return;
+            }
+
+            // 追击模式下实时检测是否已进入射程
+            if (self.ChaseTargetId != 0 && self.ChaseAttackRange > 0f)
+            {
+                BattleRoom battleRoom = owner.GetParent<BattleRoom>();
+                if (battleRoom != null && battleRoom.Units.TryGetValue(self.ChaseTargetId, out EntityRef<BattleUnit> targetRef))
+                {
+                    BattleUnit chaseTarget = targetRef;
+                    if (chaseTarget != null && !chaseTarget.IsDead)
+                    {
+                        float distToTarget = BattleDistanceHelper.GetDistance(owner.Position, chaseTarget.Position);
+                        if (distToTarget <= self.ChaseAttackRange)
+                        {
+                            // 已进入射程，停止移动并立即触发决策攻击
+                            self.StopMove();
+                            BattleActionDecisionComponent decision = owner.GetComponent<BattleActionDecisionComponent>();
+                            decision?.MakeDecision();
+                            return;
+                        }
+
+                        // 更新移动目标为射程边缘位置（紧跟目标）
+                        float dir = owner.Position.X <= chaseTarget.Position.X ? 1f : -1f;
+                        float edgeX = chaseTarget.Position.X - dir * self.ChaseAttackRange;
+                        self.TargetPosition = new Vector3(edgeX, owner.Position.Y, owner.Position.Z);
+                    }
+                    else
+                    {
+                        // 目标已死亡，停止追击
+                        self.ChaseTargetId = 0;
+                        self.ChaseAttackRange = 0f;
+                    }
+                }
             }
 
             float distance = BattleDistanceHelper.GetDistance(owner.Position, self.TargetPosition);
@@ -258,6 +306,11 @@ namespace ET.Server
             }
 
             owner.Position = newPosition;
+
+            // 更新空间网格
+            BattleRoom room = owner.GetParent<BattleRoom>();
+            BattleSpatialGrid spatialGrid = room?.GetComponent<BattleSpatialGrid>();
+            spatialGrid?.UpdatePosition(owner.Id, newPosition.X);
         }
     }
 }

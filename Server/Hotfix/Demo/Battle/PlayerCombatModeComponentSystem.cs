@@ -35,6 +35,7 @@ namespace ET.Server
 
             if (mode == BattleMode.Auto)
             {
+                owner.GetComponent<BattleActionDecisionComponent>()?.MakeDecision();
             }
             else
             {

@@ -32,6 +32,21 @@ namespace ET.Server
         {
             await self.StartNextWave();
         }
+
+        public static async ETTask TriggerNextWave(this WaveManagerComponent self)
+        {
+            if (self.State != WaveState.Completed)
+            {
+                return;
+            }
+
+            if (self.CurrentWaveIndex >= self.TotalWaves - 1)
+            {
+                return;
+            }
+
+            await self.StartNextWave();
+        }
         
         private static async ETTask StartNextWave(this WaveManagerComponent self)
         {
@@ -107,49 +122,91 @@ namespace ET.Server
         private static async ETTask SpawnFromSpawnConfig(this WaveManagerComponent self, SpawnConfig spawnConfig)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
-            
+
             // 卷轴战斗中当前只使用 X 坐标，PositionZ 暂时保留但不参与布局。
             float centerX = spawnConfig.PositionX;
             float spreadRange = spawnConfig.SpreadRange;
-            
+
             // 收集本批次创建的怪物信息
             List<BattleUnitInfo> battleUnitInfos = new List<BattleUnitInfo>();
-            
+
             foreach (var monsterInfo in spawnConfig.Monsters)
             {
-                for (int i = 0; i < monsterInfo.Count; i++)
-                {
-                    float offsetX = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
+                MonsterUnitConfig monsterConfig = MonsterUnitConfigCategory.Instance.GetOrDefault(monsterInfo.MonsterId);
+                bool isBoss = monsterConfig != null && monsterConfig.Type == 3;
 
-                    Vector3 position = new Vector3(centerX + offsetX, 0, 0);
-                    BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterInfo.MonsterId, position);
-                    
-                    battleRoom.Units[monster.Id] = monster;
-                    self.CurrentWaveMonsterIds.Add(monster.Id);
-                    
-                    // 使用统一方法创建单位信息（包含数值）
-                    BattleUnitInfo unitInfo = BattleUnitHelper.CreateBattleUnitInfo(monster);
-                    battleUnitInfos.Add(unitInfo);
+                if (isBoss)
+                {
+                    // Boss走服务端权威路径：服务端创建实体，逐个广播
+                    for (int i = 0; i < monsterInfo.Count; i++)
+                    {
+                        float offsetX = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
+                        Vector3 position = new Vector3(centerX + offsetX, 0, 0);
+                        BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterInfo.MonsterId, position);
+
+                        battleRoom.Units[monster.Id] = monster;
+                        self.CurrentWaveMonsterIds.Add(monster.Id);
+
+                        BattleUnitInfo unitInfo = BattleUnitHelper.CreateBattleUnitInfo(monster);
+                        battleUnitInfos.Add(unitInfo);
+                    }
+                }
+                else
+                {
+                    // 杂兵走客户端本地刷怪路径：下发波次指令，客户端本地创建
+                    // 服务端仍然创建轻量级实体用于碰撞检测和伤害验证
+                    long startUnitId = IdGenerater.Instance.GenerateInstanceId();
+
+                    var spawnWaveMsg = M2C_SpawnWave.Create();
+                    spawnWaveMsg.battleId = battleRoom.Id;
+                    spawnWaveMsg.waveId = self.CurrentWaveIndex;
+                    spawnWaveMsg.centerX = centerX;
+                    spawnWaveMsg.centerY = 0f;
+                    spawnWaveMsg.count = monsterInfo.Count;
+                    spawnWaveMsg.monsterConfigId = monsterInfo.MonsterId;
+                    spawnWaveMsg.moveDirX = -1f;
+                    spawnWaveMsg.moveDirY = 0f;
+                    spawnWaveMsg.spreadRange = spreadRange;
+                    spawnWaveMsg.startUnitId = startUnitId;
+
+                    self.BroadcastToBattleRoom(spawnWaveMsg);
+
+                    // 服务端创建轻量级实体用于碰撞检测（不广播M2C_CreateBattleUnits）
+                    for (int i = 0; i < monsterInfo.Count; i++)
+                    {
+                        long localUnitId = startUnitId + i;
+                        float offsetX = (RandomGenerator.RandFloat01() * 2 - 1) * spreadRange;
+                        Vector3 position = new Vector3(centerX + offsetX, 0, 0);
+
+                        BattleUnit monster = UnitFactory.CreateMinion(battleRoom, monsterInfo.MonsterId, position, localUnitId);
+                        battleRoom.Units[monster.Id] = monster;
+                        self.CurrentWaveMonsterIds.Add(monster.Id);
+                    }
                 }
             }
-            
-            // 发送怪物创建消息给所有玩家
+
+            // 仅广播Boss/精英怪的创建消息
             if (battleUnitInfos.Count > 0)
             {
                 M2C_CreateBattleUnits createMsg = M2C_CreateBattleUnits.Create();
                 createMsg.battleId = battleRoom.Id;
                 createMsg.units = battleUnitInfos;
-                
+
                 self.BroadcastToBattleRoom(createMsg);
             }
-            
+
             await ETTask.CompletedTask;
         }
         
         public static async ETTask OnMonsterDead(this WaveManagerComponent self, long monsterId)
         {
             self.CurrentWaveMonsterIds.Remove(monsterId);
-            
+
+            // 从空间网格移除
+            BattleRoom battleRoom = self.GetParent<BattleRoom>();
+            BattleSpatialGrid spatialGrid = battleRoom?.GetComponent<BattleSpatialGrid>();
+            spatialGrid?.Remove(monsterId);
+
             if (self.CurrentWaveMonsterIds.Count == 0 && self.State == WaveState.Fighting)
             {
                 await self.OnWaveCompleted();
@@ -181,6 +238,7 @@ namespace ET.Server
                 }
                 else
                 {
+                    self.State = WaveState.Completed;
                 }
             }
             else
@@ -247,13 +305,14 @@ namespace ET.Server
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             Scene mapScene = battleRoom.Root();
             UnitComponent unitComponent = mapScene.GetComponent<UnitComponent>();
-            
+
             foreach (long playerId in battleRoom.PlayerIds)
             {
                 Unit player = unitComponent.Get(playerId);
                 if (player != null)
                 {
-                    MapMessageHelper.SendToClient(player, message);
+                    // 内联 MapMessageHelper.SendToClient，避免 WaveManagerComponentSystem → MapMessageHelper 的静态类引用
+                    player.Root().GetComponent<MessageLocationSenderComponent>().Get(LocationType.GateSession).Send(player.Id, message);
                 }
             }
         }

@@ -24,16 +24,19 @@ public sealed partial class SkillConfig : Luban.BeanBase
         TargetType = _buf.ReadInt();
         TargetingConfigId = _buf.ReadInt();
         TargetingConfigId_Ref = null;
-        CastCheckConfigId = _buf.ReadInt();
-        CastCheckConfigId_Ref = null;
         CooldownGroupId = _buf.ReadInt();
         CooldownMs = _buf.ReadInt();
         Priority = _buf.ReadInt();
         CanMoveCast = _buf.ReadBool();
         NeedExplicitTarget = _buf.ReadBool();
-        EffectGroupId = _buf.ReadInt();
-        EffectGroupId_Ref = null;
+        BuffGroupId = _buf.ReadInt();
+        BuffGroupId_Ref = null;
         IsEnabled = _buf.ReadBool();
+        ProjectileSpeed = _buf.ReadFloat();
+        ProjectileMaxDistance = _buf.ReadFloat();
+        ProjectileCollisionRadius = _buf.ReadFloat();
+        ProjectilePiercing = _buf.ReadBool();
+        ProjectileMaxHitCount = _buf.ReadInt();
         Desc = _buf.ReadString();
     }
 
@@ -72,11 +75,6 @@ public sealed partial class SkillConfig : Luban.BeanBase
     public readonly int TargetingConfigId;
     public SkillTargetingConfig TargetingConfigId_Ref;
     /// <summary>
-    /// 施法校验配置ID
-    /// </summary>
-    public readonly int CastCheckConfigId;
-    public SkillCastCheckConfig CastCheckConfigId_Ref;
-    /// <summary>
     /// 冷却组ID
     /// </summary>
     public readonly int CooldownGroupId;
@@ -99,12 +97,32 @@ public sealed partial class SkillConfig : Luban.BeanBase
     /// <summary>
     /// 效果组ID
     /// </summary>
-    public readonly int EffectGroupId;
-    public SkillEffectGroupConfig EffectGroupId_Ref;
+    public readonly int BuffGroupId;
+    public BuffGroupConfig BuffGroupId_Ref;
     /// <summary>
     /// 是否启用
     /// </summary>
     public readonly bool IsEnabled;
+    /// <summary>
+    /// 投射物飞行速度（单位/秒）
+    /// </summary>
+    public readonly float ProjectileSpeed;
+    /// <summary>
+    /// 投射物最大飞行距离
+    /// </summary>
+    public readonly float ProjectileMaxDistance;
+    /// <summary>
+    /// 投射物碰撞半径
+    /// </summary>
+    public readonly float ProjectileCollisionRadius;
+    /// <summary>
+    /// 投射物是否穿透
+    /// </summary>
+    public readonly bool ProjectilePiercing;
+    /// <summary>
+    /// 投射物最大命中单位数
+    /// </summary>
+    public readonly int ProjectileMaxHitCount;
     /// <summary>
     /// 描述
     /// </summary>
@@ -116,8 +134,7 @@ public sealed partial class SkillConfig : Luban.BeanBase
     public  void ResolveRef(Tables tables)
     {
         TargetingConfigId_Ref = tables.SkillTargetingConfigCategory.GetOrDefault(TargetingConfigId);
-        CastCheckConfigId_Ref = tables.SkillCastCheckConfigCategory.GetOrDefault(CastCheckConfigId);
-        EffectGroupId_Ref = tables.SkillEffectGroupConfigCategory.GetOrDefault(EffectGroupId);
+        BuffGroupId_Ref = tables.BuffGroupConfigCategory.GetOrDefault(BuffGroupId);
     }
 
     public override string ToString()
@@ -130,14 +147,18 @@ public sealed partial class SkillConfig : Luban.BeanBase
         + "CastType:" + CastType + ","
         + "TargetType:" + TargetType + ","
         + "TargetingConfigId:" + TargetingConfigId + ","
-        + "CastCheckConfigId:" + CastCheckConfigId + ","
         + "CooldownGroupId:" + CooldownGroupId + ","
         + "CooldownMs:" + CooldownMs + ","
         + "Priority:" + Priority + ","
         + "CanMoveCast:" + CanMoveCast + ","
         + "NeedExplicitTarget:" + NeedExplicitTarget + ","
-        + "EffectGroupId:" + EffectGroupId + ","
+        + "BuffGroupId:" + BuffGroupId + ","
         + "IsEnabled:" + IsEnabled + ","
+        + "ProjectileSpeed:" + ProjectileSpeed + ","
+        + "ProjectileMaxDistance:" + ProjectileMaxDistance + ","
+        + "ProjectileCollisionRadius:" + ProjectileCollisionRadius + ","
+        + "ProjectilePiercing:" + ProjectilePiercing + ","
+        + "ProjectileMaxHitCount:" + ProjectileMaxHitCount + ","
         + "Desc:" + Desc + ","
         + "}";
     }

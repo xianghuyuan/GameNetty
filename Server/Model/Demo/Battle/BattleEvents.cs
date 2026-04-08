@@ -8,9 +8,19 @@ namespace ET.Server
         public BattleUnit Attacker;
         public BattleUnit Target;
         public int SkillId;
-        public SkillEffectGroupConfig EffectGroup;
+        public BuffGroupConfig EffectGroup;
     }
-    
+
+    /// <summary>
+    /// Buff执行事件 - 当buff需要执行效果时发布，由各效果类型的事件处理器响应。
+    /// BuffComponentSystem 通过此事件解耦，避免静态类环形依赖。
+    /// </summary>
+    public struct BuffExecuteEvent
+    {
+        public BattleUnit Target;
+        public BuffEntity BuffEntity;
+    }
+
     /// <summary>
     /// 伤害事件 - 当单位受到伤害时触发
     /// </summary>
@@ -21,6 +31,16 @@ namespace ET.Server
         public int Damage;
         public int DamageType;
         public int SkillId;
+        public long CasterId;
+    }
+
+    /// <summary>
+    /// 单位死亡事件 - 当单位因伤害死亡时触发
+    /// </summary>
+    public struct UnitDeadEvent
+    {
+        public BattleUnit Target;
+        public long KillerId;
     }
     
     /// <summary>
@@ -59,6 +79,7 @@ namespace ET.Server
         public BattleUnit Attacker;
         public float Distance;
         public float Direction;
+        public long CasterId;
     }
 
     /// <summary>
@@ -76,6 +97,8 @@ namespace ET.Server
     {
         public BattleUnit Unit;
         public System.Numerics.Vector3 TargetPosition;
+        public long ChaseTargetId;
+        public float ChaseAttackRange;
     }
 
     /// <summary>
@@ -112,5 +135,81 @@ namespace ET.Server
     public struct CastingEndEvent
     {
         public BattleUnit Unit;
+    }
+
+    /// <summary>
+    /// 投射物命中事件 - 当投射物命中目标时触发
+    /// </summary>
+    public struct ProjectileHitEvent
+    {
+        public BattleUnit Projectile;
+        public BattleUnit Target;
+        public long CasterId;
+        public int SkillId;
+    }
+
+    /// <summary>
+    /// 投射物销毁事件 - 当投射物被销毁时触发（到达最大距离、命中非穿透目标等）
+    /// </summary>
+    public struct ProjectileDestroyEvent
+    {
+        public BattleUnit Projectile;
+        public long CasterId;
+        public int SkillId;
+    }
+
+    /// <summary>
+    /// 投射物发射事件 - 当投射物被创建并发射时触发
+    /// </summary>
+    public struct ProjectileLaunchEvent
+    {
+        public BattleUnit Projectile;
+        public long CasterId;
+        public int SkillId;
+        public float Direction;
+    }
+
+    /// <summary>
+    /// 请求生成投射物事件 - 由 BattleSkillHelper 发布，UnitFactory 响应
+    /// </summary>
+    public struct SpawnProjectileEvent
+    {
+        public BattleUnit Caster;
+        public SkillConfig SkillConfig;
+        public BattleUnit Target;
+    }
+
+    /// <summary>
+    /// 注册判定框事件 - 客户端发起攻击时，将判定框注册到时间轴队列
+    /// </summary>
+    public struct RegisterHitBoxEvent
+    {
+        public BattleUnit Caster;
+        public int SkillId;
+        public long TargetId;
+        public float HitStartTick;
+        public float HitEndTick;
+        public float HitBoxMinX;
+        public float HitBoxMaxX;
+    }
+
+    /// <summary>
+    /// Boss创建事件 - 当Boss怪物被创建时触发，用于解耦 UnitFactory 与 BossSyncComponentSystem 的环形依赖
+    /// </summary>
+    public struct BossCreatedEvent
+    {
+        public BattleRoom BattleRoom;
+        public long BossUnitId;
+    }
+
+    /// <summary>
+    /// 位置校正事件 - 当服务端检测到位置误差过大时，下发强制校正
+    /// 客户端收到后平滑滑过去，而非瞬移
+    /// </summary>
+    public struct ForceCorrectPosEvent
+    {
+        public BattleUnit Target;
+        public System.Numerics.Vector3 CorrectPosition;
+        public float CorrectionThreshold;
     }
 }

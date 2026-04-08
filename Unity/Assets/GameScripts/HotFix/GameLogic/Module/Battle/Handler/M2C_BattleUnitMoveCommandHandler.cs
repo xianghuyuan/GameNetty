@@ -1,9 +1,10 @@
-using UnityEngine;
+using Unity.Mathematics;
 
 namespace ET
 {
     /// <summary>
-    /// 移动指令
+    /// 移动指令（服务端权威单位：Boss 等）
+    /// 直接更新逻辑位置和视觉位置
     /// </summary>
     [MessageHandler(SceneType.Main)]
     public class M2C_BattleUnitMoveCommandHandler : MessageHandler<Scene, M2C_BattleUnitMoveCommand>
@@ -21,26 +22,27 @@ namespace ET
             BattleUnit unit = battle.GetChild<BattleUnit>(message.unitId);
             if (unit == null)
             {
-                Log.Warning($"M2C_BattleUnitMoveCommand: 未找到战斗单位, BattleId={message.battleId}, UnitId={message.unitId}");
                 await ETTask.CompletedTask;
                 return;
             }
 
-            BattleMoveDebugLog.Write(
-                $"RecvMoveCmd unit={message.unitId} isMoving={message.isMoving} logicalPos={unit.Position} target={message.targetPosition} speed={message.moveSpeed:F3} duration={message.duration:F3} coeff={message.moveCoefficient:F3}");
-            BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
-            if (moveComponent == null)
-            {
-                moveComponent = unit.AddComponent<BattleMoveComponent>();
-            }
-
             if (message.isMoving)
             {
-                moveComponent.ApplyMoveCommand(root, message.targetPosition, message.moveSpeed, message.duration, message.moveCoefficient);
+                float oldX = unit.Position.x;
+                unit.Position = message.targetPosition;
+
+                float faceDir = message.targetPosition.x >= oldX ? 1f : -1f;
+                unit.FaceDirection = faceDir;
+                unit.Forward = new float3(faceDir, 0, 0);
+
+                unit.GetComponent<BattleUnitView>()?.SetPosition(unit.Position);
             }
             else
             {
-                moveComponent.StopMove(message.targetPosition);
+                unit.Position = message.targetPosition;
+                unit.Forward = float3.zero;
+
+                unit.GetComponent<BattleUnitView>()?.SetPosition(unit.Position);
             }
 
             await ETTask.CompletedTask;

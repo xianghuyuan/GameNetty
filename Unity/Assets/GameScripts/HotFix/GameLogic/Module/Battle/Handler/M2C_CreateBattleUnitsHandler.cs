@@ -27,20 +27,38 @@ namespace ET
                 BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitInfo.unitId, unitInfo.configId);
                 unit.Camp = (UnitCamp)unitInfo.camp;
                 unit.Position = unitInfo.position;
+                unit.FaceDirection = 1f; // 玩家默认面朝右
 
                 NumericComponent numeric = unit.AddComponent<NumericComponent>();
                 numeric.Set(NumericType.Hp, unitInfo.hp);
                 numeric.Set(NumericType.MaxHp, unitInfo.maxHp);
                 numeric.Set(NumericType.Attack, unitInfo.attack);
+                numeric.Set(NumericType.Defense, unitInfo.defense);
+                if (unitInfo.speed > 0)
+                {
+                    numeric.Set(NumericType.Speed, unitInfo.speed);
+                }
 
                 unit.AddComponent<BattleUnitCombatComponent, float>(unitInfo.attackRange);
-                unit.AddComponent<BattleMoveComponent>();
+
+                if (unit.Camp == UnitCamp.Friend)
+                {
+                    BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
+                    if (combat != null)
+                    {
+                        combat.AutoSkillIds = new[] { 11001 };
+                    }
+
+                    unit.AddComponent<ClientPlayerAIComponent>();
+                }
 
                 BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
                 view.InitViewAsync().Forget();
 
                 BattleUIHelper.CreateUnitUI(unit);
             }
+
+            await ETTask.CompletedTask;
         }
     }
 }

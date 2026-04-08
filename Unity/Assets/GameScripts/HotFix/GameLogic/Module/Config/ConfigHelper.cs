@@ -47,11 +47,15 @@ namespace ET
 
         public static SkillTargetingConfigCategory SkillTargetingConfig => tables?.SkillTargetingConfigCategory;
 
-        public static SkillCastCheckConfigCategory SkillCastCheckConfig => tables?.SkillCastCheckConfigCategory;
+        public static BuffGroupConfigCategory SkillEffectGroupConfig => tables?.BuffGroupConfigCategory;
 
-        public static SkillEffectGroupConfigCategory SkillEffectGroupConfig => tables?.SkillEffectGroupConfigCategory;
+        public static BuffConfigCategory SkillEffectConfig => tables?.BuffConfigCategory;
 
-        public static SkillEffectConfigCategory SkillEffectConfig => tables?.SkillEffectConfigCategory;
+        public static SpawnConfigCategory SpawnConfig => tables?.SpawnConfigCategory;
+
+        public static StageConfigCategory StageConfig => tables?.StageConfigCategory;
+
+        public static WaveConfigCategory WaveConfig => tables?.WaveConfigCategory;
         
         /// <summary>
         /// 清理配置引用

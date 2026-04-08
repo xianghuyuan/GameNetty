@@ -26,13 +26,8 @@ public partial class Tables
     public UnitCombatConfigCategory UnitCombatConfigCategory {get; }
     public SkillConfigCategory SkillConfigCategory {get; }
     public SkillTargetingConfigCategory SkillTargetingConfigCategory {get; }
-    public SkillCastCheckConfigCategory SkillCastCheckConfigCategory {get; }
-    public SkillEffectGroupConfigCategory SkillEffectGroupConfigCategory {get; }
-    public SkillEffectConfigCategory SkillEffectConfigCategory {get; }
-    /// <summary>
-    /// 自动战斗策略配置
-    /// </summary>
-    public AutoBattleStrategyConfigCategory AutoBattleStrategyConfigCategory {get; }
+    public BuffGroupConfigCategory BuffGroupConfigCategory {get; }
+    public BuffConfigCategory BuffConfigCategory {get; }
     public BattleGlobalConfigCategory BattleGlobalConfigCategory {get; }
 
     public Tables(System.Func<string, ByteBuf> loader)
@@ -47,10 +42,8 @@ public partial class Tables
         UnitCombatConfigCategory = new UnitCombatConfigCategory(loader("UnitCombatConfigCategory"));
         SkillConfigCategory = new SkillConfigCategory(loader("SkillConfigCategory"));
         SkillTargetingConfigCategory = new SkillTargetingConfigCategory(loader("SkillTargetingConfigCategory"));
-        SkillCastCheckConfigCategory = new SkillCastCheckConfigCategory(loader("SkillCastCheckConfigCategory"));
-        SkillEffectGroupConfigCategory = new SkillEffectGroupConfigCategory(loader("SkillEffectGroupConfigCategory"));
-        SkillEffectConfigCategory = new SkillEffectConfigCategory(loader("SkillEffectConfigCategory"));
-        AutoBattleStrategyConfigCategory = new AutoBattleStrategyConfigCategory(loader("AutoBattleStrategyConfigCategory"));
+        BuffGroupConfigCategory = new BuffGroupConfigCategory(loader("BuffGroupConfigCategory"));
+        BuffConfigCategory = new BuffConfigCategory(loader("BuffConfigCategory"));
         BattleGlobalConfigCategory = new BattleGlobalConfigCategory(loader("BattleGlobalConfigCategory"));
         ResolveRef();
     }
@@ -67,10 +60,8 @@ public partial class Tables
         UnitCombatConfigCategory.ResolveRef(this);
         SkillConfigCategory.ResolveRef(this);
         SkillTargetingConfigCategory.ResolveRef(this);
-        SkillCastCheckConfigCategory.ResolveRef(this);
-        SkillEffectGroupConfigCategory.ResolveRef(this);
-        SkillEffectConfigCategory.ResolveRef(this);
-        AutoBattleStrategyConfigCategory.ResolveRef(this);
+        BuffGroupConfigCategory.ResolveRef(this);
+        BuffConfigCategory.ResolveRef(this);
         BattleGlobalConfigCategory.ResolveRef(this);
     }
 }

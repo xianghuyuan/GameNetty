@@ -3596,6 +3596,18 @@ namespace ET
         [MemoryPackOrder(8)]
         public float attackRange { get; set; }
 
+        /// <summary>
+        /// 移动速度
+        /// </summary>
+        [MemoryPackOrder(9)]
+        public float speed { get; set; }
+
+        /// <summary>
+        /// 防御力
+        /// </summary>
+        [MemoryPackOrder(10)]
+        public int defense { get; set; }
+
         public override void Dispose()
         {
             if (!this.IsFromPool)
@@ -3612,6 +3624,8 @@ namespace ET
             this.maxHp = default;
             this.attack = default;
             this.attackRange = default;
+            this.speed = default;
+            this.defense = default;
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -5145,6 +5159,142 @@ namespace ET
         }
     }
 
+    // 投射物发射（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_ProjectileLaunch)]
+    public partial class M2C_ProjectileLaunch : MessageObject, IMessage
+    {
+        public static M2C_ProjectileLaunch Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_ProjectileLaunch), isFromPool) as M2C_ProjectileLaunch;
+        }
+
+        /// <summary>
+        /// 投射物ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long projectileId { get; set; }
+
+        /// <summary>
+        /// 施法者ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long casterId { get; set; }
+
+        /// <summary>
+        /// 技能ID
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int skillId { get; set; }
+
+        /// <summary>
+        /// 发射位置
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        /// <summary>
+        /// 发射方向
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public float direction { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.projectileId = default;
+            this.casterId = default;
+            this.skillId = default;
+            this.position = default;
+            this.direction = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 投射物命中（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_ProjectileHit)]
+    public partial class M2C_ProjectileHit : MessageObject, IMessage
+    {
+        public static M2C_ProjectileHit Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_ProjectileHit), isFromPool) as M2C_ProjectileHit;
+        }
+
+        /// <summary>
+        /// 投射物ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long projectileId { get; set; }
+
+        /// <summary>
+        /// 命中目标ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long targetId { get; set; }
+
+        /// <summary>
+        /// 命中位置
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.projectileId = default;
+            this.targetId = default;
+            this.position = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 投射物销毁（服务器推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_ProjectileDestroy)]
+    public partial class M2C_ProjectileDestroy : MessageObject, IMessage
+    {
+        public static M2C_ProjectileDestroy Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_ProjectileDestroy), isFromPool) as M2C_ProjectileDestroy;
+        }
+
+        /// <summary>
+        /// 投射物ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long projectileId { get; set; }
+
+        /// <summary>
+        /// 销毁位置
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.projectileId = default;
+            this.position = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
     // 客户端战斗单位创建完成，通知服务端可以开始战斗
     [MemoryPackable]
     [Message(OuterMessage.C2M_BattleReady)]
@@ -5207,6 +5357,616 @@ namespace ET
             this.RpcId = default;
             this.Error = default;
             this.Message = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // ========== 双轨制同步协议 (Dual-Track Sync Protocol) ==========
+    // 杂兵波次指令（服务端推送）- 轨道A：杂兵系统
+    // 客户端收到后本地刷怪并跑AI寻路，服务端不同步个体位置
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_SpawnWave)]
+    public partial class M2C_SpawnWave : MessageObject, IMessage
+    {
+        public static M2C_SpawnWave Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_SpawnWave), isFromPool) as M2C_SpawnWave;
+        }
+
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 波次ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public int waveId { get; set; }
+
+        /// <summary>
+        /// 刷怪中心点X
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public float centerX { get; set; }
+
+        /// <summary>
+        /// 刷怪中心点Y
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public float centerY { get; set; }
+
+        /// <summary>
+        /// 怪物数量
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public int count { get; set; }
+
+        /// <summary>
+        /// 怪物配置ID
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public int monsterConfigId { get; set; }
+
+        /// <summary>
+        /// 移动方向X
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public float moveDirX { get; set; }
+
+        /// <summary>
+        /// 移动方向Y
+        /// </summary>
+        [MemoryPackOrder(7)]
+        public float moveDirY { get; set; }
+
+        /// <summary>
+        /// 刷怪散布范围
+        /// </summary>
+        [MemoryPackOrder(8)]
+        public float spreadRange { get; set; }
+
+        /// <summary>
+        /// 起始单位ID（客户端本地生成时使用）
+        /// </summary>
+        [MemoryPackOrder(9)]
+        public long startUnitId { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.waveId = default;
+            this.centerX = default;
+            this.centerY = default;
+            this.count = default;
+            this.monsterConfigId = default;
+            this.moveDirX = default;
+            this.moveDirY = default;
+            this.spreadRange = default;
+            this.startUnitId = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 客户端批量命中请求（客户端 -> 服务端）- 轨道A
+    // 客户端大招扫过后，本地播受击特效，然后打包发送命中包
+    [MemoryPackable]
+    [Message(OuterMessage.C2M_ClientBatchHit)]
+    public partial class C2M_ClientBatchHit : MessageObject, ILocationMessage
+    {
+        public static C2M_ClientBatchHit Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(C2M_ClientBatchHit), isFromPool) as C2M_ClientBatchHit;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 波次ID
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int waveId { get; set; }
+
+        /// <summary>
+        /// 技能ID
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public int skillId { get; set; }
+
+        /// <summary>
+        /// 判定开始时间
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public float hitStartTick { get; set; }
+
+        /// <summary>
+        /// 判定结束时间
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public float hitEndTick { get; set; }
+
+        /// <summary>
+        /// 判定框最小X
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public float hitBoxMinX { get; set; }
+
+        /// <summary>
+        /// 判定框最大X
+        /// </summary>
+        [MemoryPackOrder(7)]
+        public float hitBoxMaxX { get; set; }
+
+        /// <summary>
+        /// 命中的怪物ID列表
+        /// </summary>
+        [MemoryPackOrder(8)]
+        public List<long> hitUnitIds { get; set; } = new();
+
+        /// <summary>
+        /// 施法者ID
+        /// </summary>
+        [MemoryPackOrder(9)]
+        public long casterId { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.battleId = default;
+            this.waveId = default;
+            this.skillId = default;
+            this.hitStartTick = default;
+            this.hitEndTick = default;
+            this.hitBoxMinX = default;
+            this.hitBoxMaxX = default;
+            this.hitUnitIds.Clear();
+            this.casterId = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 服务端批量伤害结算（服务端推送）- 每100ms打包下发
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BatchDamage)]
+    public partial class M2C_BatchDamage : MessageObject, IMessage
+    {
+        public static M2C_BatchDamage Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BatchDamage), isFromPool) as M2C_BatchDamage;
+        }
+
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 伤害列表
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public List<M2C_BatchDamage_DamageInfo> damages { get; set; } = new();
+
+        /// <summary>
+        /// 本批次确认死亡的怪物ID列表
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public List<long> deadUnitIds { get; set; } = new();
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.damages.Clear();
+            this.deadUnitIds.Clear();
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BatchDamage_DamageInfo)]
+    public partial class M2C_BatchDamage_DamageInfo : MessageObject
+    {
+        public static M2C_BatchDamage_DamageInfo Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BatchDamage_DamageInfo), isFromPool) as M2C_BatchDamage_DamageInfo;
+        }
+
+        /// <summary>
+        /// 攻击者ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long attackerId { get; set; }
+
+        /// <summary>
+        /// 目标ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long targetId { get; set; }
+
+        /// <summary>
+        /// 伤害值
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int damage { get; set; }
+
+        /// <summary>
+        /// 伤害类型
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public int damageType { get; set; }
+
+        /// <summary>
+        /// 目标当前血量
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public int targetCurrentHp { get; set; }
+
+        /// <summary>
+        /// 目标最大血量
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public int targetMaxHp { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.attackerId = default;
+            this.targetId = default;
+            this.damage = default;
+            this.damageType = default;
+            this.targetCurrentHp = default;
+            this.targetMaxHp = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // Boss高频状态同步（服务端推送）- 轨道B：Boss系统，20Hz
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_SyncBoss)]
+    public partial class M2C_SyncBoss : MessageObject, IMessage
+    {
+        public static M2C_SyncBoss Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_SyncBoss), isFromPool) as M2C_SyncBoss;
+        }
+
+        /// <summary>
+        /// Boss单位ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long bossId { get; set; }
+
+        /// <summary>
+        /// Boss位置
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        /// <summary>
+        /// 旋转
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public float rotation { get; set; }
+
+        /// <summary>
+        /// 状态: Idle/Moving/CastSkill/Frozen/Dead
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public string state { get; set; }
+
+        /// <summary>
+        /// 当前施放技能ID（0=无）
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public int currentSkillId { get; set; }
+
+        /// <summary>
+        /// 当前血量
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public int currentHp { get; set; }
+
+        /// <summary>
+        /// 最大血量
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public int maxHp { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.bossId = default;
+            this.position = default;
+            this.rotation = default;
+            this.state = default;
+            this.currentSkillId = default;
+            this.currentHp = default;
+            this.maxHp = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // Boss伤害同步（服务端推送）- Boss伤害由服务端计算，100ms批量下发
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_BossDamage)]
+    public partial class M2C_BossDamage : MessageObject, IMessage
+    {
+        public static M2C_BossDamage Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_BossDamage), isFromPool) as M2C_BossDamage;
+        }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 本批次总伤害
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public int totalDamage { get; set; }
+
+        /// <summary>
+        /// Boss当前血量
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int bossCurrentHp { get; set; }
+
+        /// <summary>
+        /// Boss最大血量
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public int bossMaxHp { get; set; }
+
+        /// <summary>
+        /// 伤害类型
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public int damageType { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.totalDamage = default;
+            this.bossCurrentHp = default;
+            this.bossMaxHp = default;
+            this.damageType = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 位置强制校正（服务端推送）- 当位置误差 > 阈值时下发
+    // 客户端收到后应平滑滑过去（0.1秒），而非瞬移
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_ForceCorrectPos)]
+    public partial class M2C_ForceCorrectPos : MessageObject, IMessage
+    {
+        public static M2C_ForceCorrectPos Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_ForceCorrectPos), isFromPool) as M2C_ForceCorrectPos;
+        }
+
+        /// <summary>
+        /// 单位ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long unitId { get; set; }
+
+        /// <summary>
+        /// 正确位置
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 correctPosition { get; set; }
+
+        /// <summary>
+        /// 平滑过渡时间（秒），默认0.1
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public float smoothDuration { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.unitId = default;
+            this.correctPosition = default;
+            this.smoothDuration = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 网络状态通知（服务端推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_NetworkStateNotice)]
+    public partial class M2C_NetworkStateNotice : MessageObject, IMessage
+    {
+        public static M2C_NetworkStateNotice Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_NetworkStateNotice), isFromPool) as M2C_NetworkStateNotice;
+        }
+
+        /// <summary>
+        /// 0=恢复正常, 1=网络延迟警告
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public int state { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.state = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 技能时间轴攻击请求（客户端 -> 服务端）- 时间轴同步法
+    // 客户端按下攻击时，直接把"未来会发生什么"告诉服务端
+    [MemoryPackable]
+    [Message(OuterMessage.C2M_SkillTimelineAttack)]
+    public partial class C2M_SkillTimelineAttack : MessageObject, ILocationMessage
+    {
+        public static C2M_SkillTimelineAttack Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(C2M_SkillTimelineAttack), isFromPool) as C2M_SkillTimelineAttack;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        /// <summary>
+        /// 技能ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public int skillId { get; set; }
+
+        /// <summary>
+        /// 目标ID
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public long targetId { get; set; }
+
+        /// <summary>
+        /// 判定开始时间（客户端逻辑帧）
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public float hitStartTick { get; set; }
+
+        /// <summary>
+        /// 判定结束时间
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public float hitEndTick { get; set; }
+
+        /// <summary>
+        /// 判定框X轴最小值
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public float hitBoxMinX { get; set; }
+
+        /// <summary>
+        /// 判定框X轴最大值
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public float hitBoxMaxX { get; set; }
+
+        /// <summary>
+        /// 施法者起始位置
+        /// </summary>
+        [MemoryPackOrder(7)]
+        public Unity.Mathematics.float3 startPos { get; set; }
+
+        /// <summary>
+        /// 面朝方向（1=右，-1=左）
+        /// </summary>
+        [MemoryPackOrder(8)]
+        public float faceDir { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.skillId = default;
+            this.targetId = default;
+            this.hitStartTick = default;
+            this.hitEndTick = default;
+            this.hitBoxMinX = default;
+            this.hitBoxMaxX = default;
+            this.startPos = default;
+            this.faceDir = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    /// <summary>
+    /// 客户端同步玩家位置到服务器
+    /// </summary>
+    [MemoryPackable]
+    [Message(OuterMessage.C2M_PlayerPositionSync)]
+    public partial class C2M_PlayerPositionSync : MessageObject, ILocationMessage
+    {
+        public static C2M_PlayerPositionSync Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(C2M_PlayerPositionSync), isFromPool) as C2M_PlayerPositionSync;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 玩家当前位置
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public Unity.Mathematics.float3 position { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.battleId = default;
+            this.position = default;
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -5356,7 +6116,20 @@ namespace ET
         public const ushort M2C_RoomRewardSync = 10141;
         public const ushort M2C_UnitFrozen = 10142;
         public const ushort M2C_UnitKnockback = 10143;
-        public const ushort C2M_BattleReady = 10144;
-        public const ushort M2C_BattleReady = 10145;
+        public const ushort M2C_ProjectileLaunch = 10144;
+        public const ushort M2C_ProjectileHit = 10145;
+        public const ushort M2C_ProjectileDestroy = 10146;
+        public const ushort C2M_BattleReady = 10147;
+        public const ushort M2C_BattleReady = 10148;
+        public const ushort M2C_SpawnWave = 10149;
+        public const ushort C2M_ClientBatchHit = 10150;
+        public const ushort M2C_BatchDamage = 10151;
+        public const ushort M2C_BatchDamage_DamageInfo = 10152;
+        public const ushort M2C_SyncBoss = 10153;
+        public const ushort M2C_BossDamage = 10154;
+        public const ushort M2C_ForceCorrectPos = 10155;
+        public const ushort M2C_NetworkStateNotice = 10156;
+        public const ushort C2M_SkillTimelineAttack = 10157;
+        public const ushort C2M_PlayerPositionSync = 10158;
     }
 }

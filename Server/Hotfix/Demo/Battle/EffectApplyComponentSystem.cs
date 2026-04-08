@@ -21,7 +21,7 @@ namespace ET.Server
         /// 应用技能效果组
         /// </summary>
         public static List<EffectResult> ApplyEffects(this EffectApplyComponent self, 
-            BattleUnit caster, BattleUnit target, SkillEffectGroupConfig effectGroup, int skillId)
+            BattleUnit caster, BattleUnit target, BuffGroupConfig effectGroup, int skillId)
         {
             List<EffectResult> results = new();
             
@@ -32,7 +32,7 @@ namespace ET.Server
             
             foreach (int effectId in effectGroup.EffectIds)
             {
-                SkillEffectConfig effectConfig = SkillEffectConfigCategory.Instance.GetOrDefault(effectId);
+                BuffConfig effectConfig = BuffConfigCategory.Instance.GetOrDefault(effectId);
                 if (effectConfig == null)
                 {
                     continue;
@@ -49,7 +49,7 @@ namespace ET.Server
         /// 应用单个效果
         /// </summary>
         private static EffectResult ApplySingleEffect(this EffectApplyComponent self,
-            BattleUnit caster, BattleUnit target, SkillEffectConfig effectConfig, int skillId)
+            BattleUnit caster, BattleUnit target, BuffConfig effectConfig, int skillId)
         {
             EffectResult result = new EffectResult
             {
@@ -110,7 +110,7 @@ namespace ET.Server
         /// <summary>
         /// 计算伤害
         /// </summary>
-        private static int CalculateDamage(BattleUnit caster, BattleUnit target, SkillEffectConfig effectConfig)
+        private static int CalculateDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
         {
             NumericComponent attackerNumeric = caster?.GetComponent<NumericComponent>();
             NumericComponent targetNumeric = target?.GetComponent<NumericComponent>();

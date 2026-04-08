@@ -22,6 +22,8 @@ namespace ET
             battle.CurrentWave = message.waveNumber;
             battle.TotalWaves = message.totalWaves;
 
+            BattleMoveDebugLog.Write($"[WaveStart] 第{message.waveNumber}/{message.totalWaves}波, 怪物数量={message.monsterCount}");
+
             Log.Info($"波次开始: 第 {message.waveNumber}/{message.totalWaves} 波, 怪物数量: {message.monsterCount}");
 
             EventSystem.Instance.Publish(root, new WaveStart

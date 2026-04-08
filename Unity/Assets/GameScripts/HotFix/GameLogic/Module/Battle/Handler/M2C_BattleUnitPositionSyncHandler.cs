@@ -1,7 +1,10 @@
+using Unity.Mathematics;
+
 namespace ET
 {
     /// <summary>
-    /// 位置校准
+    /// 位置校准（服务端驱动）
+    /// 直接更新逻辑位置和视觉位置
     /// </summary>
     [MessageHandler(SceneType.Main)]
     public class M2C_BattleUnitPositionSyncHandler : MessageHandler<Scene, M2C_BattleUnitPositionSync>
@@ -10,13 +13,7 @@ namespace ET
         {
             BattleComponent battleComponent = root.GetComponent<BattleComponent>();
             Battle battle = battleComponent?.GetCurrentBattle();
-            if (battle == null)
-            {
-                await ETTask.CompletedTask;
-                return;
-            }
-
-            if (battle.BattleId != message.battleId)
+            if (battle == null || battle.BattleId != message.battleId)
             {
                 await ETTask.CompletedTask;
                 return;
@@ -25,22 +22,13 @@ namespace ET
             BattleUnit unit = battle.GetChild<BattleUnit>(message.unitId);
             if (unit == null)
             {
-                Log.Warning($"M2C_BattleUnitPositionSync: 未找到战斗单位, BattleId={message.battleId}, UnitId={message.unitId}");
                 await ETTask.CompletedTask;
                 return;
             }
 
-            BattleMoveDebugLog.Write($"RecvPosSync unit={message.unitId} pos={message.position}");
             unit.Position = message.position;
-
-            BattleMoveComponent moveComponent = unit.GetComponent<BattleMoveComponent>();
-            moveComponent?.StopMove(message.position);
-
-            EventSystem.Instance.Publish(root, new BattleUnitPositionSynced
-            {
-                Unit = unit,
-                Position = message.position,
-            });
+            unit.Forward = float3.zero;
+            unit.GetComponent<BattleUnitView>()?.SetPosition(unit.Position);
 
             await ETTask.CompletedTask;
         }

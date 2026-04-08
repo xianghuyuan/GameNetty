@@ -31,10 +31,17 @@ namespace ET
         public float3 Position { get; set; }
         
         /// <summary>
-        /// 朝向
+        /// 移动意图方向（float3.zero 表示不移动）
+        /// 非零时 View 层每帧驱动增量移动
         /// </summary>
         public float3 Forward { get; set; }
-        
+
+        /// <summary>
+        /// 面朝方向（1f=右, -1f=左），用于视觉翻转
+        /// 与 Forward 解耦：攻击时 Forward=zero 但 FaceDirection 仍指向目标
+        /// </summary>
+        public float FaceDirection { get; set; } = 1f;
+
         /// <summary>
         /// 是否已死亡
         /// </summary>

@@ -94,4 +94,22 @@ namespace ET
         public BattleUnit Unit;
         public int Damage;
     }
+
+    /// <summary>
+    /// 杂兵波次生成完成事件（客户端本地）
+    /// </summary>
+    public struct MinionWaveSpawned
+    {
+        public Battle Battle;
+        public int WaveId;
+    }
+
+    /// <summary>
+    /// 杂兵波次全部死亡事件（客户端本地）
+    /// </summary>
+    public struct MinionWaveAllDead
+    {
+        public Battle Battle;
+        public int WaveId;
+    }
 }

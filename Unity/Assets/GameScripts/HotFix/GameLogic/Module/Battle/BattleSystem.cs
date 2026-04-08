@@ -27,9 +27,15 @@ namespace ET
             self.State = BattleState.Fighting;
             self.StartTime = TimeInfo.Instance.ClientNow();
             BattleMoveDebugLog.StartSession(self.BattleId, self.BattleType);
-            
+
+            // 启动玩家AI和杂兵AI的Tick驱动
+            if (self.GetComponent<ClientPlayerAITickComponent>() == null)
+            {
+                self.AddComponent<ClientPlayerAITickComponent>();
+            }
+
             Log.Info($"战斗开始: BattleId={self.BattleId}, Type={self.BattleType}");
-            
+
             //创建实体
             EventSystem.Instance.Publish(self.Scene(), new BattleStart { Battle = self });
         }
@@ -73,7 +79,10 @@ namespace ET
             int duration = (int)((self.EndTime - self.StartTime) / 1000); // 转换为秒
             
             Log.Info($"战斗结束: BattleId={self.BattleId}, Success={success}, Duration={duration}s");
-            
+
+            // 清理移动追踪器
+            BattleMoveDebugLog.CleanupBattle(self.BattleId);
+
             // 创建战斗结果
             BattleResult result = new BattleResult
             {
@@ -83,7 +92,7 @@ namespace ET
                 Drops = new List<ItemDrop>(),
                 PlayerDamage = new Dictionary<long, int>()
             };
-            
+
             // 触发战斗结束事件
             EventSystem.Instance.Publish(self.Scene(), new BattleEnd { Battle = self, Result = result });
         }

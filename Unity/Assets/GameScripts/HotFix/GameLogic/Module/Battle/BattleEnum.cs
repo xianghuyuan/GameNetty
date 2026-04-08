@@ -67,4 +67,15 @@ namespace ET
         /// </summary>
         Ended = 4
     }
+
+    /// <summary>
+    /// 波次状态（离线波次管理器使用）
+    /// </summary>
+    public enum WaveState
+    {
+        None = 0,
+        Preparing = 1,
+        Fighting = 2,
+        Completed = 3,
+    }
 }

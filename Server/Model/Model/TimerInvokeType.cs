@@ -40,5 +40,10 @@
         public const int BattleMoveTick = 324;     // 战斗移动心跳 100ms
         public const int BattleDecisionTick = 325; // 战斗决策心跳 200ms
         public const int CastingEnd = 326;         // 施法锁定结束
+        public const int ProjectileTick = 327;     // 投射物飞行心跳 50ms
+        public const int SkillTimelineTick = 328;  // 技能时间轴心跳 20ms
+        public const int BossSyncTick = 329;       // Boss高频同步心跳 50ms (20Hz)
+        public const int BatchDamageSend = 330;    // 批量伤害下发心跳 100ms
+        public const int NetworkStateCheck = 331;  // 网络状态机检查心跳 500ms
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ET
 {
     /// <summary>
@@ -11,15 +13,20 @@ namespace ET
         /// 攻击冷却时间（毫秒）
         /// </summary>
         public int AttackCooldown { get; set; } = 1000;
-        
+
         /// <summary>
         /// 攻击范围
         /// </summary>
         public float AttackRange { get; set; } = 2.0f;
-        
+
         /// <summary>
         /// 是否可以攻击
         /// </summary>
         public bool CanAttack { get; set; } = true;
+
+        /// <summary>
+        /// 自动技能列表 [TEST] 硬编码，验证后从服务端同步
+        /// </summary>
+        public int[] AutoSkillIds { get; set; } = System.Array.Empty<int>();
     }
 }

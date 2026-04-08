@@ -1,13 +1,33 @@
 namespace ET.Server
 {
-    [MessageHandler(SceneType.Map)]
+    [MessageSessionHandler(SceneType.Map)]
     [FriendOf(typeof(BattleRoom))]
     [FriendOf(typeof(BattleUnit))]
-    public class C2M_CastSkillHandler : MessageHandler<Scene, C2M_CastSkill, M2C_CastSkill>
+    public class C2M_CastSkillHandler : MessageSessionHandler<C2M_CastSkill, M2C_CastSkill>
     {
-        protected override async ETTask Run(Scene scene, C2M_CastSkill request, M2C_CastSkill response)
+        protected override async ETTask Run(Session session, C2M_CastSkill request, M2C_CastSkill response)
         {
-            BattleRoomManagerComponent roomManager = scene.GetComponent<BattleRoomManagerComponent>();
+            // 从 Session 获取玩家
+            SessionPlayerComponent sessionPlayer = session.GetComponent<SessionPlayerComponent>();
+            if (sessionPlayer?.Player == null)
+            {
+                response.Error = ErrorCode.ERR_BattleNotInBattle;
+                response.Message = "Not in battle";
+                return;
+            }
+
+            Player player = sessionPlayer.Player;
+
+            // 获取玩家所在的 Map 场景
+            Scene mapScene = player.GetParent<Scene>();
+            if (mapScene == null || mapScene.SceneType != SceneType.Map)
+            {
+                response.Error = ErrorCode.ERR_BattleNotInBattle;
+                response.Message = "Not in map scene";
+                return;
+            }
+
+            BattleRoomManagerComponent roomManager = mapScene.GetComponent<BattleRoomManagerComponent>();
             if (roomManager == null)
             {
                 response.Error = ErrorCode.ERR_BattleNotInBattle;
@@ -15,38 +35,21 @@ namespace ET.Server
                 return;
             }
 
-            BattleRoom battleRoom = null;
-            BattleUnit caster = null;
-
-            foreach (EntityRef<BattleRoom> roomRef in roomManager.BattleRoomIdToBattleRoom.Values)
-            {
-                BattleRoom room = roomRef;
-                if (room == null)
-                {
-                    continue;
-                }
-
-                foreach (var kv in room.Units)
-                {
-                    BattleUnit battleUnit = kv.Value;
-                    if (battleUnit != null && !battleUnit.IsDead && battleUnit.Camp == UnitCamp.Friend)
-                    {
-                        caster = battleUnit;
-                        battleRoom = room;
-                        break;
-                    }
-                }
-
-                if (caster != null)
-                {
-                    break;
-                }
-            }
-
-            if (battleRoom == null || caster == null)
+            // 获取玩家所在的战斗房间
+            BattleRoom battleRoom = roomManager.GetBattleRoomByUnitId(player.Id);
+            if (battleRoom == null)
             {
                 response.Error = ErrorCode.ERR_BattleNotInBattle;
                 response.Message = "Not in battle";
+                return;
+            }
+
+            // 获取玩家的战斗单位
+            BattleUnit caster = battleRoom.GetUnit(player.Id);
+            if (caster == null || caster.IsDead)
+            {
+                response.Error = ErrorCode.ERR_BattleNotInBattle;
+                response.Message = "Caster not found or dead";
                 return;
             }
 

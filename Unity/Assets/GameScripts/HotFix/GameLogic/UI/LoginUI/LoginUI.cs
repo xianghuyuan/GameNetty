@@ -5,10 +5,14 @@ namespace GameLogic
     [Window(UILayer.UI)]
     partial class LoginUI : UIWindow
     {
-        private partial UniTaskVoid OnClickLoginBtn()
+        private partial void OnClickLoginBtn()
         {
             LoginHelper.Login(global::Init.Root,m_inputAccount.text,m_inputPassword.text).Coroutine();
-            return default;
+        }
+
+        private partial void OnClickOfflineBtn()
+        {
+            OfflineBattleHelper.StartOfflineBattle(global::Init.Root).Coroutine();
         }
     }
 }

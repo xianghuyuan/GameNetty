@@ -12,6 +12,16 @@ namespace ET
             return (float)self.GetByKey(numericType) / 10000;
         }
 
+        public static int GetAsInt(this NumericComponent self, int numericType)
+        {
+            return (int)self.GetByKey(numericType);
+        }
+
+        public static long GetAsLong(this NumericComponent self, int numericType)
+        {
+            return self.GetByKey(numericType);
+        }
+
         public static void Set(this NumericComponent self, int nt, float value)
         {
             self[nt] = (long)(value * 10000);

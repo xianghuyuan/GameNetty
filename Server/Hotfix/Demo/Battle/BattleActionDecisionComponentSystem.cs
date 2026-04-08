@@ -18,7 +18,7 @@ namespace ET.Server
     [FriendOf(typeof(BattleUnit))]
     public static partial class BattleActionDecisionComponentSystem
     {
-        private const long DecisionTickInterval = 200; // 200ms 决策心跳
+        private const long DecisionTickInterval = 100; // 100ms 决策心跳
         private const float TargetPositionThreshold = 0.1f; // 目标位置变化阈值
 
         [EntitySystem]
@@ -54,12 +54,14 @@ namespace ET.Server
             FreezeComponent freeze = owner.GetComponent<FreezeComponent>();
             if (freeze != null && freeze.IsFrozen)
             {
+                Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 决策跳过: 冻结/施法中");
                 return;
             }
 
             CastingComponent casting = owner.GetComponent<CastingComponent>();
             if (casting != null && casting.IsCasting)
             {
+                Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 决策跳过: 施法锁定中");
                 return;
             }
 
@@ -71,6 +73,7 @@ namespace ET.Server
 
             if (!BattleSkillHelper.TrySelectBestAutoSkillPlan(owner, self.CurrentTarget, out BattleSkillHelper.AutoCastPlan plan))
             {
+                Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 无可用技能，停止移动");
                 if (self.LastTargetId != 0)
                 {
                     self.PublishStopMove(owner);
@@ -83,6 +86,7 @@ namespace ET.Server
 
             BattleUnit target = plan.Target;
             bool inRange = BattleSkillHelper.IsInSkillRange(owner, target, plan.TargetingConfig);
+            Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 选技: SkillId={plan.SkillId}, Target={target?.Id}, InRange={inRange}");
 
             // 状态变化，更新记录
             bool targetChanged = self.LastTargetId != target.Id;
@@ -104,13 +108,16 @@ namespace ET.Server
 
             if (inRange)
             {
-                self.PublishStopMove(owner);
+                // 不停止移动，直接释放技能，让角色边走边打，避免"到达→停顿→攻击"的迟钝感
+                Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 范程内，释放: SkillId={plan.SkillId}");
                 self.PublishCast(owner, plan.SkillId, target.Id);
             }
             else
             {
-                Vector3 interceptPosition = ComputeInterceptPosition(owner, target, plan.TargetingConfig);
-                self.PublishMove(owner, interceptPosition);
+                float requiredMove = plan.RequiredMoveDistance;
+                LogDebugHelper.Log($"[{LogDebugHelper.GetUnitName(owner)}] 超出射程，移动: RequiredMove={requiredMove:F2}");
+                float chaseRange = plan.TargetingConfig.CastRange + plan.TargetingConfig.EdgeDistance;
+                self.PublishMove(owner, target.Position, target.Id, chaseRange);
             }
         }
 
@@ -129,37 +136,15 @@ namespace ET.Server
             });
         }
 
-        private static void PublishMove(this BattleActionDecisionComponent self, BattleUnit owner, Vector3 position)
+        private static void PublishMove(this BattleActionDecisionComponent self, BattleUnit owner, Vector3 position, long chaseTargetId = 0, float chaseAttackRange = 0f)
         {
             EventSystem.Instance.Publish<BattleRoom, RequestMoveEvent>(self.Scene<BattleRoom>()!, new RequestMoveEvent
             {
                 Unit = owner,
                 TargetPosition = position,
+                ChaseTargetId = chaseTargetId,
+                ChaseAttackRange = chaseAttackRange,
             });
-        }
-
-        /// <summary>
-        /// var a1targetX = (Mathf.Abs(a1.positionX - b1.positionX) - a1.attackRange) / (a1.speed + b1.speed) * a1.speed;
-        /// </summary>
-        /// <param name="owner"></param>
-        /// <param name="target"></param>
-        /// <param name="targetingConfig"></param>
-        /// <returns></returns>
-        private static Vector3 ComputeInterceptPosition(BattleUnit owner, BattleUnit target, SkillTargetingConfig targetingConfig)
-        {
-            NumericComponent ownerNumeric = owner.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-
-            float distance = MathF.Abs(owner.Position.X - target.Position.X);
-            float attackRange = targetingConfig?.CastRange ?? 1f;
-            float ownerSpeed = ownerNumeric?.GetAsFloat(NumericType.Speed) ?? 1f;
-            float targetSpeed = targetNumeric?.GetAsFloat(NumericType.Speed) ?? 0f;
-            
-            float effectiveDistance = distance - attackRange;
-            float relativeSpeed = ownerSpeed + targetSpeed;
-            float direction = owner.Position.X <= target.Position.X ? 1 : -1;
-            float interceptX = owner.Position.X +direction*(effectiveDistance / relativeSpeed * ownerSpeed);
-            return new Vector3(interceptX, owner.Position.Y, owner.Position.Z);
         }
 
         public static void Reset(this BattleActionDecisionComponent self)

@@ -18,6 +18,12 @@ namespace ET.Server
             self.SceneType = SceneType.Battle;
             self.ConfigId = configId;
             self.AddComponent<SlotManagerComponent>();
+            // 空间网格 - 加速碰撞检测，网格大小5单位
+            self.AddComponent<BattleSpatialGrid, float>(5f);
+            // 技能时间轴 - 异步插帧结算 + 批量伤害下发
+            self.AddComponent<SkillTimelineComponent>();
+            // Boss高频同步 - 20Hz位置/状态同步
+            self.AddComponent<BossSyncComponent>();
         }
 
 
@@ -96,8 +102,12 @@ namespace ET.Server
         public static void InitBattle(this BattleRoom self, Unit playerUnit, int stageId, int battleType)
         {
             // 创建玩家战斗单位
-            BattleUnit heroUnit = UnitFactory.CreateHero(self, playerUnit.Id, playerUnit.ConfigId, new System.Numerics.Vector3(PlayerSpawnX, 0, 0));
+            BattleUnit heroUnit = UnitFactory.CreateHero(self, playerUnit, new System.Numerics.Vector3(PlayerSpawnX, 0, 0));
             self.Units[heroUnit.Id] = heroUnit;
+
+            // 注册英雄到空间网格
+            BattleSpatialGrid spatialGrid = self.GetComponent<BattleSpatialGrid>();
+            spatialGrid?.Insert(heroUnit.Id, heroUnit.Position.X);
 
             // 获取关卡配置
             StageConfigInfo stageInfo = GetStageConfig(stageId > 0 ? stageId : 1);
@@ -128,8 +138,13 @@ namespace ET.Server
 
                 float xOffset = (index - centerOffset) * TeamMemberSpacingX;
                 var position = new System.Numerics.Vector3(PlayerSpawnX + xOffset, 0, 0);
-                BattleUnit battleUnit = UnitFactory.CreateHero(self, unit.Id, unit.ConfigId, position);
+                BattleUnit battleUnit = UnitFactory.CreateHero(self, unit, position);
                 self.Units[battleUnit.Id] = battleUnit;
+
+                // 注册英雄到空间网格
+                BattleSpatialGrid spatialGrid = self.GetComponent<BattleSpatialGrid>();
+                spatialGrid?.Insert(battleUnit.Id, battleUnit.Position.X);
+
                 index++;
             }
 
@@ -138,6 +153,10 @@ namespace ET.Server
             {
                 BattleUnit bossUnit = UnitFactory.CreateMonster(self, self.ConfigId, new System.Numerics.Vector3(EnemySpawnX, 0, 0));
                 self.Units[bossUnit.Id] = bossUnit;
+
+                // Boss注册到Boss同步组件
+                BossSyncComponent bossSync = self.GetComponent<BossSyncComponent>();
+                bossSync?.RegisterBoss(bossUnit.Id);
             }
 
             // 初始化波次管理器
@@ -204,7 +223,8 @@ namespace ET.Server
                 Unit player = unitComponent.Get(playerId);
                 if (player != null)
                 {
-                    MapMessageHelper.SendToClient(player, message);
+                    // 内联 MapMessageHelper.SendToClient，避免 BattleRoomSystem → MapMessageHelper 的静态类引用
+                    player.Root().GetComponent<MessageLocationSenderComponent>().Get(LocationType.GateSession).Send(player.Id, message);
                 }
             }
         }
@@ -240,7 +260,10 @@ namespace ET.Server
         [EntitySystem]
         private static void Update(this ET.BattleRoom self)
         {
-
+            if (self.State != BattleState.Fighting)
+            {
+                return;
+            }
         }
     }
 }

@@ -4,6 +4,10 @@ using System.Numerics;
 
 namespace ET.Server
 {
+    /// <summary>
+    /// 战斗技能辅助工具类，提供技能选择、目标选取、伤害计算、技能执行等功能。
+    /// 同时服务于自动战斗决策（AI）和手动释放技能两种场景。
+    /// </summary>
     public static class BattleSkillHelper
     {
         private const int SelectTypeLockedTarget = 1;
@@ -19,14 +23,24 @@ namespace ET.Server
         private const int SortRuleNearest = 2;
         private const int SortRuleLowestHp = 3;
 
-        private const int EffectTypeDamage = 1;
-
-        private const int FormulaTypeAttackMinusDefense = 1;
-        private const int FormulaTypeFixedValue = 2;
 
         private const int MonsterTypeElite = 2;
         private const int MonsterTypeBoss = 3;
 
+        private const int CastTypeInstant = 0;     // 瞬发技能（直接生效）
+        private const int CastTypeProjectile = 1;   // 投射物技能（生成投射物飞行后命中）
+
+        private const int EffectTypeDamage = 1;
+        private const int EffectTypeHeal = 4;
+        private const int EffectTypeKnockback = 3;
+        private const int EffectTypeFreeze = 2;
+        private const int EffectTypeStun = 5;
+        private const int FormulaTypeAttackMinusDefense = 1;
+        private const int FormulaTypeFixedValue = 2;
+
+        /// <summary>
+        /// 技能执行结果，包含技能ID、主目标、命中数、总伤害、冷却结束时间及可能的错误信息。
+        /// </summary>
         public struct SkillExecutionResult
         {
             public int Error;
@@ -38,50 +52,28 @@ namespace ET.Server
             public long CooldownEnd;
         }
 
+        /// <summary>
+        /// 自动施法方案，描述一次自动战斗决策选出的最优技能、目标及移动方案。
+        /// 由 TrySelectBestAutoSkillPlan 输出，供决策组件执行移动或施法。
+        /// </summary>
         public struct AutoCastPlan
         {
             public int SkillId;
             public SkillConfig SkillConfig;
             public SkillTargetingConfig TargetingConfig;
             public BattleUnit Target;
+            /// <summary>施法者应移动到的目标位置</summary>
             public Vector3 DesiredCastPosition;
+            /// <summary>期望施法距离（扣除 engage buffer 和 slot offset）</summary>
             public float DesiredCastDistance;
+            /// <summary>施法者需要移动的距离（distance - desiredCastDistance，最小为0）</summary>
             public float RequiredMoveDistance;
         }
 
-        public static void ApplyNormalAttackConfig(BattleUnit unit, BattleUnitCombatComponent combat)
-        {
-            if (unit == null || combat == null)
-            {
-                return;
-            }
-
-            UnitCombatConfig unitCombatConfig = UnitCombatConfigCategory.Instance.GetOrDefault(unit.ConfigId);
-            if (unitCombatConfig == null)
-            {
-                return;
-            }
-
-            SkillConfig skillConfig = unitCombatConfig.NormalAttackSkillIdConfig;
-            SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
-
-            if (skillConfig != null)
-            {
-                combat.AttackCooldown = skillConfig.CooldownMs;
-            }
-
-            if (targetingConfig != null)
-            {
-                combat.AttackRange = targetingConfig.CastRange;
-            }
-
-            NumericComponent numeric = unit.GetComponent<NumericComponent>();
-            if (numeric != null && unitCombatConfig.MoveSpeed > 0)
-            {
-                numeric.Set(NumericType.Speed, unitCombatConfig.MoveSpeed);
-            }
-        }
-
+        /// <summary>
+        /// 判断目标是否在施法者的普攻范围内。
+        /// 优先使用 TargetingConfig 中的 CastRange，配置缺失时回退到 combat.AttackRange。
+        /// </summary>
         public static bool IsInNormalAttackRange(BattleUnit caster, BattleUnit target)
         {
             if (caster == null || target == null)
@@ -102,12 +94,12 @@ namespace ET.Server
         }
 
         /// <summary>
-        /// 遍历所有单位选目标
+        /// 自动战斗选技方法。找到最近的敌人，按优先级遍历技能，返回第一个可用的施法方案。
         /// </summary>
-        /// <param name="caster"></param>
-        /// <param name="preferredTarget"></param>
-        /// <param name="plan"></param>
-        /// <returns></returns>
+        /// <param name="caster">施法者</param>
+        /// <param name="preferredTarget">上一次锁定的目标</param>
+        /// <param name="plan">输出的施法方案</param>
+        /// <returns>是否找到了可用的施法方案</returns>
         public static bool TrySelectBestAutoSkillPlan(BattleUnit caster, BattleUnit preferredTarget, out AutoCastPlan plan)
         {
             plan = default;
@@ -125,27 +117,73 @@ namespace ET.Server
                 return false;
             }
 
-            AutoBattleStrategyConfig strategyConfig = unitCombatConfig.AutoBattleStrategyIdConfig;
-
             List<int> autoSkillIds = GetAutoSkillIds(unitCombatConfig);
             if (autoSkillIds.Count == 0)
             {
                 return false;
             }
 
-            if (TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, strategyConfig, preferredTarget, true, out plan))
+            // 找最近敌人
+            BattleUnit nearestEnemy = preferredTarget;
+            if (nearestEnemy == null || nearestEnemy.IsDead)
             {
-                return true;
+                float nearestDistance = float.MaxValue;
+                foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
+                {
+                    BattleUnit unit = unitRef;
+                    if (unit == null || unit.IsDead || unit.Camp == caster.Camp)
+                    {
+                        continue;
+                    }
+                    
+                    float dist = GetDistance(caster.Position, unit.Position);
+                    if (dist < nearestDistance)
+                    {
+                        nearestDistance = dist;
+                        nearestEnemy = unit;
+                    }
+                }
             }
 
-            if (strategyConfig != null && !strategyConfig.AllowPreMoveOnCooldown)
+            if (nearestEnemy == null)
             {
                 return false;
             }
 
-            return TryBuildAutoCastPlan(caster, battleRoom, combat, autoSkillIds, strategyConfig, preferredTarget, false, out plan);
+            // 按优先级遍历技能，找到第一个可用的
+            foreach (int skillId in autoSkillIds)
+            {
+                SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(skillId);
+                SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
+                if (!CanUseSkillForAuto(caster, combat, skillConfig, targetingConfig, true))
+                {
+                    continue;
+                }
+
+                float distance = GetDistance(caster.Position, nearestEnemy.Position);
+                float desiredCastDistance = GetDesiredCastDistance(caster, nearestEnemy, targetingConfig);
+                float requiredMoveDistance = System.MathF.Max(0f, distance - desiredCastDistance);
+                Vector3 desiredCastPosition = ComputeDesiredCastPosition(caster, nearestEnemy, targetingConfig);
+
+                plan = new AutoCastPlan
+                {
+                    SkillId = skillId,
+                    SkillConfig = skillConfig,
+                    TargetingConfig = targetingConfig,
+                    Target = nearestEnemy,
+                    DesiredCastPosition = desiredCastPosition,
+                    DesiredCastDistance = desiredCastDistance,
+                    RequiredMoveDistance = requiredMoveDistance,
+                };
+                return true;
+            }
+
+            return false;
         }
 
+        /// <summary>
+        /// 在战斗房间中查找指定玩家拥有的友方战斗单位。
+        /// </summary>
         public static BattleUnit FindPlayerBattleUnit(BattleRoom battleRoom, long ownerId)
         {
             if (battleRoom == null)
@@ -165,6 +203,9 @@ namespace ET.Server
             return null;
         }
 
+        /// <summary>
+        /// 尝试执行普通攻击。从 UnitCombatConfig 中获取普攻技能ID，委托给 TryExecuteSkill。
+        /// </summary>
         public static bool TryExecuteNormalAttack(BattleUnit caster, long explicitTargetId, out SkillExecutionResult result)
         {
             result = default;
@@ -180,6 +221,10 @@ namespace ET.Server
             return TryExecuteSkill(caster, unitCombatConfig.NormalAttackSkillId, explicitTargetId, out result);
         }
 
+        /// <summary>
+        /// 检查指定技能是否允许在自动战斗模式下施放。
+        /// 非自动模式下所有技能均可施放；自动模式下仅允许配置中标记为自动释放的技能。
+        /// </summary>
         public static bool CanAutoCastSkill(BattleUnit caster, int skillId)
         {
             if (caster == null)
@@ -215,6 +260,15 @@ namespace ET.Server
             return false;
         }
 
+        /// <summary>
+        /// 技能执行主入口。依次进行：前置检查（死亡、配置完整性、冷却、自动模式限制）
+        /// → 目标选取 → 广播施法 → 执行效果（瞬发直接结算 / 投射物生成弹道） → 启动冷却。
+        /// </summary>
+        /// <param name="caster">施法者</param>
+        /// <param name="skillId">技能配置ID</param>
+        /// <param name="explicitTargetId">玩家指定的目标ID，0表示自动选目标</param>
+        /// <param name="result">执行结果</param>
+        /// <param name="ignoreAutoModeLimit">是否忽略自动模式限制（服务端主动施放时为true）</param>
         public static bool TryExecuteSkill(BattleUnit caster, int skillId, long explicitTargetId, out SkillExecutionResult result,
             bool ignoreAutoModeLimit = false)
         {
@@ -252,33 +306,33 @@ namespace ET.Server
             }
 
             SkillTargetingConfig targetingConfig = skillConfig.TargetingConfigIdConfig;
-            SkillCastCheckConfig castCheckConfig = skillConfig.CastCheckConfigIdConfig;
-            SkillEffectGroupConfig effectGroupConfig = skillConfig.EffectGroupIdConfig;
-            if (targetingConfig == null || castCheckConfig == null || effectGroupConfig == null)
+            BuffGroupConfig effectGroupConfig = skillConfig.BuffGroupIdConfig;
+            if (targetingConfig == null || effectGroupConfig == null)
             {
                 result.Error = ErrorCode.ERR_SkillNotFound;
                 result.Message = $"Skill config incomplete: {skillId}";
+                LogDebugHelper.Log($"[SkillExec] FAIL skillId={skillId} targetingConfig={(targetingConfig==null?"NULL":"OK")} effectGroupConfig={(effectGroupConfig==null?"NULL":"OK")}");
                 return false;
             }
 
             combat.AttackCooldown = skillConfig.CooldownMs;
             combat.AttackRange = targetingConfig.CastRange;
 
-            if (castCheckConfig.CheckCanAttack && !combat.CanAttack)
+            if (!combat.CanAttack)
             {
                 result.Error = ErrorCode.ERR_BattleAttackNotReady;
                 result.Message = "Caster cannot attack";
                 return false;
             }
 
-            if (castCheckConfig.CheckCooldown && !combat.IsSkillReady(skillConfig))
+            if (!combat.IsSkillReady(skillConfig))
             {
-                result.Error = castCheckConfig.FailErrorCode != 0 ? castCheckConfig.FailErrorCode : ErrorCode.ERR_SkillCooldown;
+                result.Error = ErrorCode.ERR_SkillCooldown;
                 result.Message = "Skill is cooling down";
                 return false;
             }
 
-            if (!ignoreAutoModeLimit && castCheckConfig.CheckAutoModeLimit)
+            if (!ignoreAutoModeLimit)
             {
                 PlayerCombatModeComponent modeComponent = caster.GetComponent<PlayerCombatModeComponent>();
                 if (modeComponent != null && modeComponent.IsAutoBattle)
@@ -300,296 +354,80 @@ namespace ET.Server
             BattleUnit mainTarget = targets[0];
             BattleUnitHelper.BroadcastSkillCast(caster, skillId, mainTarget.Id, mainTarget.Position);
 
-            int totalDamage = 0;
-            foreach (BattleUnit target in targets)
+            LogDebugHelper.Log($"[SkillExec] skillId={skillId} CastType={skillConfig.CastType} BuffGroupId={skillConfig.BuffGroupId} EffectIds=[{string.Join(",", effectGroupConfig.EffectIds)}] TargetCount={targets.Count}");
+
+            // 投射物类型技能：生成投射物，由投射物飞行过程中进行碰撞检测和伤害结算
+            if (skillConfig.CastType == CastTypeProjectile)
             {
-                totalDamage += ApplyEffects(caster, target, effectGroupConfig, skillConfig);
+                LogDebugHelper.Log($"[SkillExec] skillId={skillId} -> Projectile path (CastType=1), SpawnProjectileEvent");
+                EventSystem.Instance.Publish(battleRoom.Root(), new SpawnProjectileEvent
+                {
+                    Caster = caster,
+                    SkillConfig = skillConfig,
+                    Target = mainTarget,
+                });
+            }
+            else
+            {
+                // 非投射物类型：直接生效
+                LogDebugHelper.Log($"[SkillExec] skillId={skillId} -> Instant path (CastType=0), calling ApplyEffects");
+                int totalDamage = 0;
+                foreach (BattleUnit target in targets)
+                {
+                    totalDamage += ApplyEffects(caster, target, effectGroupConfig, skillConfig);
+                }
+
+                LogDebugHelper.Log($"[SkillExec] skillId={skillId} ApplyEffects done, totalDamage={totalDamage}");
+                result.TotalDamage = totalDamage;
             }
 
+            // 技能生效（伤害/投射物已生成）后再启动CD
             long cooldownEnd = combat.StartSkillCooldown(skillConfig);
 
             result.SkillId = skillId;
             result.MainTarget = mainTarget;
             result.HitTargetsCount = targets.Count;
-            result.TotalDamage = totalDamage;
-            result.CooldownEnd = cooldownEnd;
             return true;
         }
 
-        private static bool TryBuildAutoCastPlan(BattleUnit caster, BattleRoom battleRoom, BattleUnitCombatComponent combat,
-            List<int> autoSkillIds, AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget, bool readyOnly, out AutoCastPlan bestPlan)
-        {
-            bestPlan = default;
-            bool found = false;
-
-            foreach (int skillId in autoSkillIds)
-            {
-                SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(skillId);
-                SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
-                SkillCastCheckConfig castCheckConfig = skillConfig?.CastCheckConfigIdConfig;
-                if (!CanUseSkillForAuto(caster, combat, skillConfig, targetingConfig, castCheckConfig, readyOnly))
-                {
-                    continue;
-                }
-
-                foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
-                {
-                    BattleUnit target = unitRef;
-                    if (!IsTargetValid(caster, target, targetingConfig))
-                    {
-                        continue;
-                    }
-
-                    float distance = GetDistance(caster.Position, target.Position);
-
-                    float desiredCastDistance = GetDesiredCastDistance(caster, target, targetingConfig);
-                    float requiredMoveDistance = System.MathF.Max(0f, distance - desiredCastDistance);
-                    Vector3 desiredCastPosition = ComputeDesiredCastPosition(caster, target, targetingConfig);
-
-                    AutoCastPlan candidate = new AutoCastPlan
-                    {
-                        SkillId = skillId,
-                        SkillConfig = skillConfig,
-                        TargetingConfig = targetingConfig,
-                        Target = target,
-                        DesiredCastPosition = desiredCastPosition,
-                        DesiredCastDistance = desiredCastDistance,
-                        RequiredMoveDistance = requiredMoveDistance,
-                    };
-
-                    if (!found || IsBetterAutoCastPlan(caster, candidate, bestPlan, strategyConfig, preferredTarget))
-                    {
-                        bestPlan = candidate;
-                        found = true;
-                    }
-                }
-            }
-
-            return found;
-        }
-
-        private static bool CanUseSkillForAuto(BattleUnit caster, BattleUnitCombatComponent combat, SkillConfig skillConfig,
-            SkillTargetingConfig targetingConfig, SkillCastCheckConfig castCheckConfig, bool readyOnly)
-        {
-            if (caster == null || combat == null || skillConfig == null || targetingConfig == null || castCheckConfig == null)
-            {
-                return false;
-            }
-
-            if (!skillConfig.IsEnabled || (castCheckConfig.CheckCanAttack && !combat.CanAttack))
-            {
-                return false;
-            }
-
-            if (readyOnly && castCheckConfig.CheckCooldown && !combat.IsSkillReady(skillConfig))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool IsBetterAutoCastPlan(BattleUnit caster, AutoCastPlan candidate, AutoCastPlan current,
-            AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget)
-        {
-            if (TryCompareCurrentTargetPreference(candidate, current, strategyConfig, preferredTarget, out bool candidateWinsByCurrentTarget))
-            {
-                return candidateWinsByCurrentTarget;
-            }
-
-            int candidateTargetWeight = GetTargetTypeWeight(candidate.Target, strategyConfig);
-            int currentTargetWeight = GetTargetTypeWeight(current.Target, strategyConfig);
-            if (candidateTargetWeight != currentTargetWeight)
-            {
-                return candidateTargetWeight > currentTargetWeight;
-            }
-
-            if (TryCompareSkillSelectionRule(candidate, current, strategyConfig, out bool candidateWinsBySkillRule))
-            {
-                return candidateWinsBySkillRule;
-            }
-
-            if (TryCompareTargetSelectionRule(caster, candidate, current, strategyConfig, out bool candidateWinsByTargetRule))
-            {
-                return candidateWinsByTargetRule;
-            }
-
-            if (candidate.RequiredMoveDistance + 0.0001f < current.RequiredMoveDistance)
-            {
-                return true;
-            }
-
-            if (candidate.RequiredMoveDistance > current.RequiredMoveDistance + 0.0001f)
-            {
-                return false;
-            }
-
-            float candidateTargetDistance = GetDistance(candidate.DesiredCastPosition, candidate.Target.Position);
-            float currentTargetDistance = GetDistance(current.DesiredCastPosition, current.Target.Position);
-            if (candidateTargetDistance + 0.0001f < currentTargetDistance)
-            {
-                return true;
-            }
-
-            if (candidateTargetDistance > currentTargetDistance + 0.0001f)
-            {
-                return false;
-            }
-
-            return (candidate.SkillConfig?.Priority ?? 0) > (current.SkillConfig?.Priority ?? 0);
-        }
-
-        private static bool TryCompareCurrentTargetPreference(AutoCastPlan candidate, AutoCastPlan current,
-            AutoBattleStrategyConfig strategyConfig, BattleUnit preferredTarget, out bool candidateWins)
-        {
-            candidateWins = false;
-
-            if (preferredTarget == null || preferredTarget.IsDead || strategyConfig == null || !strategyConfig.PreferCurrentTarget)
-            {
-                return false;
-            }
-
-            bool candidateIsPreferredTarget = candidate.Target?.Id == preferredTarget.Id;
-            bool currentIsPreferredTarget = current.Target?.Id == preferredTarget.Id;
-            if (candidateIsPreferredTarget == currentIsPreferredTarget)
-            {
-                return false;
-            }
-
-            float tolerance = MathF.Max(0f, strategyConfig.TargetSwitchTolerance);
-            if (candidateIsPreferredTarget && candidate.RequiredMoveDistance <= current.RequiredMoveDistance + tolerance)
-            {
-                candidateWins = true;
-                return true;
-            }
-
-            if (currentIsPreferredTarget && current.RequiredMoveDistance <= candidate.RequiredMoveDistance + tolerance)
-            {
-                candidateWins = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static bool TryCompareSkillSelectionRule(AutoCastPlan candidate, AutoCastPlan current,
-            AutoBattleStrategyConfig strategyConfig, out bool candidateWins)
-        {
-            candidateWins = false;
-
-            AutoBattleSkillSelectRule rule = (AutoBattleSkillSelectRule)(strategyConfig?.SkillSelectRule ?? (int)AutoBattleSkillSelectRule.ShortestMoveThenPriority);
-            switch (rule)
-            {
-                case AutoBattleSkillSelectRule.HighestPriorityThenMove:
-                {
-                    int candidatePriority = candidate.SkillConfig?.Priority ?? 0;
-                    int currentPriority = current.SkillConfig?.Priority ?? 0;
-                    if (candidatePriority != currentPriority)
-                    {
-                        candidateWins = candidatePriority > currentPriority;
-                        return true;
-                    }
-
-                    if (MathF.Abs(candidate.RequiredMoveDistance - current.RequiredMoveDistance) > 0.0001f)
-                    {
-                        candidateWins = candidate.RequiredMoveDistance < current.RequiredMoveDistance;
-                        return true;
-                    }
-
-                    return false;
-                }
-                case AutoBattleSkillSelectRule.ShortestMoveThenPriority:
-                default:
-                {
-                    if (MathF.Abs(candidate.RequiredMoveDistance - current.RequiredMoveDistance) > 0.0001f)
-                    {
-                        candidateWins = candidate.RequiredMoveDistance < current.RequiredMoveDistance;
-                        return true;
-                    }
-
-                    int candidatePriority = candidate.SkillConfig?.Priority ?? 0;
-                    int currentPriority = current.SkillConfig?.Priority ?? 0;
-                    if (candidatePriority != currentPriority)
-                    {
-                        candidateWins = candidatePriority > currentPriority;
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        private static bool TryCompareTargetSelectionRule(BattleUnit caster, AutoCastPlan candidate, AutoCastPlan current,
-            AutoBattleStrategyConfig strategyConfig, out bool candidateWins)
-        {
-            candidateWins = false;
-
-            AutoBattleTargetSelectRule rule = (AutoBattleTargetSelectRule)(strategyConfig?.TargetSelectRule ?? (int)AutoBattleTargetSelectRule.NearestEnemy);
-            switch (rule)
-            {
-                case AutoBattleTargetSelectRule.LowestHp:
-                {
-                    int candidateHp = GetCurrentHp(candidate.Target);
-                    int currentHp = GetCurrentHp(current.Target);
-                    if (candidateHp != currentHp)
-                    {
-                        candidateWins = candidateHp < currentHp;
-                        return true;
-                    }
-
-                    break;
-                }
-                case AutoBattleTargetSelectRule.KeepCurrentThenNearest:
-                case AutoBattleTargetSelectRule.NearestEnemy:
-                default:
-                    break;
-            }
-
-            float candidateDistance = GetDistance(caster.Position, candidate.Target.Position);
-            float currentDistance = GetDistance(caster.Position, current.Target.Position);
-            if (MathF.Abs(candidateDistance - currentDistance) > 0.0001f)
-            {
-                candidateWins = candidateDistance < currentDistance;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static int GetTargetTypeWeight(BattleUnit target, AutoBattleStrategyConfig strategyConfig)
-        {
-            if (target == null || strategyConfig == null)
-            {
-                return 0;
-            }
-
-            int weight = 0;
-            int monsterType = GetMonsterType(target);
-            if (strategyConfig.PreferBoss && monsterType == MonsterTypeBoss)
-            {
-                weight += 200;
-            }
-
-            if (strategyConfig.PreferElite && monsterType == MonsterTypeElite)
-            {
-                weight += 100;
-            }
-
-            return weight;
-        }
-
-        private static int GetMonsterType(BattleUnit unit)
-        {
-            MonsterUnitConfig monsterConfig = MonsterUnitConfigCategory.Instance.GetOrDefault(unit.ConfigId);
-            return monsterConfig?.Type ?? 0;
-        }
-
+        /// <summary>
+        /// 判断指定技能是否为该单位的普攻技能。
+        /// </summary>
         private static bool IsNormalAttackSkill(UnitCombatConfig unitCombatConfig, int skillId)
         {
             return unitCombatConfig != null && unitCombatConfig.NormalAttackSkillId != 0 && unitCombatConfig.NormalAttackSkillId == skillId;
         }
 
+        /// <summary>
+        /// 检查技能是否可用于自动战斗。校验配置完整性、技能是否启用、能否攻击、以及冷却状态。
+        /// </summary>
+        /// <param name="readyOnly">true时额外检查技能CD是否就绪</param>
+        private static bool CanUseSkillForAuto(BattleUnit caster, BattleUnitCombatComponent combat, SkillConfig skillConfig,
+            SkillTargetingConfig targetingConfig, bool readyOnly)
+        {
+            if (caster == null || combat == null || skillConfig == null || targetingConfig == null)
+            {
+                return false;
+            }
+
+            if (!skillConfig.IsEnabled || !combat.CanAttack)
+            {
+                return false;
+            }
+
+            if (readyOnly && !combat.IsSkillReady(skillConfig))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 收集单位可自动释放的技能ID列表。
+        /// 包含 AutoSkillIds 中配置的技能，以及根据 AutoCastNormalAttack 决定是否包含普攻。
+        /// 自动去重。
+        /// </summary>
         private static List<int> GetAutoSkillIds(UnitCombatConfig unitCombatConfig)
         {
             List<int> result = new List<int>();
@@ -626,6 +464,13 @@ namespace ET.Server
             return result;
         }
 
+        /// <summary>
+        /// 为技能选取目标列表。支持三种目标选取方式：
+        /// 1. 指定目标（explicitTargetId > 0）：直接验证并返回
+        /// 2. 锁定目标/最近敌人：返回距离最近的一个合法目标
+        /// 3. 范围内所有敌人：返回射程内所有合法目标
+        /// 选取后会按 SortRule 排序并限制最大目标数。
+        /// </summary>
         private static List<BattleUnit> SelectTargets(BattleUnit caster, BattleRoom battleRoom, SkillConfig skillConfig,
             SkillTargetingConfig targetingConfig, long explicitTargetId, out int error, out string message)
         {
@@ -728,21 +573,37 @@ namespace ET.Server
             return targets;
         }
 
-        private static int ApplyEffects(BattleUnit caster, BattleUnit target, SkillEffectGroupConfig effectGroupConfig, SkillConfig skillConfig)
+        /// <summary>
+        /// 对目标施加技能效果组中的所有效果。目前仅支持伤害效果。
+        /// <summary>
+        /// 对目标施加技能的buff组。所有战斗效果统一视为buff：
+        /// - 即时效果（Damage/Heal/Knockback）直接执行并广播
+        /// - 持续效果（Freeze/Stun/DoT）创建 BuffEntity 注册到 BuffComponent
+        /// </summary>
+        /// <returns>造成的总即时伤害</returns>
+        public static int ApplyEffects(BattleUnit caster, BattleUnit target, BuffGroupConfig effectGroupConfig, SkillConfig skillConfig)
         {
             int totalDamage = 0;
 
-            foreach (int effectId in effectGroupConfig.EffectIds)
+            if (effectGroupConfig == null || target == null)
             {
-                SkillEffectConfig effectConfig = SkillEffectConfigCategory.Instance.GetOrDefault(effectId);
+                return totalDamage;
+            }
+
+            long currentTime = TimeInfo.Instance.ServerFrameTime();
+            BuffComponent buffComponent = target.GetComponent<BuffComponent>();
+
+            foreach (int buffId in effectGroupConfig.EffectIds)
+            {
+                BuffConfig effectConfig = BuffConfigCategory.Instance.GetOrDefault(buffId);
                 if (effectConfig == null)
                 {
                     continue;
                 }
 
-                switch (effectConfig.EffectType)
+                switch ((EffectType)effectConfig.EffectType)
                 {
-                    case EffectTypeDamage:
+                    case EffectType.Damage:
                     {
                         bool wasAlive = !target.IsDead;
                         int damage = CalculateDamage(caster, target, effectConfig);
@@ -752,8 +613,51 @@ namespace ET.Server
                         {
                             BattleUnitHelper.BroadcastUnitDead(target, caster.Id);
                         }
-
                         totalDamage += damage;
+                        break;
+                    }
+                    case EffectType.Heal:
+                    {
+                        int healAmount = (int)effectConfig.BaseValue;
+                        if (healAmount > 0)
+                        {
+                            target.Heal(healAmount);
+                        }
+                        break;
+                    }
+                    case EffectType.Knockback:
+                    {
+                        float distance = effectConfig.BaseValue;
+                        float direction = caster != null
+                            ? (caster.Position.X <= target.Position.X ? 1f : -1f)
+                            : 1f;
+                        if (distance > 0)
+                        {
+                            EventSystem.Instance.Publish(target.Root(), new KnockbackEvent
+                            {
+                                Target = target,
+                                Attacker = caster,
+                                Distance = distance,
+                                Direction = direction,
+                                CasterId = caster?.Id ?? 0,
+                            });
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        // 持续效果（Freeze/Stun/DoT等）交给 BuffComponent 管理
+                        if (buffComponent != null)
+                        {
+                            int duration = 0;
+                            int tickInterval = 0;
+                            if ((EffectType)effectConfig.EffectType == EffectType.Freeze || (EffectType)effectConfig.EffectType == EffectType.Stun)
+                            {
+                                duration = (int)effectConfig.BaseValue;
+                            }
+
+                            buffComponent.AddBuff(buffId, caster?.Id ?? 0, skillConfig.Id, effectConfig, duration, tickInterval);
+                        }
                         break;
                     }
                 }
@@ -762,7 +666,10 @@ namespace ET.Server
             return totalDamage;
         }
 
-        private static int CalculateDamage(BattleUnit caster, BattleUnit target, SkillEffectConfig effectConfig)
+        /// <summary>
+        /// 根据伤害公式计算单次效果伤害。
+        /// </summary>
+        private static int CalculateDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
         {
             NumericComponent attackerNumeric = caster.GetComponent<NumericComponent>();
             NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
@@ -797,6 +704,9 @@ namespace ET.Server
             return damage;
         }
 
+        /// <summary>
+        /// 根据技能类型获取伤害类型标识。
+        /// </summary>
         private static int GetDamageType(SkillConfig skillConfig)
         {
             if (skillConfig == null)
@@ -807,6 +717,9 @@ namespace ET.Server
             return skillConfig.SkillKind == 1 ? 0 : 1;
         }
 
+        /// <summary>
+        /// 检查目标是否合法：存活状态检查 + 阵营关系检查。
+        /// </summary>
         private static bool IsTargetValid(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             if (caster == null || target == null)
@@ -822,6 +735,10 @@ namespace ET.Server
             return IsTargetCampMatched(caster, target, targetingConfig.TargetCampRelation);
         }
 
+        /// <summary>
+        /// 检查施法者与目标的阵营关系是否匹配配置要求。
+        /// 支持敌方、友方（不含自身）、自身、任意阵营。
+        /// </summary>
         private static bool IsTargetCampMatched(BattleUnit caster, BattleUnit target, int targetCampRelation)
         {
             switch (targetCampRelation)
@@ -839,11 +756,17 @@ namespace ET.Server
             }
         }
 
+        /// <summary>
+        /// 判断目标是否在技能射程内。射程 = CastRange + EdgeDistance + 碰撞半径（可选）。
+        /// </summary>
         public static bool IsInSkillRange(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             return GetDistance(caster.Position, target.Position) <= GetAllowedCastDistance(caster, target, targetingConfig);
         }
 
+        /// <summary>
+        /// 计算允许施法的最大距离 = CastRange + EdgeDistance + 碰撞半径（如果启用）。
+        /// </summary>
         private static float GetAllowedCastDistance(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             float allowedDistance = targetingConfig.CastRange + targetingConfig.EdgeDistance;
@@ -855,6 +778,9 @@ namespace ET.Server
             return allowedDistance;
         }
 
+        /// <summary>
+        /// 计算期望施法距离。在允许施法距离基础上扣除 engage buffer（防止浮点抖动）和 slot offset（多单位近战错位）。
+        /// </summary>
         private static float GetDesiredCastDistance(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             float allowedDistance = GetAllowedCastDistance(caster, target, targetingConfig);
@@ -864,6 +790,10 @@ namespace ET.Server
             return desiredDistance > 0f ? desiredDistance : allowedDistance;
         }
 
+        /// <summary>
+        /// 计算近战错位偏移量。根据施法者和目标的 ID 哈希分配 4 个站位槽位，
+        /// 避免多个单位攻击同一目标时重叠在同一位置。
+        /// </summary>
         private static float GetEngageSlotOffset(BattleUnit caster, BattleUnit target)
         {
             if (caster == null || target == null)
@@ -875,6 +805,9 @@ namespace ET.Server
             return slotIndex * 0.08f;
         }
 
+        /// <summary>
+        /// 计算施法者应移动到的目标位置。站在目标面向施法者方向的一侧，距离为期望施法距离。
+        /// </summary>
         public static Vector3 ComputeDesiredCastPosition(BattleUnit caster, BattleUnit target, SkillTargetingConfig targetingConfig)
         {
             float desiredDistance = GetDesiredCastDistance(caster, target, targetingConfig);
@@ -882,6 +815,9 @@ namespace ET.Server
             return new Vector3(target.Position.X + direction * desiredDistance, caster.Position.Y, caster.Position.Z);
         }
 
+        /// <summary>
+        /// 按排序规则对目标列表排序。支持：无排序、按距离最近、按血量最低。
+        /// </summary>
         private static void SortTargets(BattleUnit caster, List<BattleUnit> targets, int sortRule)
         {
             switch (sortRule)
@@ -898,6 +834,9 @@ namespace ET.Server
             }
         }
 
+        /// <summary>
+        /// 限制目标数量不超过配置的最大值。超出时截断尾部（排序后优先保留靠前的目标）。
+        /// </summary>
         private static void LimitTargets(List<BattleUnit> targets, int maxTargetCount)
         {
             if (maxTargetCount > 0 && targets.Count > maxTargetCount)
@@ -906,6 +845,9 @@ namespace ET.Server
             }
         }
 
+        /// <summary>
+        /// 通过单位ID在战斗房间中查找战斗单位。
+        /// </summary>
         private static BattleUnit FindBattleUnitById(BattleRoom battleRoom, long unitId)
         {
             if (battleRoom == null || !battleRoom.Units.TryGetValue(unitId, out EntityRef<BattleUnit> unitRef))
@@ -917,16 +859,25 @@ namespace ET.Server
             return unit;
         }
 
+        /// <summary>
+        /// 获取单位当前生命值。
+        /// </summary>
         private static int GetCurrentHp(BattleUnit unit)
         {
             return unit?.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Hp) ?? 0;
         }
 
+        /// <summary>
+        /// 获取单位碰撞半径。当前固定返回 0，后续可从配置中读取。
+        /// </summary>
         private static float GetCollisionRadius(BattleUnit unit)
         {
             return 0f;
         }
 
+        /// <summary>
+        /// 计算两点之间的 X 轴距离。当前战斗为横版，仅使用 X 坐标。
+        /// </summary>
         private static float GetDistance(Vector3 from, Vector3 to)
         {
             return MathF.Abs(from.X - to.X);

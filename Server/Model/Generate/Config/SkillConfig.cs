@@ -23,14 +23,18 @@ namespace ET
             CastType = _buf.ReadInt();
             TargetType = _buf.ReadInt();
             TargetingConfigId = _buf.ReadInt();
-            CastCheckConfigId = _buf.ReadInt();
             CooldownGroupId = _buf.ReadInt();
             CooldownMs = _buf.ReadInt();
             Priority = _buf.ReadInt();
             CanMoveCast = _buf.ReadBool();
             NeedExplicitTarget = _buf.ReadBool();
-            EffectGroupId = _buf.ReadInt();
+            BuffGroupId = _buf.ReadInt();
             IsEnabled = _buf.ReadBool();
+            ProjectileSpeed = _buf.ReadFloat();
+            ProjectileMaxDistance = _buf.ReadFloat();
+            ProjectileCollisionRadius = _buf.ReadFloat();
+            ProjectilePiercing = _buf.ReadBool();
+            ProjectileMaxHitCount = _buf.ReadInt();
             Desc = _buf.ReadString();
 
             PostInit();
@@ -82,16 +86,6 @@ namespace ET
         public SkillTargetingConfig TargetingConfigIdConfig => SkillTargetingConfigCategory.Instance.GetOrDefault(TargetingConfigId);
 
         /// <summary>
-        /// 施法校验配置ID
-        /// </summary>
-        public readonly int CastCheckConfigId;
-
-        /// <summary>
-        /// 施法校验配置ID
-        /// </summary>
-        public SkillCastCheckConfig CastCheckConfigIdConfig => SkillCastCheckConfigCategory.Instance.GetOrDefault(CastCheckConfigId);
-
-        /// <summary>
         /// 冷却组ID
         /// </summary>
         public readonly int CooldownGroupId;
@@ -119,17 +113,42 @@ namespace ET
         /// <summary>
         /// 效果组ID
         /// </summary>
-        public readonly int EffectGroupId;
+        public readonly int BuffGroupId;
 
         /// <summary>
         /// 效果组ID
         /// </summary>
-        public SkillEffectGroupConfig EffectGroupIdConfig => SkillEffectGroupConfigCategory.Instance.GetOrDefault(EffectGroupId);
+        public BuffGroupConfig BuffGroupIdConfig => BuffGroupConfigCategory.Instance.GetOrDefault(BuffGroupId);
 
         /// <summary>
         /// 是否启用
         /// </summary>
         public readonly bool IsEnabled;
+
+        /// <summary>
+        /// 投射物飞行速度（单位/秒）
+        /// </summary>
+        public readonly float ProjectileSpeed;
+
+        /// <summary>
+        /// 投射物最大飞行距离
+        /// </summary>
+        public readonly float ProjectileMaxDistance;
+
+        /// <summary>
+        /// 投射物碰撞半径
+        /// </summary>
+        public readonly float ProjectileCollisionRadius;
+
+        /// <summary>
+        /// 投射物是否穿透
+        /// </summary>
+        public readonly bool ProjectilePiercing;
+
+        /// <summary>
+        /// 投射物最大命中单位数
+        /// </summary>
+        public readonly int ProjectileMaxHitCount;
 
         /// <summary>
         /// 描述
@@ -150,14 +169,18 @@ namespace ET
             + "CastType:" + CastType + ","
             + "TargetType:" + TargetType + ","
             + "TargetingConfigId:" + TargetingConfigId + ","
-            + "CastCheckConfigId:" + CastCheckConfigId + ","
             + "CooldownGroupId:" + CooldownGroupId + ","
             + "CooldownMs:" + CooldownMs + ","
             + "Priority:" + Priority + ","
             + "CanMoveCast:" + CanMoveCast + ","
             + "NeedExplicitTarget:" + NeedExplicitTarget + ","
-            + "EffectGroupId:" + EffectGroupId + ","
+            + "BuffGroupId:" + BuffGroupId + ","
             + "IsEnabled:" + IsEnabled + ","
+            + "ProjectileSpeed:" + ProjectileSpeed + ","
+            + "ProjectileMaxDistance:" + ProjectileMaxDistance + ","
+            + "ProjectileCollisionRadius:" + ProjectileCollisionRadius + ","
+            + "ProjectilePiercing:" + ProjectilePiercing + ","
+            + "ProjectileMaxHitCount:" + ProjectileMaxHitCount + ","
             + "Desc:" + Desc + ","
             + "}";
         }

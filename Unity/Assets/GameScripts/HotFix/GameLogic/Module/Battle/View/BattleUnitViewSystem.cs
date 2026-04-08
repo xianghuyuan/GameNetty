@@ -1,5 +1,5 @@
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
+using Spine.Unity;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -7,6 +7,7 @@ namespace ET
 {
     [EntitySystemOf(typeof(BattleUnitView))]
     [FriendOf(typeof(BattleUnitView))]
+    [FriendOf(typeof(BattleUnit))]
     public static partial class BattleUnitViewSystem
     {
         [EntitySystem]
@@ -20,8 +21,6 @@ namespace ET
         {
             self.Initialized = false;
             self.HasPendingPosition = false;
-            self.KillMoveTween();
-            self.KillTweens();
             if (self.GameObject != null)
             {
                 UnityEngine.Object.Destroy(self.GameObject);
@@ -33,86 +32,106 @@ namespace ET
         {
             BattleUnit unit = self.GetParent<BattleUnit>();
 
-            self.GameObject = await GameModule.Resource.LoadGameObjectAsync(BattleAreaConfig.BattleUnitViewPrefabPath);
+            string prefabPath = self.Camp == UnitCamp.Friend
+                ? BattleAreaConfig.HeroUnitViewPrefabPath
+                : BattleAreaConfig.MonsterUnitViewPrefabPath;
+
+            self.GameObject = await GameModule.Resource.LoadGameObjectAsync(prefabPath);
 
             if (self.GameObject == null)
             {
-                Log.Error($"加载战斗单位 Prefab 失败: {BattleAreaConfig.BattleUnitViewPrefabPath}");
+                Log.Error($"加载战斗单位 Prefab 失败: {prefabPath}");
                 return;
             }
 
             self.GameObject.name = $"Unit_{unit.Id}";
-
-            self.GameObject.transform.localScale = new Vector3(self.Camp == UnitCamp.Friend ? 1f : -1f, 1f, 1f);
+            self.GameObject.transform.localScale = new Vector3(unit.FaceDirection > 0f ? 1f : -1f, 1f, 1f);
+            self.SkeletonAnimation = self.GameObject.GetComponent<SkeletonAnimation>();
             self.InitPresentation();
 
-            
             Vector3 worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, unit.Position);
             self.GameObject.transform.position = worldPos;
-            if (self.HasPendingPosition)//存在推送消息
+
+            if (self.HasPendingPosition)
             {
-                self.UpdatePosition(self.PendingPosition,self.PendingDuration);
+                worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, self.PendingPosition);
+                self.GameObject.transform.position = worldPos;
                 self.HasPendingPosition = false;
             }
 
             self.Initialized = true;
-
-            Log.Info($"创建单位表现 UnitId={unit.Id}, Camp={self.Camp}, Pos={self.GameObject.transform.position}");
         }
 
         public static void InitPresentation(this BattleUnitView self)
         {
             if (self.GameObject == null) return;
-            
-            SpriteRenderer sr = self.GameObject.GetComponentInChildren<SpriteRenderer>();
-            self.DefaultColor = sr != null ? sr.color : Color.white;
             self.DefaultScale = self.GameObject.transform.localScale;
         }
 
-        public static void UpdatePosition(this BattleUnitView self, float3 position, float timer)
+        /// <summary>
+        /// 每帧驱动：基于 Forward 增量移动，FaceDirection 控制视觉翻转
+        /// </summary>
+        [EntitySystem]
+        private static void Update(this BattleUnitView self)
+        {
+            if (!self.Initialized || self.GameObject == null) return;
+
+            BattleUnit unit = self.GetParent<BattleUnit>();
+            if (unit == null || unit.IsDead) return;
+
+            // 视觉翻转
+            float faceDir = unit.FaceDirection;
+            if (faceDir != 0f)
+            {
+                self.GameObject.transform.localScale = new Vector3(faceDir > 0f ? 1f : -1f, 1f, 1f);
+            }
+
+            // Forward != zero 时增量移动
+            float speed = unit.GetComponent<NumericComponent>()?.GetAsFloat(NumericType.Speed) ?? 0f;
+            bool shouldMove = unit.Forward.x != 0f && speed > 0f;
+
+            self.PlayLocomotionAnimation(shouldMove);
+
+            if (!shouldMove) return;
+
+            float dt = Time.deltaTime;
+            float moveDelta = speed * dt;
+
+            // 更新逻辑位置
+            unit.Position = new float3(unit.Position.x + unit.Forward.x * moveDelta, unit.Position.y, unit.Position.z);
+
+            // 同步视觉位置
+            Vector3 worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, unit.Position);
+            self.GameObject.transform.position = worldPos;
+        }
+
+        /// <summary>
+        /// 直接 snap 到指定逻辑位置（服务端同步用）
+        /// </summary>
+        public static void SetPosition(this BattleUnitView self, float3 position)
         {
             if (!self.Initialized)
             {
                 self.PendingPosition = position;
-                self.PendingDuration = timer;
                 self.HasPendingPosition = true;
-                BattleUnit unit = self.GetParent<BattleUnit>();
-                BattleMoveDebugLog.Write($"ViewPending unit={unit?.Id ?? 0} target={position} timer={timer:F3}");
                 return;
             }
 
-            BattleUnit owner = self.GetParent<BattleUnit>();
             Vector3 worldPos = BattleAreaConfig.GetWorldPosition(self.Camp, position);
-            if (timer == 0)
-            {
-                self.KillMoveTween();
-                BattleMoveDebugLog.Write(
-                    $"ViewSnap unit={owner?.Id ?? 0} currentWorld={self.GameObject.transform.position} targetWorld={worldPos}");
-                self.GameObject.transform.position = worldPos;
-            }
-            else
-            {
-                self.KillMoveTween();
-                BattleMoveDebugLog.Write(
-                    $"ViewTweenStart unit={owner?.Id ?? 0} currentWorld={self.GameObject.transform.position} targetWorld={worldPos} timer={timer:F3}");
-                self.MoveTweener = self.GameObject.transform.DOMove(worldPos, timer)
-                    .SetEase(Ease.Linear)
-                    .SetRecyclable(true)
-                    .OnComplete(() =>
-                    {
-                        BattleMoveDebugLog.Write(
-                            $"ViewTweenComplete unit={owner?.Id ?? 0} worldPos={self.GameObject.transform.position} targetWorld={worldPos}");
-                        self.MoveTweener = null;
-                    });
-            }
+            self.GameObject.transform.position = worldPos;
         }
 
         public static void SetColor(this BattleUnitView self, Color color)
         {
-            if (self.GameObject == null) return;
-            
-            SpriteRenderer sr = self.GameObject.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null) sr.color = color;
+            if (self.SkeletonAnimation != null)
+            {
+                self.SkeletonAnimation.Skeleton.SetColor(color);
+            }
+            else if (self.GameObject != null)
+            {
+                SpriteRenderer sr = self.GameObject.GetComponentInChildren<SpriteRenderer>();
+                if (sr != null) sr.color = color;
+            }
         }
 
         public static void SetVisible(this BattleUnitView self, bool visible)
@@ -120,54 +139,83 @@ namespace ET
             if (self.GameObject != null) self.GameObject.SetActive(visible);
         }
 
+        private const string AnimIdle = "idle";
+        private const string AnimRun = "run";
+        private const string AnimAttack = "atk1";
+        private const string AnimHit = "hit";
+        private const string AnimDeath = "die";
+
+        /// <summary>
+        /// 切换移动/待机动画
+        /// </summary>
+        public static void PlayLocomotionAnimation(this BattleUnitView self, bool moving)
+        {
+            if (self.SkeletonAnimation == null) return;
+
+            string targetAnim = moving ? AnimRun : AnimIdle;
+            if (self.CurrentAnimName == AnimAttack || self.CurrentAnimName == AnimHit || self.CurrentAnimName == AnimDeath)
+                return;
+
+            if (self.CurrentAnimName == targetAnim) return;
+
+            self.CurrentAnimName = targetAnim;
+            self.IsMoving = moving;
+            self.SkeletonAnimation.AnimationState.SetAnimation(0, targetAnim, true);
+        }
+
+        /// <summary>
+        /// 播放攻击动画，结束后自动回到当前移动/待机动画
+        /// </summary>
+        public static void PlayAttackAnimation(this BattleUnitView self)
+        {
+            if (self.SkeletonAnimation == null) return;
+
+            self.CurrentAnimName = AnimAttack;
+            var entry = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimAttack, false);
+            entry.Complete += _ =>
+            {
+                if (self.SkeletonAnimation == null) return;
+                self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
+                self.SkeletonAnimation.AnimationState.SetAnimation(0, self.CurrentAnimName, true);
+            };
+        }
+
+        /// <summary>
+        /// 播放受击动画，结束后自动回到当前移动/待机动画
+        /// </summary>
+        public static void PlayHitAnimation(this BattleUnitView self)
+        {
+            if (self.SkeletonAnimation == null) return;
+
+            self.CurrentAnimName = AnimHit;
+            var entry = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimHit, false);
+            entry.Complete += _ =>
+            {
+                if (self.SkeletonAnimation == null) return;
+                self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
+                self.SkeletonAnimation.AnimationState.SetAnimation(0, self.CurrentAnimName, true);
+            };
+        }
+
+        /// <summary>
+        /// 播放死亡动画
+        /// </summary>
+        public static void PlayDeathAnimation(this BattleUnitView self)
+        {
+            if (self.SkeletonAnimation == null) return;
+
+            self.CurrentAnimName = AnimDeath;
+            self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimDeath, false);
+        }
+
         public static void PlayAttackFeedback(this BattleUnitView self)
         {
-            self.KillTweens();
-            self.PlayPulse(new Color(1f, 0.95f, 0.55f, 1f), 1.1f, 0.10f);
+            self.PlayAttackAnimation();
         }
 
         public static void PlayHitFeedback(this BattleUnitView self, int damage)
         {
-            self.KillTweens();
-            self.PlayPulse(new Color(1f, 0.45f, 0.45f, 1f), 1.06f, 0.12f);
-            self.PlayDamagePopup(damage);
-        }
-
-        private static void KillTweens(this BattleUnitView self)
-        {
-            self.PresentationTweener?.Kill();
-            self.PresentationTweener = null;
-        }
-
-        private static void KillMoveTween(this BattleUnitView self)
-        {
-            self.MoveTweener?.Kill();
-            self.MoveTweener = null;
-        }
-
-        private static void PlayPulse(this BattleUnitView self, Color flashColor, float scaleMultiplier, float duration)
-        {
-            if (self.GameObject == null) return;
-            
-            Transform transform = self.GameObject.transform;
-            SpriteRenderer sr = self.GameObject.GetComponentInChildren<SpriteRenderer>();
-            
-            Sequence scaleSeq = DOTween.Sequence();
-            scaleSeq.Append(transform.DOScale(self.DefaultScale * scaleMultiplier, duration * 0.5f).SetEase(Ease.OutQuad));
-            scaleSeq.Append(transform.DOScale(self.DefaultScale, duration * 0.5f).SetEase(Ease.InQuad));
-            scaleSeq.Play();
-            self.PresentationTweener = scaleSeq;
-            
-            if (sr != null)
-            {
-                sr.DOColor(flashColor, duration * 0.5f).SetEase(Ease.OutQuad)
-                    .OnComplete(() => sr.DOColor(self.DefaultColor, duration * 0.5f).SetEase(Ease.InQuad));
-            }
-        }
-
-        private static void PlayDamagePopup(this BattleUnitView self, int damage)
-        {
-            if (self.GameObject == null) return;
+            self.PlayHitAnimation();
         }
     }
 }

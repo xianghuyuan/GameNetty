@@ -800,6 +800,8 @@ message BattleUnitInfo
     int32 maxHp = 7;        // 最大血量
     int32 attack = 8;       // 攻击力
     float attackRange = 9;  // 攻击距离
+    float speed = 10;       // 移动速度
+    int32 defense = 11;     // 防御力
 }
 
 // 创建战斗单位（服务器主动推送）
@@ -1113,6 +1115,31 @@ message M2C_UnitKnockback // IMessage
     Unity.Mathematics.float3 newPosition = 4; // 击退后位置
 }
 
+// 投射物发射（服务器推送）
+message M2C_ProjectileLaunch // IMessage
+{
+    int64 projectileId = 1;                        // 投射物ID
+    int64 casterId = 2;                            // 施法者ID
+    int32 skillId = 3;                             // 技能ID
+    Unity.Mathematics.float3 position = 4;         // 发射位置
+    float direction = 5;                           // 发射方向
+}
+
+// 投射物命中（服务器推送）
+message M2C_ProjectileHit // IMessage
+{
+    int64 projectileId = 1;                        // 投射物ID
+    int64 targetId = 2;                            // 命中目标ID
+    Unity.Mathematics.float3 position = 3;         // 命中位置
+}
+
+// 投射物销毁（服务器推送）
+message M2C_ProjectileDestroy // IMessage
+{
+    int64 projectileId = 1;                        // 投射物ID
+    Unity.Mathematics.float3 position = 2;         // 销毁位置
+}
+
 // ResponseType M2C_BattleReady
 // 客户端战斗单位创建完成，通知服务端可以开始战斗
 message C2M_BattleReady // ILocationRequest
@@ -1126,4 +1153,115 @@ message M2C_BattleReady // ILocationResponse
     int32 RpcId = 1;
     int32 Error = 2;
     string Message = 3;
+}
+
+// ========== 双轨制同步协议 (Dual-Track Sync Protocol) ==========
+
+// 杂兵波次指令（服务端推送）- 轨道A：杂兵系统
+// 客户端收到后本地刷怪并跑AI寻路，服务端不同步个体位置
+message M2C_SpawnWave // IMessage
+{
+    int64 battleId = 1;
+    int32 waveId = 2;           // 波次ID
+    float centerX = 3;          // 刷怪中心点X
+    float centerY = 4;          // 刷怪中心点Y
+    int32 count = 5;            // 怪物数量
+    int32 monsterConfigId = 6;  // 怪物配置ID
+    float moveDirX = 7;         // 移动方向X
+    float moveDirY = 8;         // 移动方向Y
+    float spreadRange = 9;      // 刷怪散布范围
+    int64 startUnitId = 10;     // 起始单位ID（客户端本地生成时使用）
+}
+
+// 客户端批量命中请求（客户端 -> 服务端）- 轨道A
+// 客户端大招扫过后，本地播受击特效，然后打包发送命中包
+message C2M_ClientBatchHit // ILocationMessage
+{
+    int32 RpcId = 1;
+    int64 battleId = 2;         // 战斗ID
+    int32 waveId = 3;           // 波次ID
+    int32 skillId = 4;          // 技能ID
+    float hitStartTick = 5;     // 判定开始时间
+    float hitEndTick = 6;       // 判定结束时间
+    float hitBoxMinX = 7;       // 判定框最小X
+    float hitBoxMaxX = 8;       // 判定框最大X
+    repeated int64 hitUnitIds = 9;  // 命中的怪物ID列表
+    int64 casterId = 10;        // 施法者ID
+}
+
+// 服务端批量伤害结算（服务端推送）- 每100ms打包下发
+message M2C_BatchDamage // IMessage
+{
+    int64 battleId = 1;
+    repeated M2C_BatchDamage_DamageInfo damages = 2;  // 伤害列表
+    repeated int64 deadUnitIds = 3;                    // 本批次确认死亡的怪物ID列表
+}
+
+message M2C_BatchDamage_DamageInfo
+{
+    int64 attackerId = 1;       // 攻击者ID
+    int64 targetId = 2;         // 目标ID
+    int32 damage = 3;           // 伤害值
+    int32 damageType = 4;       // 伤害类型
+    int32 targetCurrentHp = 5;  // 目标当前血量
+    int32 targetMaxHp = 6;      // 目标最大血量
+}
+
+// Boss高频状态同步（服务端推送）- 轨道B：Boss系统，20Hz
+message M2C_SyncBoss // IMessage
+{
+    int64 bossId = 1;                           // Boss单位ID
+    Unity.Mathematics.float3 position = 2;      // Boss位置
+    float rotation = 3;                         // 旋转
+    string state = 4;                           // 状态: Idle/Moving/CastSkill/Frozen/Dead
+    int32 currentSkillId = 5;                   // 当前施放技能ID（0=无）
+    int32 currentHp = 6;                        // 当前血量
+    int32 maxHp = 7;                            // 最大血量
+}
+
+// Boss伤害同步（服务端推送）- Boss伤害由服务端计算，100ms批量下发
+message M2C_BossDamage // IMessage
+{
+    int64 battleId = 1;         // 战斗ID
+    int32 totalDamage = 2;      // 本批次总伤害
+    int32 bossCurrentHp = 3;    // Boss当前血量
+    int32 bossMaxHp = 4;        // Boss最大血量
+    int32 damageType = 5;       // 伤害类型
+}
+
+// 位置强制校正（服务端推送）- 当位置误差 > 阈值时下发
+// 客户端收到后应平滑滑过去（0.1秒），而非瞬移
+message M2C_ForceCorrectPos // IMessage
+{
+    int64 unitId = 1;                           // 单位ID
+    Unity.Mathematics.float3 correctPosition = 2; // 正确位置
+    float smoothDuration = 3;                   // 平滑过渡时间（秒），默认0.1
+}
+
+// 网络状态通知（服务端推送）
+message M2C_NetworkStateNotice // IMessage
+{
+    int32 state = 1;  // 0=恢复正常, 1=网络延迟警告
+}
+
+// 技能时间轴攻击请求（客户端 -> 服务端）- 时间轴同步法
+// 客户端按下攻击时，直接把"未来会发生什么"告诉服务端
+message C2M_SkillTimelineAttack // ILocationMessage
+{
+    int32 RpcId = 1;
+    int32 skillId = 2;          // 技能ID
+    int64 targetId = 3;         // 目标ID
+    float hitStartTick = 4;     // 判定开始时间（客户端逻辑帧）
+    float hitEndTick = 5;       // 判定结束时间
+    float hitBoxMinX = 6;       // 判定框X轴最小值
+    float hitBoxMaxX = 7;       // 判定框X轴最大值
+    Unity.Mathematics.float3 startPos = 8;     // 施法者起始位置
+    float faceDir = 9;          // 面朝方向（1=右，-1=左）
+}
+
+// 客户端同步玩家位置到服务器
+message C2M_PlayerPositionSync // ILocationMessage
+{
+    int64 battleId = 1;                        // 战斗ID
+    Unity.Mathematics.float3 position = 2;      // 玩家当前位置
 }

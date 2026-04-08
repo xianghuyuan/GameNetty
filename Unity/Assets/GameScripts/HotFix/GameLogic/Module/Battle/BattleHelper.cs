@@ -1,3 +1,5 @@
+using Unity.Mathematics;
+
 namespace ET
 {
     /// <summary>
@@ -153,6 +155,20 @@ namespace ET
             
             Log.Debug($"释放技能成功, SkillId: {skillId}, CooldownEnd: {response.cooldownEnd}");
             return true;
+        }
+
+        /// <summary>
+        /// 同步玩家位置到服务端（客户端权威移动模式下，Boss AI需要知道玩家位置）
+        /// </summary>
+        public static void SyncPlayerPosition(Scene scene, long battleId, float3 position)
+        {
+            C2M_PlayerPositionSync message = C2M_PlayerPositionSync.Create();
+            message.battleId = battleId;
+            message.position = position;
+            scene.GetComponent<ClientSenderComponent>()?.Send(message);
+
+            // 记录客户端位置同步
+            BattleMoveDebugLog.RecordClientPosSync(0, position, battleId);
         }
     }
 }

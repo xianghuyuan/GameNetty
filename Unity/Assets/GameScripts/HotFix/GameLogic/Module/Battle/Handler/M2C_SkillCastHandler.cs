@@ -8,6 +8,7 @@ namespace ET
             BattleComponent battleComponent = root.GetComponent<BattleComponent>();
             Battle battle = battleComponent?.GetCurrentBattle();
             Log.Info(BattleMessageLogHelper.FormatSkillCast(battle, message));
+            BattleMoveDebugLog.Write(BattleMessageLogHelper.FormatSkillCast(battle, message));
 
             BattleUnit caster = battle?.GetChild<BattleUnit>(message.casterId);
             if (caster == null)
