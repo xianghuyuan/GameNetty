@@ -6,37 +6,29 @@ namespace ET
     /// </summary>
     public static class OfflineBattleHelper
     {
+#if UNITY_EDITOR
+        private static GameLogic.BattleDebugPanel _debugPanel;
+#endif
+
         /// <summary>
-        /// 启动离线波次战斗
+        /// 确保调试面板存在（仅 Editor 下自动挂载）
+        /// </summary>
+        private static void EnsureDebugPanel()
+        {
+#if UNITY_EDITOR
+            if (_debugPanel != null) return;
+            var go = new UnityEngine.GameObject("~BattleDebugPanel");
+            _debugPanel = go.AddComponent<GameLogic.BattleDebugPanel>();
+#endif
+        }
+        /// <summary>
+        /// 启动离线战斗（空战斗模式，不启动波次管理，通过调试面板手动添加怪物）
         /// </summary>
         /// <param name="scene">Main scene</param>
-        /// <param name="stageId">关卡配置 ID（0 = 使用第一个关卡）</param>
         /// <param name="playerUnitId">主世界 Unit ID（0 = 自动查找或创建默认）</param>
-        public static async ETTask<Battle> StartOfflineBattle(Scene scene, int stageId = 0, long playerUnitId = 0)
+        public static async ETTask<Battle> StartOfflineBattle(Scene scene, long playerUnitId = 0)
         {
-            // 1. 确定关卡配置
-            if (stageId <= 0)
-            {
-                var stageConfigs = ConfigHelper.StageConfig?.DataList;
-                if (stageConfigs != null && stageConfigs.Count > 0)
-                {
-                    stageId = stageConfigs[0].Id;
-                }
-                else
-                {
-                    Log.Error("OfflineBattle: No stage configs available");
-                    return null;
-                }
-            }
-
-            StageConfig stageConfig = ConfigHelper.StageConfig?.GetOrDefault(stageId);
-            if (stageConfig == null)
-            {
-                Log.Error($"OfflineBattle: StageConfig not found: id={stageId}");
-                return null;
-            }
-
-            // 2. 查找玩家 Unit ID
+            // 1. 查找玩家 Unit ID
             if (playerUnitId <= 0)
             {
                 PlayerComponent playerComponent = scene.Root().GetComponent<PlayerComponent>();
@@ -46,7 +38,7 @@ namespace ET
                 }
             }
 
-            // 3. 创建 Battle 实体（会自动调用 Battle.Start() 启动 AI tick）
+            // 2. 创建 Battle 实体（会自动调用 Battle.Start() 启动 AI tick）
             BattleComponent battleComponent = scene.GetComponent<BattleComponent>();
             if (battleComponent == null)
             {
@@ -57,22 +49,20 @@ namespace ET
             long battleId = IdGenerater.Instance.GenerateInstanceId();
             Battle battle = battleComponent.CreateBattle(battleId, (int)BattleType.WaveBattle);
 
-            // 4. 添加离线战斗组件
+            // 3. 添加离线战斗组件
             OfflineBattleComponent offlineComp = battle.AddComponent<OfflineBattleComponent>();
-            offlineComp.StageConfigId = stageId;
             offlineComp.PlayerUnitId = playerUnitId;
 
-            // 5. 创建玩家单位
+            // 4. 创建玩家单位
             offlineComp.CreatePlayerBattleUnit();
+
+            // 5. 挂载调试面板（仅 Editor）
+            EnsureDebugPanel();
 
             // 6. 等一帧让视图初始化
             await scene.Root().GetComponent<TimerComponent>().WaitFrameAsync();
 
-            // 7. 启动波次管理
-            OfflineWaveManagerComponent waveManager = battle.AddComponent<OfflineWaveManagerComponent, int>(stageId);
-            await waveManager.StartFirstWave();
-
-            Log.Info($"OfflineBattle started: BattleId={battleId}, StageId={stageId}, Waves={stageConfig.TotalWaves}");
+            Log.Info($"OfflineBattle started (empty mode): BattleId={battleId}");
             return battle;
         }
 

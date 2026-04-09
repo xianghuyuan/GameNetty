@@ -3608,6 +3608,18 @@ namespace ET
         [MemoryPackOrder(10)]
         public int defense { get; set; }
 
+        /// <summary>
+        /// 是否为Boss
+        /// </summary>
+        [MemoryPackOrder(11)]
+        public bool isBoss { get; set; }
+
+        /// <summary>
+        /// 所属玩家ID（英雄=玩家ID，怪物=0）
+        /// </summary>
+        [MemoryPackOrder(12)]
+        public long ownerId { get; set; }
+
         public override void Dispose()
         {
             if (!this.IsFromPool)
@@ -3626,6 +3638,79 @@ namespace ET
             this.attackRange = default;
             this.speed = default;
             this.defense = default;
+            this.isBoss = default;
+            this.ownerId = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    // 重连恢复战斗（SecondLogin时服务端主动推送）
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_ReconnectBattle)]
+    public partial class M2C_ReconnectBattle : MessageObject, IMessage
+    {
+        public static M2C_ReconnectBattle Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_ReconnectBattle), isFromPool) as M2C_ReconnectBattle;
+        }
+
+        /// <summary>
+        /// 战斗ID
+        /// </summary>
+        [MemoryPackOrder(0)]
+        public long battleId { get; set; }
+
+        /// <summary>
+        /// 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss
+        /// </summary>
+        [MemoryPackOrder(1)]
+        public int battleType { get; set; }
+
+        /// <summary>
+        /// 战斗状态: 1=Prepare, 2=Fighting
+        /// </summary>
+        [MemoryPackOrder(2)]
+        public int state { get; set; }
+
+        /// <summary>
+        /// 当前波次（0-based）
+        /// </summary>
+        [MemoryPackOrder(3)]
+        public int currentWave { get; set; }
+
+        /// <summary>
+        /// 总波数
+        /// </summary>
+        [MemoryPackOrder(4)]
+        public int totalWaves { get; set; }
+
+        /// <summary>
+        /// 所有存活单位（英雄+Boss）
+        /// </summary>
+        [MemoryPackOrder(5)]
+        public List<BattleUnitInfo> units { get; set; } = new();
+
+        /// <summary>
+        /// 已完成的波次编号列表
+        /// </summary>
+        [MemoryPackOrder(6)]
+        public List<int> completedWaveNumbers { get; set; } = new();
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.battleId = default;
+            this.battleType = default;
+            this.state = default;
+            this.currentWave = default;
+            this.totalWaves = default;
+            this.units.Clear();
+            this.completedWaveNumbers.Clear();
 
             ObjectPool.Instance.Recycle(this);
         }
@@ -6131,5 +6216,6 @@ namespace ET
         public const ushort M2C_NetworkStateNotice = 10156;
         public const ushort C2M_SkillTimelineAttack = 10157;
         public const ushort C2M_PlayerPositionSync = 10158;
+        public const ushort M2C_ReconnectBattle = 10159;
     }
 }

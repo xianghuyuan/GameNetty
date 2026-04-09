@@ -802,6 +802,20 @@ message BattleUnitInfo
     float attackRange = 9;  // 攻击距离
     float speed = 10;       // 移动速度
     int32 defense = 11;     // 防御力
+    bool isBoss = 12;       // 是否为Boss
+    int64 ownerId = 13;     // 所属玩家ID（英雄=玩家ID，怪物=0）
+}
+
+// 重连恢复战斗（SecondLogin时服务端主动推送）
+message M2C_ReconnectBattle // IMessage
+{
+    int64 battleId = 1;
+    int32 battleType = 2;           // 战斗类型: 0=WaveBattle, 1=Dungeon, 2=Boss
+    int32 state = 3;                // 战斗状态: 1=Prepare, 2=Fighting
+    int32 currentWave = 4;          // 当前波次（0-based）
+    int32 totalWaves = 5;           // 总波数
+    repeated BattleUnitInfo units = 6;  // 所有存活单位（英雄+Boss）
+    repeated int32 completedWaveNumbers = 7;  // 已完成的波次编号列表
 }
 
 // 创建战斗单位（服务器主动推送）

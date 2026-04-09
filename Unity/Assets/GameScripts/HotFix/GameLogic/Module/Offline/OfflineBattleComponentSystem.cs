@@ -92,19 +92,29 @@ namespace ET
             }
             else
             {
-                // 使用 UnitCombatConfig 默认值
+                // 默认属性
+                numeric.Set(NumericType.Hp, 1000);
+                numeric.Set(NumericType.MaxHp, 1000);
+                numeric.Set(NumericType.Attack, 50);
+                numeric.Set(NumericType.Defense, 10);
+                numeric.Set(NumericType.Speed, 3f);
+
+                // 尝试从 UnitCombatConfig 覆盖速度
                 UnitCombatConfig combatConfig = ConfigHelper.UnitCombatConfig?.GetOrDefault(configId);
                 if (combatConfig != null)
                 {
-                    numeric.Set(NumericType.Hp, 1000);
-                    numeric.Set(NumericType.MaxHp, 1000);
-                    numeric.Set(NumericType.Attack, 50);
-                    numeric.Set(NumericType.Defense, 10);
                     numeric.Set(NumericType.Speed, combatConfig.MoveSpeed);
                 }
             }
 
             unit.AddComponent<BattleUnitCombatComponent, float>(3f);
+
+            BattleUnitCombatComponent combatComp = unit.GetComponent<BattleUnitCombatComponent>();
+            if (combatComp != null)
+            {
+                combatComp.AutoSkillIds = new[] { 11001 };
+            }
+
             unit.AddComponent<ClientPlayerAIComponent>();
 
             BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);

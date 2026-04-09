@@ -31,7 +31,7 @@ namespace ET
 
         public static Vector3 GetWorldPosition(UnitCamp camp, float3 position)
         {
-            return new Vector3(position.x + BattleAreaCenter.x, BattleAreaCenter.y, 0f);
+            return new Vector3(position.x + BattleAreaCenter.x, position.y + BattleAreaCenter.y, 0f);
         }
     }
 }

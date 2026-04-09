@@ -111,11 +111,29 @@ namespace ET
 
                     if (battle.GetComponent<OfflineBattleComponent>() != null)
                     {
-                        OfflineBattleDamageHelper.ApplySkillEffects(player, target, bestSkillId);
+                        var result = OfflineBattleDamageHelper.ApplySkillEffects(player, target, bestSkillId);
+                        // 配置不全时 fallback：直接用 ATK - DEF 结算
+                        if (result.TotalDamage <= 0 && !target.IsDead)
+                        {
+                            int atk = player.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Attack) ?? 0;
+                            int def = target.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Defense) ?? 0;
+                            int dmg = System.Math.Max(1, atk - def);
+                            target.GetComponent<BattleUnitCombatComponent>()?.TakeDamage(dmg);
+                            EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
+                            {
+                                Unit = target,
+                                AttackerId = player.Id,
+                                Damage = dmg,
+                                IsCrit = false,
+                            });
+                        }
                     }
                     else
                     {
                         BattleHelper.CastSkill(player.Scene(), bestSkillId, target.Id).Coroutine();
+
+                        // 客户端权威：本地碰撞检测 + 立刻扣血 + 发送 C2M_ClientBatchHit 给服务端验证
+                        ClientBattleDamageHelper.ApplySkillOnMinions(battle, player, bestSkillId);
                     }
                 }
                 return;

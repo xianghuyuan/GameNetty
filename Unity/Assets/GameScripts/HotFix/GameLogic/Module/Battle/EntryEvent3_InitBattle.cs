@@ -7,8 +7,10 @@ namespace ET
         {
             // 添加 BattleComponent 到 Main 场景
             root.AddComponent<BattleComponent>();
+            // 挂载 ET↔TE 事件桥接器
+            root.AddComponent<EventBridgeComponent>();
             
-            Log.Info("BattleComponent 初始化完成");
+            Log.Info("BattleComponent & EventBridgeComponent 初始化完成");
             
             await ETTask.CompletedTask;
         }

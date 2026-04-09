@@ -46,5 +46,10 @@ namespace ET
         /// 是否已死亡
         /// </summary>
         public bool IsDead { get; set; }
+
+        /// <summary>
+        /// 是否Boss单位
+        /// </summary>
+        public bool IsBoss { get; set; }
     }
 }

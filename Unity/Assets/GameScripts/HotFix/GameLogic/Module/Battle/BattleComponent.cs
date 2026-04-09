@@ -57,6 +57,23 @@ namespace ET
         }
         
         /// <summary>
+        /// 创建战斗但不启动（用于重连：先创建单位再手动Start，确保BattleStart_UI能补刷UI）
+        /// </summary>
+        public static Battle CreateBattleWithoutStart(this BattleComponent self, long battleId, int battleType)
+        {
+            if (self.CurrentBattle != null)
+            {
+                Log.Warning($"已存在战斗，先清理旧战斗: {self.CurrentBattle.BattleId}");
+                self.CurrentBattle.Dispose();
+            }
+            
+            Battle battle = self.AddChildWithId<Battle, long, int>(battleId, battleId, battleType);
+            self.CurrentBattle = battle;
+            
+            return battle;
+        }
+        
+        /// <summary>
         /// 获取战斗
         /// </summary>
         public static Battle GetBattle(this BattleComponent self, long battleId)

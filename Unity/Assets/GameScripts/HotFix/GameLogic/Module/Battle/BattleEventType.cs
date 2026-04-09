@@ -9,6 +9,7 @@ namespace ET
     /// <summary>
     /// 战斗开始事件
     /// </summary>
+    [BridgeToTE]
     public struct BattleStart
     {
         public Battle Battle;
@@ -17,6 +18,7 @@ namespace ET
     /// <summary>
     /// 战斗结束事件
     /// </summary>
+    [BridgeToTE]
     public struct BattleEnd
     {
         public Battle Battle;
@@ -44,6 +46,7 @@ namespace ET
     /// <summary>
     /// 战斗单位死亡事件
     /// </summary>
+    [BridgeToTE]
     public struct BattleUnitDead
     {
         public BattleUnit BattleUnit;
@@ -81,6 +84,7 @@ namespace ET
     /// <summary>
     /// 战斗单位释放技能事件
     /// </summary>
+    [BridgeToTE]
     public struct BattleUnitSkillCast
     {
         public BattleUnit Unit;
@@ -89,10 +93,21 @@ namespace ET
     /// <summary>
     /// 战斗单位受到伤害事件
     /// </summary>
+    [BridgeToTE]
     public struct BattleUnitDamaged
     {
         public BattleUnit Unit;
+        public long AttackerId;
         public int Damage;
+        public bool IsCrit;
+    }
+
+    /// <summary>
+    /// 战斗单位复活事件（服务端纠错：客户端乐观击杀后服务端验证不通过）
+    /// </summary>
+    public struct BattleUnitRevived
+    {
+        public BattleUnit BattleUnit;
     }
 
     /// <summary>

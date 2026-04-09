@@ -66,7 +66,9 @@ namespace ET
                         EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
                         {
                             Unit = target,
+                            AttackerId = caster.Id,
                             Damage = damage,
+                            IsCrit = false,
                         });
 
                         targetDied = wasAlive && target.IsDead;

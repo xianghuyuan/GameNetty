@@ -23,7 +23,9 @@ namespace ET
             EventSystem.Instance.Publish(root, new BattleUnitDamaged
             {
                 Unit = target,
+                AttackerId = message.attackerId,
                 Damage = message.damage,
+                IsCrit = message.isCrit,
             });
             await ETTask.CompletedTask;
         }

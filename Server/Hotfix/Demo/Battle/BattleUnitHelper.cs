@@ -14,6 +14,8 @@ namespace ET.Server
             unitInfo.camp = (int)unit.Camp;
             unitInfo.position = new float3(unit.Position.X, unit.Position.Y, unit.Position.Z);
             unitInfo.forward = new float3(1, 0, 0);
+            unitInfo.isBoss = unit.IsBoss;
+            unitInfo.ownerId = unit.OwnerId;
 
             NumericComponent numeric = unit.GetComponent<NumericComponent>();
             if (numeric != null)

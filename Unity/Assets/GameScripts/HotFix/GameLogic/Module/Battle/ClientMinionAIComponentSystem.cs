@@ -78,7 +78,9 @@ namespace ET
                 EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
                 {
                     Unit = target,
+                    AttackerId = minion.Id,
                     Damage = finalDamage,
+                    IsCrit = false,
                 });
             }
             // 不在攻击范围内 → 设置移动方向，由 BattleUnitViewSystem.Update 驱动增量移动
