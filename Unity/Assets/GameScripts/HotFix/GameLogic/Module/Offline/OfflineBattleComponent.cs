@@ -7,8 +7,9 @@ namespace ET
     [ComponentOf(typeof(Battle))]
     public class OfflineBattleComponent : Entity, IAwake, IDestroy, IUpdate
     {
-        public int StageConfigId { get; set; }
-
+        /// <summary>
+        /// 玩家在主世界的 Unit ID，用于拷贝属性
+        /// </summary>
         public long PlayerUnitId { get; set; }
     }
 }

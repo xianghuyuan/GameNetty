@@ -69,7 +69,7 @@ namespace ET
         }
 
         /// <summary>
-        /// 每帧驱动：基于 Forward 增量移动，FaceDirection 控制视觉翻转
+        /// 每帧驱动：基于 Forward 增量移动，FaceDirection 控制视觉翻转，攻击命中检测
         /// </summary>
         [EntitySystem]
         private static void Update(this BattleUnitView self)
@@ -77,7 +77,22 @@ namespace ET
             if (!self.Initialized || self.GameObject == null) return;
 
             BattleUnit unit = self.GetParent<BattleUnit>();
-            if (unit == null || unit.IsDead) return;
+            if (unit == null) return;
+
+            // 攻击命中检测
+            if (self.CurrentAnimName == AnimAttack && !self.AttackHitTriggered && self.OnAttackHit != null)
+            {
+                float elapsed = Time.time - self.AttackStartTime;
+                if (elapsed >= self.AttackHitTime)
+                {
+                    self.AttackHitTriggered = true;
+                    self.OnAttackHit?.Invoke();
+                    self.OnAttackHit = null;
+                }
+            }
+
+            // 死亡后只做命中检测，不移动不切换动画
+            if (unit.IsDead) return;
 
             // 视觉翻转
             float faceDir = unit.FaceDirection;
@@ -164,15 +179,28 @@ namespace ET
         }
 
         /// <summary>
-        /// 播放攻击动画，结束后自动回到当前移动/待机动画
+        /// 播放攻击动画，结束后自动回到当前移动/待机动画。
+        /// 在动画进行到 AttackHitTime 时触发 OnAttackHit 回调（伤害结算）。
         /// </summary>
-        public static void PlayAttackAnimation(this BattleUnitView self)
+        public static void PlayAttackAnimation(this BattleUnitView self, float hitTimeRatio = 0.5f)
         {
             if (self.SkeletonAnimation == null) return;
 
             self.CurrentAnimName = AnimAttack;
-            var entry = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimAttack, false);
-            entry.Complete += _ =>
+            self.AttackHitTriggered = false;
+
+            // 计算命中时间：动画时长的 hitTimeRatio 比例处
+            float animDuration = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimAttack, false).Animation.Duration;
+            self.AttackHitTime = animDuration * hitTimeRatio;
+            self.AttackStartTime = Time.time;
+
+            // 如果没有设置回调，则帧末直接标记命中已触发
+            if (self.OnAttackHit == null)
+            {
+                self.AttackHitTriggered = true;
+            }
+
+            self.SkeletonAnimation.AnimationState.GetCurrent(0).Complete += _ =>
             {
                 if (self.SkeletonAnimation == null) return;
                 self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
@@ -186,12 +214,19 @@ namespace ET
         public static void PlayHitAnimation(this BattleUnitView self)
         {
             if (self.SkeletonAnimation == null) return;
+            if (self.CurrentAnimName == AnimDeath) return;
 
             self.CurrentAnimName = AnimHit;
+            self.AttackHitTriggered = true;
+            self.OnAttackHit = null;
+
             var entry = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimHit, false);
             entry.Complete += _ =>
             {
                 if (self.SkeletonAnimation == null) return;
+                if (self.CurrentAnimName == AnimDeath) return;
+                BattleUnit unit = self.GetParent<BattleUnit>();
+                if (unit != null && unit.IsDead) return;
                 self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
                 self.SkeletonAnimation.AnimationState.SetAnimation(0, self.CurrentAnimName, true);
             };
@@ -208,13 +243,20 @@ namespace ET
             self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimDeath, false);
         }
 
-        public static void PlayAttackFeedback(this BattleUnitView self)
+        /// <summary>
+        /// 播放攻击动画并注册命中回调（伤害在动画命中点触发）
+        /// </summary>
+        public static void PlayAttackFeedback(this BattleUnitView self, System.Action onHit, float hitTimeRatio = 0.5f)
         {
-            self.PlayAttackAnimation();
+            self.OnAttackHit = onHit;
+            self.PlayAttackAnimation(hitTimeRatio);
         }
 
         public static void PlayHitFeedback(this BattleUnitView self, int damage)
         {
+            // 死亡状态下不播放受击动画，死亡动画优先
+            BattleUnit unit = self.GetParent<BattleUnit>();
+            if (unit != null && unit.IsDead) return;
             self.PlayHitAnimation();
         }
     }

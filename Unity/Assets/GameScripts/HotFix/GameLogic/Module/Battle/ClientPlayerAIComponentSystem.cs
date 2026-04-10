@@ -111,22 +111,37 @@ namespace ET
 
                     if (battle.GetComponent<OfflineBattleComponent>() != null)
                     {
-                        var result = OfflineBattleDamageHelper.ApplySkillEffects(player, target, bestSkillId);
-                        // 配置不全时 fallback：直接用 ATK - DEF 结算
-                        if (result.TotalDamage <= 0 && !target.IsDead)
+                        // 离线：通过攻击动画命中点延迟伤害，视觉上攻击动作与伤害同步
+                        var view = player.GetComponent<BattleUnitView>();
+                        long targetId = target.Id;
+                        int skillId = bestSkillId;
+                        long attackerId = player.Id;
+
+                        void OnHit()
                         {
-                            int atk = player.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Attack) ?? 0;
-                            int def = target.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Defense) ?? 0;
-                            int dmg = System.Math.Max(1, atk - def);
-                            target.GetComponent<BattleUnitCombatComponent>()?.TakeDamage(dmg);
-                            EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
+                            // 命中时目标可能已被其他攻击杀死
+                            BattleUnit hitTarget = battle.GetChild<BattleUnit>(targetId);
+                            if (hitTarget == null || hitTarget.IsDisposed || hitTarget.IsDead) return;
+
+                            var result = OfflineBattleDamageHelper.ApplySkillEffects(player, hitTarget, skillId);
+                            // 配置不全时 fallback：直接用 ATK - DEF 结算
+                            if (result.TotalDamage <= 0 && !hitTarget.IsDead)
                             {
-                                Unit = target,
-                                AttackerId = player.Id,
-                                Damage = dmg,
-                                IsCrit = false,
-                            });
+                                int atk = player.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Attack) ?? 0;
+                                int def = hitTarget.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Defense) ?? 0;
+                                int dmg = System.Math.Max(1, atk - def);
+                                hitTarget.GetComponent<BattleUnitCombatComponent>()?.TakeDamage(dmg);
+                                EventSystem.Instance.Publish(hitTarget.Scene(), new BattleUnitDamaged
+                                {
+                                    Unit = hitTarget,
+                                    AttackerId = attackerId,
+                                    Damage = dmg,
+                                    IsCrit = false,
+                                });
+                            }
                         }
+
+                        view?.PlayAttackFeedback(OnHit);
                     }
                     else
                     {

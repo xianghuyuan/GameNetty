@@ -6,7 +6,6 @@ namespace ET
     [EntitySystemOf(typeof(OfflineBattleComponent))]
     [FriendOf(typeof(OfflineBattleComponent))]
     [FriendOf(typeof(Battle))]
-    [FriendOf(typeof(OfflineWaveManagerComponent))]
     public static partial class OfflineBattleComponentSystem
     {
         [EntitySystem]
@@ -23,36 +22,22 @@ namespace ET
         private static void Update(this OfflineBattleComponent self)
         {
             Battle battle = self.GetParent<Battle>();
-            if (battle == null)
-            {
-                return;
-            }
 
-            if (battle.State == BattleState.Ended)
+            switch (battle.State)
             {
-                // 战斗结束后延迟清理
-                BattleComponent battleComponent = battle.Root().GetComponent<BattleComponent>();
-                battleComponent?.RemoveBattle(battle.BattleId);
-                return;
-            }
-
-            if (battle.State != BattleState.Fighting)
-            {
-                return;
-            }
-
-            OfflineWaveManagerComponent waveManager = battle.GetComponent<OfflineWaveManagerComponent>();
-            if (waveManager != null)
-            {
-                waveManager.CheckWaveState();
-                waveManager.CheckPlayerAlive();
+                case BattleState.Ended:
+                {
+                    BattleComponent battleComponent = battle.Root().GetComponent<BattleComponent>();
+                    battleComponent?.RemoveBattle(battle.BattleId);
+                    break;
+                }
             }
         }
 
         /// <summary>
         /// 创建玩家 BattleUnit，复用 M2C_CreateBattleUnitsHandler 中友方单位的创建逻辑
         /// </summary>
-        public static void CreatePlayerBattleUnit(this OfflineBattleComponent self)
+        public static async ETTask CreatePlayerBattleUnitAsync(this OfflineBattleComponent self)
         {
             Battle battle = self.GetParent<Battle>();
 
@@ -117,10 +102,14 @@ namespace ET
 
             unit.AddComponent<ClientPlayerAIComponent>();
 
+            // 等待 View 初始化完成（UniTask 异步加载 Prefab）
             BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
-            view.InitViewAsync().Forget();
+            await view.InitViewAsync();
 
             BattleUIHelper.CreateUnitUI(unit);
+
+            // View 已就绪，同步设置 Cinemachine 虚拟相机跟随
+            BattleCameraHelper.SetupCameraFollow(view.GameObject.transform);
         }
     }
 }

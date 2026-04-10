@@ -87,8 +87,6 @@ namespace GameLogic
                 ? view.GameObject.transform.position + new Vector3(0f, 1f, 0f)
                 : ET.BattleAreaConfig.GetWorldPosition(args.Unit.Camp, args.Unit.Position + new float3(0f, 1f, 0f));
 
-            Log.Info($"[DamageFloat] Unit={args.Unit.Id} WorldPos={worldPos} Damage={args.Damage}");
-
             ShowDamage(worldPos, args.Damage, args.IsCrit);
         }
 
@@ -97,11 +95,12 @@ namespace GameLogic
             var widget = RentWidget();
             if (widget == null) return;
 
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(_uiCamera, worldPos);
+            // 使用主相机（而非 UI 相机）将世界坐标转为屏幕坐标，
+            // 因为虚拟相机会移动主相机，世界空间由主相机渲染
+            Camera mainCam = Camera.main;
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(mainCam, worldPos);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, screenPoint, _uiCamera, out Vector2 localPos);
             localPos.y += 80f;
-
-            Log.Info($"[DamageFloat] ScreenPoint={screenPoint} LocalPos={localPos}");
 
             widget.rectTransform.SetParent(m_tfContent, false);
             widget.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);

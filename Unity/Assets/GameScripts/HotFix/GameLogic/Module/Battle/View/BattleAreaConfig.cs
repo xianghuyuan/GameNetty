@@ -29,6 +29,16 @@ namespace ET
         /// </summary>
         public const string MonsterUnitViewPrefabPath = "MonsterUnitView";
 
+        /// <summary>
+        /// 屏幕可视宽度（基于正交相机 / BattleAreaSize.x）
+        /// </summary>
+        public static readonly float ScreenWidth = BattleAreaSize.x;
+
+        /// <summary>
+        /// 怪物在玩家前方的生成距离偏移（屏幕右侧外一点）
+        /// </summary>
+        public const float SpawnAheadOffset = 10f;
+
         public static Vector3 GetWorldPosition(UnitCamp camp, float3 position)
         {
             return new Vector3(position.x + BattleAreaCenter.x, position.y + BattleAreaCenter.y, 0f);

@@ -65,23 +65,33 @@ namespace ET
 
                 self.LastAttackTime = nowMs;
 
-                // 客户端权威：直接对目标造成伤害
+                // 通过攻击动画命中点延迟伤害
                 int damage = minion.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Attack) ?? 0;
                 if (damage <= 0) return;
 
                 int defense = target.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Defense) ?? 0;
                 int finalDamage = System.Math.Max(1, damage - defense);
 
-                target.GetComponent<BattleUnitCombatComponent>()?.TakeDamage(finalDamage);
+                long targetId = target.Id;
+                long attackerId = minion.Id;
+
+                void OnHit()
+                {
+                    BattleUnit hitTarget = battle.GetChild<BattleUnit>(targetId);
+                    if (hitTarget == null || hitTarget.IsDisposed || hitTarget.IsDead) return;
+
+                    hitTarget.GetComponent<BattleUnitCombatComponent>()?.TakeDamage(finalDamage);
+                    EventSystem.Instance.Publish(hitTarget.Scene(), new BattleUnitDamaged
+                    {
+                        Unit = hitTarget,
+                        AttackerId = attackerId,
+                        Damage = finalDamage,
+                        IsCrit = false,
+                    });
+                }
 
                 EventSystem.Instance.Publish(minion.Scene(), new BattleUnitSkillCast { Unit = minion });
-                EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
-                {
-                    Unit = target,
-                    AttackerId = minion.Id,
-                    Damage = finalDamage,
-                    IsCrit = false,
-                });
+                minion.GetComponent<BattleUnitView>()?.PlayAttackFeedback(OnHit);
             }
             // 不在攻击范围内 → 设置移动方向，由 BattleUnitViewSystem.Update 驱动增量移动
             minion.Forward = new float3(faceDir, 0, 0);

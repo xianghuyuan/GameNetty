@@ -8,9 +8,13 @@ namespace ET
         protected override async ETTask Run(Scene scene, BattleUnitSkillCast args)
         {
             var view = args.Unit.GetComponent<BattleUnitView>();
-            view?.PlayAttackFeedback();
+            // 动画由 AI 通过 PlayAttackFeedback(onHit) 播放
+            // 如果 AI 未播放（如在线路径），则在此处兜底播放（无命中回调）
+            if (view != null && view.CurrentAnimName != "atk1")
+            {
+                view.PlayAttackAnimation();
+            }
 
-            // 桥接到 TE 侧，供纯 UI 层（如技能栏特效）订阅
             EventBridge.PublishToTE(args);
 
             await ETTask.CompletedTask;
@@ -25,7 +29,6 @@ namespace ET
             var view = args.Unit.GetComponent<BattleUnitView>();
             view?.PlayHitFeedback(args.Damage);
 
-            // 桥接到 TE 侧，UIDamageWindow 等 UIWindow 直接监听
             EventBridge.PublishToTE(args);
 
             await ETTask.CompletedTask;

@@ -177,6 +177,7 @@ namespace ET
         protected override async ETTask Run(Scene scene, BattleEnd args)
         {
             BattleUIHelper.ClearAll();
+            BattleCameraHelper.Cleanup();
             GameModule.UI.GetUIAsync<GameLogic.BattleUI>(ui =>
             {
                 if (ui != null) ui.SetBattleActive(false);

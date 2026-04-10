@@ -1,3 +1,4 @@
+using System;
 using Spine.Unity;
 using Unity.Mathematics;
 using UnityEngine;
@@ -16,6 +17,26 @@ namespace ET
         public bool HasPendingPosition { get; set; }
         public string CurrentAnimName { get; set; }
         public bool IsMoving { get; set; }
+
+        /// <summary>
+        /// 攻击命中点时间（秒），从攻击动画开始到触发伤害的时间
+        /// </summary>
+        public float AttackHitTime { get; set; }
+
+        /// <summary>
+        /// 攻击命中回调，在攻击动画达到命中点时触发
+        /// </summary>
+        public Action OnAttackHit { get; set; }
+
+        /// <summary>
+        /// 攻击命中是否已触发（防止重复触发）
+        /// </summary>
+        public bool AttackHitTriggered { get; set; }
+
+        /// <summary>
+        /// 攻击动画开始时间（Time.time）
+        /// </summary>
+        public float AttackStartTime { get; set; }
 
         /// <summary>
         /// 死亡取消标记：服务端纠错复活时置 true，阻止延迟销毁

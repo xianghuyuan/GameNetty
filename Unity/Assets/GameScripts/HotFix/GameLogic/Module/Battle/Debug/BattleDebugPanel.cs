@@ -17,7 +17,7 @@ namespace GameLogic
         private int _monsterAtk = 10;
         private int _monsterDef = 1;
         private float _monsterSpeed = 1f;
-        private float _spawnCenterX = 8f;
+        private float _spawnOffset = 1f;
         private float _spreadRange = 3f;
 
         // 玩家操作
@@ -199,9 +199,9 @@ namespace GameLogic
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos X:", _labelStyle, GUILayout.Width(70));
-            _spawnCenterX = Mathf.Round(GUILayout.HorizontalSlider(_spawnCenterX, -15f, 15f) * 10f) / 10f;
-            GUILayout.Label(_spawnCenterX.ToString("F1"), _labelStyle, GUILayout.Width(50));
+            GUILayout.Label("Offset:", _labelStyle, GUILayout.Width(70));
+            _spawnOffset = Mathf.Round(GUILayout.HorizontalSlider(_spawnOffset, 0f, 15f) * 10f) / 10f;
+            GUILayout.Label(_spawnOffset.ToString("F1"), _labelStyle, GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -365,7 +365,7 @@ namespace GameLogic
 
         private void SpawnMonsters(Battle battle)
         {
-            BattleDebugSpawnHelper.SpawnMonster(battle, _monsterHp, _monsterAtk, _monsterDef, _monsterSpeed, _spawnCount, _spawnCenterX, _spreadRange);
+            BattleDebugSpawnHelper.SpawnMonster(battle, _monsterHp, _monsterAtk, _monsterDef, _monsterSpeed, _spawnCount, _spawnOffset, _spreadRange);
         }
 
         private void StartOfflineBattle()

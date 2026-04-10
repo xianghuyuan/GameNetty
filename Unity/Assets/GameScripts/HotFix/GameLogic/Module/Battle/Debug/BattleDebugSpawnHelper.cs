@@ -12,9 +12,13 @@ namespace ET
         /// <summary>
         /// 在战斗中生成怪物（纯客户端，属性手动指定）
         /// </summary>
-        public static void SpawnMonster(Battle battle, int hp, int atk, int def, float speed, int count, float centerX, float spreadRange)
+        public static void SpawnMonster(Battle battle, int hp, int atk, int def, float speed, int count, float offsetFromCamera, float spreadRange)
         {
             if (battle == null || battle.State != BattleState.Fighting) return;
+
+            // 基于相机右边界偏移生成，怪物始终出现在屏幕右侧外
+            float cameraRight = BattleCameraHelper.GetCameraRightBound();
+            float centerX = cameraRight + offsetFromCamera;
 
             for (int i = 0; i < count; i++)
             {
