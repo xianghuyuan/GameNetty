@@ -88,6 +88,7 @@ namespace ET.Server
 
             // 从持久化单位复制战斗属性
             CopyNumericFromPlayer(unit, playerUnit);
+            unit.GetOrCreateBattleStats().LoadFromNumeric(unit.GetComponent<NumericComponent>());
 
             Log.Debug($"[Hero] Speed={unit.GetComponent<NumericComponent>()?.GetAsFloat(NumericType.Speed)} MaxHp={unit.GetComponent<NumericComponent>()?.GetAsInt(NumericType.MaxHp)} Attack={unit.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Attack)} Defense={unit.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Defense)}");
 
@@ -121,6 +122,7 @@ namespace ET.Server
 
             // 初始化属性
             InitMonsterNumeric(unit, configId);
+            unit.GetOrCreateBattleStats().LoadFromNumeric(unit.GetComponent<NumericComponent>());
 
             // 从 UnitCombatConfig 读取技能配置初始化战斗参数（冷却、射程）
             ApplyNormalAttackConfigFromCombatConfig(unit, combatComp);
@@ -163,6 +165,7 @@ namespace ET.Server
             unit.AddComponent<BuffComponent>();
 
             InitMonsterNumeric(unit, configId);
+            unit.GetOrCreateBattleStats().LoadFromNumeric(unit.GetComponent<NumericComponent>());
 
             // 注册到空间网格
             BattleSpatialGrid spatialGrid = battleRoom.GetComponent<BattleSpatialGrid>();
@@ -219,8 +222,8 @@ namespace ET.Server
                 return;
             }
 
-            SkillConfig skillConfig = unitCombatConfig.NormalAttackSkillIdConfig;
-            SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
+            EmitterConfig skillConfig = unitCombatConfig != null ? EmitterConfigCategory.Instance.GetOrDefault(unitCombatConfig.NormalAttackEmitterId) : null;
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
 
             if (skillConfig != null)
             {

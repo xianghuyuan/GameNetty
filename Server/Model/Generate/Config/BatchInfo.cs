@@ -28,6 +28,8 @@ namespace ET
 
         public readonly int SpawnId;
 
+        public SpawnConfig SpawnIdConfig => SpawnConfigCategory.Instance.GetOrDefault(SpawnId);
+
         public readonly int Delay;
 
         public override string ToString()

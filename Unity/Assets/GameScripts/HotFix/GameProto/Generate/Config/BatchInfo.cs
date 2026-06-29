@@ -17,6 +17,7 @@ public partial struct BatchInfo
     public BatchInfo(ByteBuf _buf) 
     {
         SpawnId = _buf.ReadInt();
+        SpawnId_Ref = null;
         Delay = _buf.ReadInt();
     }
 
@@ -26,11 +27,13 @@ public partial struct BatchInfo
     }
 
     public readonly int SpawnId;
+    public SpawnConfig SpawnId_Ref;
     public readonly int Delay;
    
 
     public  void ResolveRef(Tables tables)
     {
+        SpawnId_Ref = tables.SpawnConfigCategory.GetOrDefault(SpawnId);
     }
 
     public override string ToString()

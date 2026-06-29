@@ -26,8 +26,10 @@ namespace ET
             {
                 BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitInfo.unitId, unitInfo.configId);
                 unit.Camp = (UnitCamp)unitInfo.camp;
-                unit.Position = unitInfo.position;
+                unit.Position = BattleAreaConfig.WithBattleUnitSpawnY(unitInfo.position);
                 unit.FaceDirection = 1f; // 玩家默认面朝右
+                unit.IsBoss = unitInfo.isBoss;
+                unit.OwnerId = unitInfo.ownerId;
 
                 NumericComponent numeric = unit.AddComponent<NumericComponent>();
                 numeric.Set(NumericType.Hp, unitInfo.hp);
@@ -38,27 +40,33 @@ namespace ET
                 {
                     numeric.Set(NumericType.Speed, unitInfo.speed);
                 }
+                unit.GetOrCreateBattleStats().SetCore(unitInfo.hp, unitInfo.maxHp, unitInfo.attack, unitInfo.defense, unitInfo.speed, false);
 
                 unit.AddComponent<BattleUnitCombatComponent, float>(unitInfo.attackRange);
 
-                if (unit.Camp == UnitCamp.Friend)
-                {
-                    BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
-                    if (combat != null)
-                    {
-                        combat.AutoSkillIds = new[] { 11001 };
-                    }
+                bool isPlayer = unit.Camp == UnitCamp.Friend;
 
+                if (isPlayer)
+                {
+                    unit.AddComponent<VehicleComponent>();
+                    unit.AddComponent<BattleAttackComponent>();
                     unit.AddComponent<ClientPlayerAIComponent>();
                 }
 
                 BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
-                view.InitViewAsync().Forget();
 
-                BattleUIHelper.CreateUnitUI(unit);
+                if (isPlayer)
+                {
+                    await view.InitViewAsync();
+                    BattleCameraHelper.SetupCameraFollow(view.GameObject.transform);
+                }
+                else
+                {
+                    view.InitViewAsync().Forget();
+                }
+
+                BattleUIHelper.RefreshUnit(unit);
             }
-
-            await ETTask.CompletedTask;
         }
     }
 }

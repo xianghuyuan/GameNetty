@@ -27,6 +27,6 @@ namespace ET
         /// <summary>
         /// 自动技能列表 [TEST] 硬编码，验证后从服务端同步
         /// </summary>
-        public int[] AutoSkillIds { get; set; } = System.Array.Empty<int>();
+        public int[] AutoEmitterIds { get; set; } = System.Array.Empty<int>();
     }
 }

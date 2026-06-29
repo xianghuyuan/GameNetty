@@ -27,20 +27,14 @@ namespace ET.Server
 
             battleRoom.State = BattleState.Fighting;
             
-            foreach (var kv in battleRoom.Units)
+            battleRoom.ForEachUnit(battleUnit =>
             {
-                BattleUnit battleUnit = kv.Value;
-                if (battleUnit == null || battleUnit.IsDead)
-                {
-                    continue;
-                }
-
                 BattleActionDecisionComponent decisionComponent = battleUnit.GetComponent<BattleActionDecisionComponent>();
                 if (decisionComponent != null)
                 {
                     decisionComponent.MakeDecision();
                 }
-            }
+            });
 
             response.Error = ErrorCode.ERR_Success;
             

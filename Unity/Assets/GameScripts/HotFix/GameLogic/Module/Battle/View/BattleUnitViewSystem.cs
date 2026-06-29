@@ -102,10 +102,11 @@ namespace ET
             }
 
             // Forward != zero 时增量移动
-            float speed = unit.GetComponent<NumericComponent>()?.GetAsFloat(NumericType.Speed) ?? 0f;
+            float speed = unit.GetOrCreateBattleStats()?.Speed ?? 0f;
             bool shouldMove = unit.Forward.x != 0f && speed > 0f;
 
             self.PlayLocomotionAnimation(shouldMove);
+            self.TryFlushPendingHitReact();
 
             if (!shouldMove) return;
 
@@ -159,6 +160,8 @@ namespace ET
         private const string AnimAttack = "atk1";
         private const string AnimHit = "hit";
         private const string AnimDeath = "die";
+        private const float HitReactMinIntervalSeconds = 0.15f;
+        private const float AttackUninterruptibleBufferSeconds = 0.05f;
 
         /// <summary>
         /// 切换移动/待机动画
@@ -193,6 +196,7 @@ namespace ET
             float animDuration = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimAttack, false).Animation.Duration;
             self.AttackHitTime = animDuration * hitTimeRatio;
             self.AttackStartTime = Time.time;
+            self.AttackUninterruptibleEndTime = self.AttackStartTime + self.AttackHitTime + AttackUninterruptibleBufferSeconds;
 
             // 如果没有设置回调，则帧末直接标记命中已触发
             if (self.OnAttackHit == null)
@@ -203,6 +207,10 @@ namespace ET
             self.SkeletonAnimation.AnimationState.GetCurrent(0).Complete += _ =>
             {
                 if (self.SkeletonAnimation == null) return;
+                if (self.TryFlushPendingHitReact())
+                {
+                    return;
+                }
                 self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
                 self.SkeletonAnimation.AnimationState.SetAnimation(0, self.CurrentAnimName, true);
             };
@@ -217,8 +225,8 @@ namespace ET
             if (self.CurrentAnimName == AnimDeath) return;
 
             self.CurrentAnimName = AnimHit;
-            self.AttackHitTriggered = true;
-            self.OnAttackHit = null;
+            self.LastHitReactTime = Time.time;
+            self.PendingHitReact = false;
 
             var entry = self.SkeletonAnimation.AnimationState.SetAnimation(0, AnimHit, false);
             entry.Complete += _ =>
@@ -227,6 +235,10 @@ namespace ET
                 if (self.CurrentAnimName == AnimDeath) return;
                 BattleUnit unit = self.GetParent<BattleUnit>();
                 if (unit != null && unit.IsDead) return;
+                if (self.TryFlushPendingHitReact())
+                {
+                    return;
+                }
                 self.CurrentAnimName = self.IsMoving ? AnimRun : AnimIdle;
                 self.SkeletonAnimation.AnimationState.SetAnimation(0, self.CurrentAnimName, true);
             };
@@ -257,7 +269,46 @@ namespace ET
             // 死亡状态下不播放受击动画，死亡动画优先
             BattleUnit unit = self.GetParent<BattleUnit>();
             if (unit != null && unit.IsDead) return;
+
+            if (self.ShouldDeferHitReact())
+            {
+                self.PendingHitReact = true;
+                return;
+            }
+
+            if (Time.time - self.LastHitReactTime < HitReactMinIntervalSeconds)
+            {
+                self.PendingHitReact = true;
+                return;
+            }
+
             self.PlayHitAnimation();
+        }
+
+        private static bool ShouldDeferHitReact(this BattleUnitView self)
+        {
+            return self.CurrentAnimName == AnimAttack && Time.time <= self.AttackUninterruptibleEndTime;
+        }
+
+        private static bool TryFlushPendingHitReact(this BattleUnitView self)
+        {
+            if (!self.PendingHitReact)
+            {
+                return false;
+            }
+
+            if (self.ShouldDeferHitReact())
+            {
+                return false;
+            }
+
+            if (Time.time - self.LastHitReactTime < HitReactMinIntervalSeconds)
+            {
+                return false;
+            }
+
+            self.PlayHitAnimation();
+            return true;
         }
     }
 }

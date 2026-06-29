@@ -59,7 +59,7 @@ namespace ET.Server
         public struct AutoCastPlan
         {
             public int SkillId;
-            public SkillConfig SkillConfig;
+            public EmitterConfig EmitterConfig;
             public SkillTargetingConfig TargetingConfig;
             public BattleUnit Target;
             /// <summary>施法者应移动到的目标位置</summary>
@@ -82,8 +82,8 @@ namespace ET.Server
             }
 
             UnitCombatConfig unitCombatConfig = UnitCombatConfigCategory.Instance.GetOrDefault(caster.ConfigId);
-            SkillConfig skillConfig = unitCombatConfig?.NormalAttackSkillIdConfig;
-            SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
+            EmitterConfig skillConfig = unitCombatConfig != null ? EmitterConfigCategory.Instance.GetOrDefault(unitCombatConfig.NormalAttackEmitterId) : null;
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
             if (targetingConfig == null)
             {
                 BattleUnitCombatComponent combat = caster.GetComponent<BattleUnitCombatComponent>();
@@ -117,7 +117,7 @@ namespace ET.Server
                 return false;
             }
 
-            List<int> autoSkillIds = GetAutoSkillIds(unitCombatConfig);
+            List<int> autoSkillIds = GetAutoEmitterIds(unitCombatConfig);
             if (autoSkillIds.Count == 0)
             {
                 return false;
@@ -128,7 +128,8 @@ namespace ET.Server
             if (nearestEnemy == null || nearestEnemy.IsDead)
             {
                 float nearestDistance = float.MaxValue;
-                foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
+                BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
+                foreach (EntityRef<BattleUnit> unitRef in registry.Units.Values)
                 {
                     BattleUnit unit = unitRef;
                     if (unit == null || unit.IsDead || unit.Camp == caster.Camp)
@@ -153,8 +154,8 @@ namespace ET.Server
             // 按优先级遍历技能，找到第一个可用的
             foreach (int skillId in autoSkillIds)
             {
-                SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(skillId);
-                SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
+                EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(skillId);
+                SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
                 if (!CanUseSkillForAuto(caster, combat, skillConfig, targetingConfig, true))
                 {
                     continue;
@@ -168,7 +169,7 @@ namespace ET.Server
                 plan = new AutoCastPlan
                 {
                     SkillId = skillId,
-                    SkillConfig = skillConfig,
+                    EmitterConfig = skillConfig,
                     TargetingConfig = targetingConfig,
                     Target = nearestEnemy,
                     DesiredCastPosition = desiredCastPosition,
@@ -191,7 +192,7 @@ namespace ET.Server
                 return null;
             }
 
-            foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
+            foreach (EntityRef<BattleUnit> unitRef in battleRoom.GetComponent<BattleUnitRegistryComponent>().Units.Values)
             {
                 BattleUnit unit = unitRef;
                 if (unit != null && unit.OwnerId == ownerId && unit.Camp == UnitCamp.Friend)
@@ -218,7 +219,7 @@ namespace ET.Server
                 return false;
             }
 
-            return TryExecuteSkill(caster, unitCombatConfig.NormalAttackSkillId, explicitTargetId, out result);
+            return TryExecuteSkill(caster, unitCombatConfig.NormalAttackEmitterId, explicitTargetId, out result);
         }
 
         /// <summary>
@@ -249,7 +250,7 @@ namespace ET.Server
                 return unitCombatConfig.AutoCastNormalAttack;
             }
 
-            foreach (int autoSkillId in unitCombatConfig.AutoSkillIds)
+            foreach (int autoSkillId in unitCombatConfig.AutoEmitterIds)
             {
                 if (autoSkillId == skillId)
                 {
@@ -297,7 +298,7 @@ namespace ET.Server
                 return false;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(skillId);
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(skillId);
             if (skillConfig == null || !skillConfig.IsEnabled)
             {
                 result.Error = ErrorCode.ERR_SkillNotFound;
@@ -305,13 +306,12 @@ namespace ET.Server
                 return false;
             }
 
-            SkillTargetingConfig targetingConfig = skillConfig.TargetingConfigIdConfig;
-            BuffGroupConfig effectGroupConfig = skillConfig.BuffGroupIdConfig;
-            if (targetingConfig == null || effectGroupConfig == null)
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
+            if (targetingConfig == null)
             {
                 result.Error = ErrorCode.ERR_SkillNotFound;
                 result.Message = $"Skill config incomplete: {skillId}";
-                LogDebugHelper.Log($"[SkillExec] FAIL skillId={skillId} targetingConfig={(targetingConfig==null?"NULL":"OK")} effectGroupConfig={(effectGroupConfig==null?"NULL":"OK")}");
+                LogDebugHelper.Log($"[SkillExec] FAIL skillId={skillId} targetingConfig=NULL");
                 return false;
             }
 
@@ -325,7 +325,7 @@ namespace ET.Server
                 return false;
             }
 
-            if (!combat.IsSkillReady(skillConfig))
+            if (!combat.IsEmitterReady(skillConfig))
             {
                 result.Error = ErrorCode.ERR_SkillCooldown;
                 result.Message = "Skill is cooling down";
@@ -354,7 +354,7 @@ namespace ET.Server
             BattleUnit mainTarget = targets[0];
             BattleUnitHelper.BroadcastSkillCast(caster, skillId, mainTarget.Id, mainTarget.Position);
 
-            LogDebugHelper.Log($"[SkillExec] skillId={skillId} CastType={skillConfig.CastType} BuffGroupId={skillConfig.BuffGroupId} EffectIds=[{string.Join(",", effectGroupConfig.EffectIds)}] TargetCount={targets.Count}");
+            LogDebugHelper.Log($"[SkillExec] skillId={skillId} CastType={skillConfig.CastType} BaseDamage={skillConfig.BaseDamage} WhiteAttackRatio={skillConfig.WhiteAttackRatio} TargetCount={targets.Count}");
 
             // 投射物类型技能：生成投射物，由投射物飞行过程中进行碰撞检测和伤害结算
             if (skillConfig.CastType == CastTypeProjectile)
@@ -363,7 +363,7 @@ namespace ET.Server
                 EventSystem.Instance.Publish(battleRoom.Root(), new SpawnProjectileEvent
                 {
                     Caster = caster,
-                    SkillConfig = skillConfig,
+                    EmitterConfig = skillConfig,
                     Target = mainTarget,
                 });
             }
@@ -374,7 +374,7 @@ namespace ET.Server
                 int totalDamage = 0;
                 foreach (BattleUnit target in targets)
                 {
-                    totalDamage += ApplyEffects(caster, target, effectGroupConfig, skillConfig);
+                    totalDamage += ApplyEmitterDamage(caster, target, skillConfig);
                 }
 
                 LogDebugHelper.Log($"[SkillExec] skillId={skillId} ApplyEffects done, totalDamage={totalDamage}");
@@ -382,7 +382,7 @@ namespace ET.Server
             }
 
             // 技能生效（伤害/投射物已生成）后再启动CD
-            long cooldownEnd = combat.StartSkillCooldown(skillConfig);
+            long cooldownEnd = combat.StartEmitterCooldown(skillConfig);
 
             result.SkillId = skillId;
             result.MainTarget = mainTarget;
@@ -395,14 +395,14 @@ namespace ET.Server
         /// </summary>
         private static bool IsNormalAttackSkill(UnitCombatConfig unitCombatConfig, int skillId)
         {
-            return unitCombatConfig != null && unitCombatConfig.NormalAttackSkillId != 0 && unitCombatConfig.NormalAttackSkillId == skillId;
+            return unitCombatConfig != null && unitCombatConfig.NormalAttackEmitterId != 0 && unitCombatConfig.NormalAttackEmitterId == skillId;
         }
 
         /// <summary>
         /// 检查技能是否可用于自动战斗。校验配置完整性、技能是否启用、能否攻击、以及冷却状态。
         /// </summary>
         /// <param name="readyOnly">true时额外检查技能CD是否就绪</param>
-        private static bool CanUseSkillForAuto(BattleUnit caster, BattleUnitCombatComponent combat, SkillConfig skillConfig,
+        private static bool CanUseSkillForAuto(BattleUnit caster, BattleUnitCombatComponent combat, EmitterConfig skillConfig,
             SkillTargetingConfig targetingConfig, bool readyOnly)
         {
             if (caster == null || combat == null || skillConfig == null || targetingConfig == null)
@@ -415,7 +415,7 @@ namespace ET.Server
                 return false;
             }
 
-            if (readyOnly && !combat.IsSkillReady(skillConfig))
+            if (readyOnly && !combat.IsEmitterReady(skillConfig))
             {
                 return false;
             }
@@ -425,10 +425,10 @@ namespace ET.Server
 
         /// <summary>
         /// 收集单位可自动释放的技能ID列表。
-        /// 包含 AutoSkillIds 中配置的技能，以及根据 AutoCastNormalAttack 决定是否包含普攻。
+        /// 包含 AutoEmitterIds 中配置的技能，以及根据 AutoCastNormalAttack 决定是否包含普攻。
         /// 自动去重。
         /// </summary>
-        private static List<int> GetAutoSkillIds(UnitCombatConfig unitCombatConfig)
+        private static List<int> GetAutoEmitterIds(UnitCombatConfig unitCombatConfig)
         {
             List<int> result = new List<int>();
             if (unitCombatConfig == null)
@@ -436,7 +436,7 @@ namespace ET.Server
                 return result;
             }
 
-            foreach (int skillId in unitCombatConfig.AutoSkillIds)
+            foreach (int skillId in unitCombatConfig.AutoEmitterIds)
             {
                 if (skillId == 0)
                 {
@@ -455,10 +455,10 @@ namespace ET.Server
             }
 
             if (unitCombatConfig.AutoCastNormalAttack
-                && unitCombatConfig.NormalAttackSkillId != 0
-                && !result.Contains(unitCombatConfig.NormalAttackSkillId))
+                && unitCombatConfig.NormalAttackEmitterId != 0
+                && !result.Contains(unitCombatConfig.NormalAttackEmitterId))
             {
-                result.Add(unitCombatConfig.NormalAttackSkillId);
+                result.Add(unitCombatConfig.NormalAttackEmitterId);
             }
 
             return result;
@@ -471,7 +471,7 @@ namespace ET.Server
         /// 3. 范围内所有敌人：返回射程内所有合法目标
         /// 选取后会按 SortRule 排序并限制最大目标数。
         /// </summary>
-        private static List<BattleUnit> SelectTargets(BattleUnit caster, BattleRoom battleRoom, SkillConfig skillConfig,
+        private static List<BattleUnit> SelectTargets(BattleUnit caster, BattleRoom battleRoom, EmitterConfig skillConfig,
             SkillTargetingConfig targetingConfig, long explicitTargetId, out int error, out string message)
         {
             error = ErrorCode.ERR_BattleTargetNotFound;
@@ -511,7 +511,7 @@ namespace ET.Server
             BattleUnit nearestEnemy = null;
             float nearestDistance = float.MaxValue;
 
-            foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
+            foreach (EntityRef<BattleUnit> unitRef in battleRoom.GetComponent<BattleUnitRegistryComponent>().Units.Values)
             {
                 BattleUnit target = unitRef;
                 if (!IsTargetValid(caster, target, targetingConfig))
@@ -581,7 +581,7 @@ namespace ET.Server
         /// - 持续效果（Freeze/Stun/DoT）创建 BuffEntity 注册到 BuffComponent
         /// </summary>
         /// <returns>造成的总即时伤害</returns>
-        public static int ApplyEffects(BattleUnit caster, BattleUnit target, BuffGroupConfig effectGroupConfig, SkillConfig skillConfig)
+        public static int ApplyEffects(BattleUnit caster, BattleUnit target, BuffGroupConfig effectGroupConfig, EmitterConfig skillConfig)
         {
             int totalDamage = 0;
 
@@ -593,7 +593,7 @@ namespace ET.Server
             long currentTime = TimeInfo.Instance.ServerFrameTime();
             BuffComponent buffComponent = target.GetComponent<BuffComponent>();
 
-            foreach (int buffId in effectGroupConfig.EffectIds)
+            foreach (int buffId in effectGroupConfig.BuffIds)
             {
                 BuffConfig effectConfig = BuffConfigCategory.Instance.GetOrDefault(buffId);
                 if (effectConfig == null)
@@ -666,13 +666,47 @@ namespace ET.Server
             return totalDamage;
         }
 
+        public static int ApplyEmitterDamage(BattleUnit caster, BattleUnit target, EmitterConfig emitterConfig)
+        {
+            if (caster == null || target == null || target.IsDead || emitterConfig == null)
+            {
+                return 0;
+            }
+
+            if (emitterConfig.BaseDamage <= 0f && emitterConfig.WhiteAttackRatio <= 0f)
+            {
+                return 0;
+            }
+
+            BattleStatsComponent attackerStats = caster.GetOrCreateBattleStats();
+            BattleStatsComponent targetStats = target.GetOrCreateBattleStats();
+            int attack = attackerStats?.Attack ?? 0;
+            int defense = targetStats?.Defense ?? 0;
+            float rawDamage = emitterConfig.BaseDamage + attack * emitterConfig.WhiteAttackRatio - defense;
+            int damage = (int)System.Math.Floor(System.Math.Max(0f, rawDamage));
+            if (damage <= 0)
+            {
+                return 0;
+            }
+
+            bool wasAlive = !target.IsDead;
+            target.TakeDamage(damage);
+            BattleUnitHelper.BroadcastDamage(caster, target, damage, GetDamageType(emitterConfig));
+            if (wasAlive && target.IsDead)
+            {
+                BattleUnitHelper.BroadcastUnitDead(target, caster.Id);
+            }
+
+            return damage;
+        }
+
         /// <summary>
         /// 根据伤害公式计算单次效果伤害。
         /// </summary>
         private static int CalculateDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
         {
-            NumericComponent attackerNumeric = caster.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
+            BattleStatsComponent attackerStats = caster.GetOrCreateBattleStats();
+            BattleStatsComponent targetStats = target.GetOrCreateBattleStats();
 
             float damageValue = effectConfig.BaseValue;
 
@@ -680,8 +714,8 @@ namespace ET.Server
             {
                 case FormulaTypeAttackMinusDefense:
                 {
-                    int attack = attackerNumeric?.GetAsInt(NumericType.Attack) ?? 0;
-                    int defense = targetNumeric?.GetAsInt(NumericType.Defense) ?? 0;
+                    int attack = attackerStats?.Attack ?? 0;
+                    int defense = targetStats?.Defense ?? 0;
                     damageValue += attack * effectConfig.RatioAtk - defense * effectConfig.RatioDef;
                     break;
                 }
@@ -707,14 +741,14 @@ namespace ET.Server
         /// <summary>
         /// 根据技能类型获取伤害类型标识。
         /// </summary>
-        private static int GetDamageType(SkillConfig skillConfig)
+        private static int GetDamageType(EmitterConfig skillConfig)
         {
             if (skillConfig == null)
             {
                 return 1;
             }
 
-            return skillConfig.SkillKind == 1 ? 0 : 1;
+            return skillConfig.EmitterKind == 1 ? 0 : 1;
         }
 
         /// <summary>
@@ -850,13 +884,7 @@ namespace ET.Server
         /// </summary>
         private static BattleUnit FindBattleUnitById(BattleRoom battleRoom, long unitId)
         {
-            if (battleRoom == null || !battleRoom.Units.TryGetValue(unitId, out EntityRef<BattleUnit> unitRef))
-            {
-                return null;
-            }
-
-            BattleUnit unit = unitRef;
-            return unit;
+            return battleRoom?.GetUnit(unitId);
         }
 
         /// <summary>
@@ -864,7 +892,7 @@ namespace ET.Server
         /// </summary>
         private static int GetCurrentHp(BattleUnit unit)
         {
-            return unit?.GetComponent<NumericComponent>()?.GetAsInt(NumericType.Hp) ?? 0;
+            return unit?.GetOrCreateBattleStats()?.Hp ?? 0;
         }
 
         /// <summary>

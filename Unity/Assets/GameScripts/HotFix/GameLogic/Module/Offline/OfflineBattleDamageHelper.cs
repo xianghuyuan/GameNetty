@@ -6,10 +6,6 @@ namespace ET
     /// </summary>
     public static class OfflineBattleDamageHelper
     {
-        private const int FormulaTypeAttackMinusDefense = 1;
-        private const int EffectTypeDamage = 1;
-        private const int EffectTypeHeal = 4;
-
         public struct DamageResult
         {
             public int TotalDamage;
@@ -22,101 +18,39 @@ namespace ET
         /// </summary>
         public static DamageResult ApplySkillEffects(BattleUnit caster, BattleUnit target, int skillId)
         {
-            SkillConfig skillConfig = ConfigHelper.SkillConfig?.GetOrDefault(skillId);
-            if (skillConfig == null || !skillConfig.IsEnabled)
+            if (caster == null || target == null || caster.IsDisposed || target.IsDisposed)
             {
                 return default;
             }
 
-            if (skillConfig.CastType != 0)
+            Battle battle = caster.GetParent<Battle>();
+            if (battle == null)
             {
                 return default;
             }
 
-            BuffGroupConfig effectGroup = skillConfig.BuffGroupId_Ref;
-            if (effectGroup == null)
+            if (!BattleSkillSimulationHelper.TrySimulate(battle, caster, skillId, target.Id, out BattleSkillSimulationHelper.SkillSimulation simulation))
             {
                 return default;
             }
 
-            int totalDamage = 0;
-            bool targetDied = false;
-
-            foreach (int effectId in effectGroup.EffectIds)
+            foreach (BattleSkillSimulationHelper.PredictedTargetImpact impact in simulation.Impacts)
             {
-                BuffConfig effectConfig = ConfigHelper.SkillEffectConfig?.GetOrDefault(effectId);
-                if (effectConfig == null)
+                if (impact.TargetId != target.Id)
                 {
                     continue;
                 }
 
-                switch (effectConfig.EffectType)
+                bool wasAlive = !target.IsDead;
+                BattleSkillSimulationHelper.ApplyLocalImpacts(battle, caster, simulation, true);
+                return new DamageResult
                 {
-                    case EffectTypeDamage:
-                    {
-                        bool wasAlive = !target.IsDead;
-                        int damage = CalculateDamage(caster, target, effectConfig);
-
-                        BattleUnitCombatComponent combatComp = target.GetComponent<BattleUnitCombatComponent>();
-                        if (combatComp != null)
-                        {
-                            combatComp.TakeDamage(damage);
-                        }
-
-                        EventSystem.Instance.Publish(target.Scene(), new BattleUnitDamaged
-                        {
-                            Unit = target,
-                            AttackerId = caster.Id,
-                            Damage = damage,
-                            IsCrit = false,
-                        });
-
-                        targetDied = wasAlive && target.IsDead;
-                        totalDamage += damage;
-                        break;
-                    }
-                    case EffectTypeHeal:
-                    {
-                        int healAmount = (int)effectConfig.BaseValue;
-                        if (healAmount > 0)
-                        {
-                            BattleUnitCombatComponent combatComp = target.GetComponent<BattleUnitCombatComponent>();
-                            combatComp?.Heal(healAmount);
-                        }
-                        break;
-                    }
-                }
+                    TotalDamage = impact.TotalDamage,
+                    TargetDied = wasAlive && target.IsDead,
+                };
             }
 
-            return new DamageResult { TotalDamage = totalDamage, TargetDied = targetDied };
-        }
-
-        private static int CalculateDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
-        {
-            NumericComponent attackerNumeric = caster.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-
-            float damageValue = effectConfig.BaseValue;
-
-            if (effectConfig.FormulaType == FormulaTypeAttackMinusDefense)
-            {
-                int attack = attackerNumeric?.GetAsInt(NumericType.Attack) ?? 0;
-                int defense = targetNumeric?.GetAsInt(NumericType.Defense) ?? 0;
-                damageValue += attack * effectConfig.RatioAtk - defense * effectConfig.RatioDef;
-            }
-
-            int damage = (int)System.Math.Floor(damageValue);
-            if (damage < effectConfig.MinValue)
-            {
-                damage = effectConfig.MinValue;
-            }
-
-            if (effectConfig.MaxValue > 0 && damage > effectConfig.MaxValue)
-            {
-                damage = effectConfig.MaxValue;
-            }
-
-            return damage;
+            return default;
         }
     }
 }

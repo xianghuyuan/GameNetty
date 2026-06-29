@@ -29,8 +29,7 @@ namespace ET
                     // 服务端确认该单位存活（有伤害信息）
                     serverAlive.Add(info.targetId);
 
-                    target.SetNumeric(NumericType.MaxHp, info.targetMaxHp);
-                    target.SetNumeric(NumericType.Hp, info.targetCurrentHp);
+                    target.GetOrCreateBattleStats().SetHpMax(info.targetCurrentHp, info.targetMaxHp, true);
 
                     // 仅在单位未死亡时发布受击事件（乐观击杀已发布过）
                     if (!target.IsDead)

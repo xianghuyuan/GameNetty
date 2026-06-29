@@ -47,8 +47,7 @@ namespace ET
             int configId = 1001; // 默认英雄配置 ID
 
             // 尝试从主世界 Unit 获取属性
-            UnitComponent unitComponent = battle.Root().GetComponent<UnitComponent>();
-            Unit playerUnit = unitComponent?.Get(self.PlayerUnitId);
+            Unit playerUnit = FindMapUnit(battle.Root(), self.PlayerUnitId);
 
             if (playerUnit != null)
             {
@@ -59,7 +58,7 @@ namespace ET
             BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitId, configId);
             unit.Camp = UnitCamp.Friend;
             unit.OwnerId = self.PlayerUnitId;
-            unit.Position = new float3(-5f, 0, 0);
+            unit.Position = new float3(-5f, BattleAreaConfig.BattleUnitSpawnY, 0);
 
             NumericComponent numeric = unit.AddComponent<NumericComponent>();
 
@@ -77,11 +76,9 @@ namespace ET
             }
             else
             {
-                // 默认属性
+                // 默认属性（攻击力/防御力由载具镶嵌的 Buff 碎片决定，不在这里赋值）
                 numeric.Set(NumericType.Hp, 1000);
                 numeric.Set(NumericType.MaxHp, 1000);
-                numeric.Set(NumericType.Attack, 50);
-                numeric.Set(NumericType.Defense, 10);
                 numeric.Set(NumericType.Speed, 3f);
 
                 // 尝试从 UnitCombatConfig 覆盖速度
@@ -92,13 +89,12 @@ namespace ET
                 }
             }
 
+            unit.GetOrCreateBattleStats().LoadFromNumeric(numeric);
+
             unit.AddComponent<BattleUnitCombatComponent, float>(3f);
 
-            BattleUnitCombatComponent combatComp = unit.GetComponent<BattleUnitCombatComponent>();
-            if (combatComp != null)
-            {
-                combatComp.AutoSkillIds = new[] { 11001 };
-            }
+            unit.AddComponent<VehicleComponent>();
+            unit.AddComponent<BattleAttackComponent>();
 
             unit.AddComponent<ClientPlayerAIComponent>();
 
@@ -106,10 +102,27 @@ namespace ET
             BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
             await view.InitViewAsync();
 
-            BattleUIHelper.CreateUnitUI(unit);
-
             // View 已就绪，同步设置 Cinemachine 虚拟相机跟随
             BattleCameraHelper.SetupCameraFollow(view.GameObject.transform);
+        }
+
+        private static Unit FindMapUnit(Scene root, long unitId)
+        {
+            if (unitId <= 0)
+            {
+                return null;
+            }
+
+            CurrentScenesComponent currentScenesComponent = root.GetComponent<CurrentScenesComponent>();
+            UnitComponent currentUnitComponent = currentScenesComponent?.Scene?.GetComponent<UnitComponent>();
+            Unit unit = currentUnitComponent?.Get(unitId);
+            if (unit != null)
+            {
+                return unit;
+            }
+
+            UnitComponent rootUnitComponent = root.GetComponent<UnitComponent>();
+            return rootUnitComponent?.Get(unitId);
         }
     }
 }

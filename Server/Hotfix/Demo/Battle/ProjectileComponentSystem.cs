@@ -19,6 +19,7 @@ namespace ET.Server
     [EntitySystemOf(typeof(ProjectileComponent))]
     [FriendOf(typeof(ProjectileComponent))]
     [FriendOf(typeof(BattleUnit))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public static partial class ProjectileComponentSystem
     {
         private const long ProjectileTickInterval = 50; // 50ms 投射物心跳（比普通移动更频繁，减少穿透）
@@ -45,7 +46,7 @@ namespace ET.Server
         /// <summary>
         /// 初始化并启动投射物飞行
         /// </summary>
-        public static void Launch(this ProjectileComponent self, SkillConfig skillConfig, BattleUnit caster, BattleUnit target)
+        public static void Launch(this ProjectileComponent self, EmitterConfig skillConfig, BattleUnit caster, BattleUnit target)
         {
             BattleUnit projectileUnit = self.GetParent<BattleUnit>();
             if (projectileUnit == null || skillConfig == null || caster == null)
@@ -53,7 +54,7 @@ namespace ET.Server
                 return;
             }
 
-            SkillTargetingConfig targetingConfig = skillConfig.TargetingConfigIdConfig;
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
 
             self.Camp = caster.Camp;
             self.Speed = skillConfig.ProjectileSpeed > 0 ? skillConfig.ProjectileSpeed : 8f;
@@ -61,7 +62,6 @@ namespace ET.Server
             self.CollisionRadius = skillConfig.ProjectileCollisionRadius;
             self.IsPiercing = skillConfig.ProjectilePiercing;
             self.MaxHitCount = skillConfig.ProjectileMaxHitCount;
-            self.BuffGroupId = skillConfig.BuffGroupId;
             self.StartPosition = projectileUnit.Position;
             self.PreviousPosition = projectileUnit.Position;
 
@@ -138,10 +138,9 @@ namespace ET.Server
                 return;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(self.SkillId);
-            SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
-            BuffGroupConfig effectGroupConfig = skillConfig?.BuffGroupIdConfig;
-            if (targetingConfig == null || effectGroupConfig == null)
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(self.SkillId);
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
+            if (targetingConfig == null || skillConfig == null || !skillConfig.IsEnabled)
             {
                 return;
             }
@@ -156,30 +155,18 @@ namespace ET.Server
             float sweepMin = Math.Min(prevX, currX) - pRadius;
             float sweepMax = Math.Max(prevX, currX) + pRadius;
 
-            foreach (EntityRef<BattleUnit> unitRef in battleRoom.Units.Values)
+            BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
+            bool destroyed = false;
+            registry?.ForEachUnit(target =>
             {
-                BattleUnit target = unitRef;
-                if (target == null || target.Id == projectileUnit.Id || target.Id == self.CasterId)
-                {
-                    continue;
-                }
-
-                if (target.IsDead)
-                {
-                    continue;
-                }
+                if (destroyed) return;
+                if (target.Id == projectileUnit.Id || target.Id == self.CasterId) return;
 
                 // 阵营检查
-                if (!IsEnemyCamp(self.Camp, target.Camp))
-                {
-                    continue;
-                }
+                if (!IsEnemyCamp(self.Camp, target.Camp)) return;
 
                 // 避免重复命中
-                if (self.HitSet.Contains(target.Id))
-                {
-                    continue;
-                }
+                if (self.HitSet.Contains(target.Id)) return;
 
                 // 获取目标碰撞半径
                 float targetRadius = GetTargetCollisionRadius(target);
@@ -188,10 +175,7 @@ namespace ET.Server
                 float targetMin = target.Position.X - targetRadius;
                 float targetMax = target.Position.X + targetRadius;
 
-                if (sweepMax < targetMin || sweepMin > targetMax)
-                {
-                    continue;
-                }
+                if (sweepMax < targetMin || sweepMin > targetMax) return;
 
                 // 命中！
                 self.HitSet.Add(target.Id);
@@ -209,15 +193,17 @@ namespace ET.Server
                 if (!self.IsPiercing)
                 {
                     self.DestroyProjectile();
+                    destroyed = true;
                     return;
                 }
 
                 if (self.MaxHitCount > 0 && self.HitSet.Count >= self.MaxHitCount)
                 {
                     self.DestroyProjectile();
+                    destroyed = true;
                     return;
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -251,22 +237,18 @@ namespace ET.Server
 
         private static BattleUnit FindUnitById(BattleRoom battleRoom, long unitId)
         {
-            if (battleRoom == null || !battleRoom.Units.TryGetValue(unitId, out EntityRef<BattleUnit> unitRef))
-            {
-                return null;
-            }
-
-            return unitRef;
+            BattleUnitRegistryComponent registry = battleRoom?.GetComponent<BattleUnitRegistryComponent>();
+            return registry?.GetUnit(unitId);
         }
 
-        private static int GetDamageType(SkillConfig skillConfig)
+        private static int GetDamageType(EmitterConfig skillConfig)
         {
             if (skillConfig == null)
             {
                 return 1;
             }
 
-            return skillConfig.SkillKind == 1 ? 0 : 1;
+            return skillConfig.EmitterKind == 1 ? 0 : 1;
         }
     }
 }

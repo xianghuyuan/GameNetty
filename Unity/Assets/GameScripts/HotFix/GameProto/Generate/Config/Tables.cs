@@ -24,11 +24,23 @@ public partial class Tables
     public StageConfigCategory StageConfigCategory {get; }
     public WaveConfigCategory WaveConfigCategory {get; }
     public UnitCombatConfigCategory UnitCombatConfigCategory {get; }
-    public SkillConfigCategory SkillConfigCategory {get; }
+    /// <summary>
+    /// 发射器升级配置
+    /// </summary>
+    public EmitterUpgradeConfigCategory EmitterUpgradeConfigCategory {get; }
+    public EmitterConfigCategory EmitterConfigCategory {get; }
     public SkillTargetingConfigCategory SkillTargetingConfigCategory {get; }
     public BuffGroupConfigCategory BuffGroupConfigCategory {get; }
     public BuffConfigCategory BuffConfigCategory {get; }
     public BattleGlobalConfigCategory BattleGlobalConfigCategory {get; }
+    /// <summary>
+    /// 发射器效果配置
+    /// </summary>
+    public EmitterEffectConfigCategory EmitterEffectConfigCategory {get; }
+    /// <summary>
+    /// 发射器效果包配置
+    /// </summary>
+    public EmitterEffectPackConfigCategory EmitterEffectPackConfigCategory {get; }
 
     public Tables(System.Func<string, ByteBuf> loader)
     {
@@ -40,11 +52,14 @@ public partial class Tables
         StageConfigCategory = new StageConfigCategory(loader("StageConfigCategory"));
         WaveConfigCategory = new WaveConfigCategory(loader("WaveConfigCategory"));
         UnitCombatConfigCategory = new UnitCombatConfigCategory(loader("UnitCombatConfigCategory"));
-        SkillConfigCategory = new SkillConfigCategory(loader("SkillConfigCategory"));
+        EmitterUpgradeConfigCategory = new EmitterUpgradeConfigCategory(loader("EmitterUpgradeConfigCategory"));
+        EmitterConfigCategory = new EmitterConfigCategory(loader("EmitterConfigCategory"));
         SkillTargetingConfigCategory = new SkillTargetingConfigCategory(loader("SkillTargetingConfigCategory"));
         BuffGroupConfigCategory = new BuffGroupConfigCategory(loader("BuffGroupConfigCategory"));
         BuffConfigCategory = new BuffConfigCategory(loader("BuffConfigCategory"));
         BattleGlobalConfigCategory = new BattleGlobalConfigCategory(loader("BattleGlobalConfigCategory"));
+        EmitterEffectConfigCategory = new EmitterEffectConfigCategory(loader("EmitterEffectConfigCategory"));
+        EmitterEffectPackConfigCategory = new EmitterEffectPackConfigCategory(loader("EmitterEffectPackConfigCategory"));
         ResolveRef();
     }
     
@@ -58,11 +73,14 @@ public partial class Tables
         StageConfigCategory.ResolveRef(this);
         WaveConfigCategory.ResolveRef(this);
         UnitCombatConfigCategory.ResolveRef(this);
-        SkillConfigCategory.ResolveRef(this);
+        EmitterUpgradeConfigCategory.ResolveRef(this);
+        EmitterConfigCategory.ResolveRef(this);
         SkillTargetingConfigCategory.ResolveRef(this);
         BuffGroupConfigCategory.ResolveRef(this);
         BuffConfigCategory.ResolveRef(this);
         BattleGlobalConfigCategory.ResolveRef(this);
+        EmitterEffectConfigCategory.ResolveRef(this);
+        EmitterEffectPackConfigCategory.ResolveRef(this);
     }
 }
 

@@ -24,20 +24,7 @@ namespace ET
         /// </summary>
         public static void Start(this Battle self)
         {
-            self.State = BattleState.Fighting;
-            self.StartTime = TimeInfo.Instance.ClientNow();
-            BattleMoveDebugLog.StartSession(self.BattleId, self.BattleType);
-
-            // 启动玩家AI和杂兵AI的Tick驱动
-            if (self.GetComponent<ClientPlayerAITickComponent>() == null)
-            {
-                self.AddComponent<ClientPlayerAITickComponent>();
-            }
-
-            Log.Info($"战斗开始: BattleId={self.BattleId}, Type={self.BattleType}");
-
-            //创建实体
-            EventSystem.Instance.Publish(self.Scene(), new BattleStart { Battle = self });
+            self.GetOrCreateFlowController().StartBattle();
         }
         
         /// <summary>
@@ -45,13 +32,7 @@ namespace ET
         /// </summary>
         public static void Pause(this Battle self)
         {
-            if (self.State != BattleState.Fighting)
-            {
-                return;
-            }
-            
-            self.State = BattleState.Paused;
-            Log.Info($"战斗暂停: BattleId={self.BattleId}");
+            self.GetOrCreateFlowController().PauseBattle();
         }
         
         /// <summary>
@@ -59,13 +40,7 @@ namespace ET
         /// </summary>
         public static void Resume(this Battle self)
         {
-            if (self.State != BattleState.Paused)
-            {
-                return;
-            }
-            
-            self.State = BattleState.Fighting;
-            Log.Info($"战斗恢复: BattleId={self.BattleId}");
+            self.GetOrCreateFlowController().ResumeBattle();
         }
         
         /// <summary>
@@ -73,28 +48,7 @@ namespace ET
         /// </summary>
         public static void End(this Battle self, bool success)
         {
-            self.State = BattleState.Ended;
-            self.EndTime = TimeInfo.Instance.ClientNow();
-            
-            int duration = (int)((self.EndTime - self.StartTime) / 1000); // 转换为秒
-            
-            Log.Info($"战斗结束: BattleId={self.BattleId}, Success={success}, Duration={duration}s");
-
-            // 清理移动追踪器
-            BattleMoveDebugLog.CleanupBattle(self.BattleId);
-
-            // 创建战斗结果
-            BattleResult result = new BattleResult
-            {
-                Success = success,
-                Duration = duration,
-                Exp = success ? 100 : 0, // 临时值
-                Drops = new List<ItemDrop>(),
-                PlayerDamage = new Dictionary<long, int>()
-            };
-
-            // 触发战斗结束事件
-            EventSystem.Instance.Publish(self.Scene(), new BattleEnd { Battle = self, Result = result });
+            self.GetOrCreateFlowController().EndBattle(success);
         }
         
         /// <summary>
@@ -155,6 +109,16 @@ namespace ET
             }
             
             return false;
+        }
+
+        /// <summary>
+        /// Battle 对外暴露 Start/Pause/Resume/End API，
+        /// 但真正的会话推进交给 BattleFlowComponent 这个流程控制器。
+        /// 这样 Battle 仍是战斗实例，而流程职责被显式收拢到一个组件中。
+        /// </summary>
+        private static BattleFlowComponent GetOrCreateFlowController(this Battle self)
+        {
+            return self.GetComponent<BattleFlowComponent>() ?? self.AddComponent<BattleFlowComponent>();
         }
     }
 }

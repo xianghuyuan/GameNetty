@@ -47,7 +47,7 @@ namespace ET.Server
         /// <param name="duration">持续时间（毫秒）</param>
         /// <param name="tickInterval">周期触发间隔（毫秒）</param>
         public static void AddBuff(this BuffComponent self, int buffId, long casterId, int skillId,
-            BuffConfig config, int duration, int tickInterval)
+            BuffConfig config, int duration, int tickInterval, int maxStack = 0)
         {
             if (config == null || duration <= 0)
             {
@@ -55,6 +55,21 @@ namespace ET.Server
             }
 
             long currentTime = TimeInfo.Instance.ServerFrameTime();
+
+            // 同名buff检测：已存在则刷新时长，不创建新实体
+            BuffEntity existingBuff = self.FindBuffById(buffId);
+            if (existingBuff != null)
+            {
+                existingBuff.ExpireTime = currentTime + duration;
+                existingBuff.Duration = duration;
+                if (tickInterval > 0)
+                {
+                    existingBuff.TickInterval = tickInterval;
+                    existingBuff.NextTickTime = currentTime + tickInterval;
+                }
+                return;
+            }
+
             BuffEntity buffEntity = self.AddChild<BuffEntity>();
             buffEntity.BuffId = buffId;
             buffEntity.CasterId = casterId;
@@ -65,7 +80,7 @@ namespace ET.Server
             buffEntity.NextTickTime = tickInterval > 0 ? currentTime + tickInterval : 0;
             buffEntity.ExpireTime = currentTime + duration;
             buffEntity.TickCount = 0;
-            buffEntity.MaxStack = 0;
+            buffEntity.MaxStack = maxStack;
             buffEntity.StackCount = 1;
 
             // 首次执行
@@ -77,6 +92,54 @@ namespace ET.Server
         }
 
         /// <summary>
+        /// 根据buffId查找已存在的BuffEntity。
+        /// </summary>
+        public static BuffEntity FindBuffById(this BuffComponent self, int buffId)
+        {
+            foreach (Entity child in self.Children.Values)
+            {
+                BuffEntity buffEntity = child as BuffEntity;
+                if (buffEntity != null && buffEntity.BuffId == buffId)
+                {
+                    return buffEntity;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 根据EffectType查找已存在的BuffEntity。
+        /// </summary>
+        public static BuffEntity FindBuffByEffectType(this BuffComponent self, EffectType effectType)
+        {
+            foreach (Entity child in self.Children.Values)
+            {
+                BuffEntity buffEntity = child as BuffEntity;
+                if (buffEntity != null && buffEntity.Config != null && buffEntity.Config.EffectType == (int)effectType)
+                {
+                    return buffEntity;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 移除指定buff并发布BuffRemoveEvent。
+        /// </summary>
+        public static void RemoveBuff(this BuffComponent self, BuffEntity buffEntity)
+        {
+            if (buffEntity == null) return;
+
+            BattleUnit target = self.GetParent<BattleUnit>();
+            EventSystem.Instance.Publish(self.Root(), new BuffRemoveEvent
+            {
+                Target = target,
+                BuffEntity = buffEntity,
+            });
+            buffEntity.Dispose();
+        }
+
+        /// <summary>
         /// Buff系统心跳 - 遍历所有子BuffEntity，处理tick触发和过期清理。
         /// </summary>
         internal static void OnBuffTick(BuffComponent self)
@@ -84,7 +147,7 @@ namespace ET.Server
             BattleUnit target = self.GetParent<BattleUnit>();
             if (target == null || target.IsDead)
             {
-                // 目标死亡，销毁所有buff
+                // 目标死亡，销毁所有buff（发布移除事件以还原属性）
                 self.DestroyAllBuffEntities();
                 return;
             }
@@ -102,6 +165,12 @@ namespace ET.Server
                 // 过期检测
                 if (buffEntity.IsExpired)
                 {
+                    // 发布移除事件以还原属性（如AttackBuff/DefenseBuff）
+                    EventSystem.Instance.Publish(self.Root(), new BuffRemoveEvent
+                    {
+                        Target = target,
+                        BuffEntity = buffEntity,
+                    });
                     buffEntity.Dispose();
                     continue;
                 }

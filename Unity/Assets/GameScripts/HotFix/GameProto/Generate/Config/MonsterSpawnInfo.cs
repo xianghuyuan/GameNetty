@@ -17,6 +17,7 @@ public partial struct MonsterSpawnInfo
     public MonsterSpawnInfo(ByteBuf _buf) 
     {
         MonsterId = _buf.ReadInt();
+        MonsterId_Ref = null;
         Count = _buf.ReadInt();
     }
 
@@ -26,11 +27,13 @@ public partial struct MonsterSpawnInfo
     }
 
     public readonly int MonsterId;
+    public MonsterUnitConfig MonsterId_Ref;
     public readonly int Count;
    
 
     public  void ResolveRef(Tables tables)
     {
+        MonsterId_Ref = tables.MonsterUnitConfigCategory.GetOrDefault(MonsterId);
     }
 
     public override string ToString()

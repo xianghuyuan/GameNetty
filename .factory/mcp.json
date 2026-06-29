@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "duojie-image": {
+      "command": "npx",
+      "type": "stdio",
+      "args": ["-y", "mcp-duojie-image"],
+      "env": {
+        "DUOJIE_API_KEY": "sk-0yrbRmgFk2QK8baFzdrdDyhhKfUhA3yOn6rfqcjpZRljBEqX"
+      }
+    }
+  }
+}

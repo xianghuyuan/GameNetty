@@ -28,6 +28,8 @@ namespace ET
 
         public readonly int MonsterId;
 
+        public MonsterUnitConfig MonsterIdConfig => MonsterUnitConfigCategory.Instance.GetOrDefault(MonsterId);
+
         public readonly int Count;
 
         public override string ToString()

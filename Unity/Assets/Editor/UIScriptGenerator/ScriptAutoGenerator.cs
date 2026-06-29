@@ -282,7 +282,9 @@ namespace TEngine.Editor.UI
                 return;
             }
 
-            var componentName = rule.componentName.ToString();
+            var componentName = rule.componentName == UIComponentName.Button
+                ? nameof(UIButton)
+                : rule.componentName.ToString();
 
             if (string.IsNullOrEmpty(componentName))
             {
@@ -320,12 +322,12 @@ namespace TEngine.Editor.UI
                     if (isUniTask)
                     {
                         strOnCreate.AppendLine(
-                            $"\t\t\t{varName}.onClick.AddListener(UniTask.UnityAction({btnFuncName}));");
+                            $"\t\t\t{varName}.SetClick(() => {{ {btnFuncName}(); }});");
                         strCallback.AppendLine($"\t\tprivate partial UniTaskVoid {btnFuncName}();");
                     }
                     else
                     {
-                        strOnCreate.AppendLine($"\t\t\t{varName}.onClick.AddListener({btnFuncName});");
+                        strOnCreate.AppendLine($"\t\t\t{varName}.SetClick({btnFuncName});");
                         strCallback.AppendLine($"\t\tprivate partial void {btnFuncName}();");
                     }
 
@@ -642,7 +644,7 @@ namespace TEngine.Editor.UI
             return enumName switch
             {
                 UIComponentName.GameObject => typeof(GameObject),
-                UIComponentName.Button => typeof(Button),
+                UIComponentName.Button => typeof(UIButton),
                 UIComponentName.Toggle => typeof(Toggle),
                 UIComponentName.Slider => typeof(Slider),
                 UIComponentName.Text => typeof(Text),

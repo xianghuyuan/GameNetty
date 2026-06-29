@@ -111,6 +111,11 @@ namespace ET
         public readonly int DropId;
 
         /// <summary>
+        /// 掉落表ID
+        /// </summary>
+        public ResourceConfig DropIdConfig => ResourceConfigCategory.Instance.GetOrDefault(DropId);
+
+        /// <summary>
         /// 经验值
         /// </summary>
         public readonly int Exp;

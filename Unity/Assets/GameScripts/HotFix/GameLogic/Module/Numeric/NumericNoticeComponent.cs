@@ -38,7 +38,6 @@ namespace ET
                 NumericType.CritRate => "CritRate/暴击率",
                 NumericType.CritDamage => "CritDamage/暴击伤害",
                 NumericType.AttackSpeed => "AttackSpeed/攻速",
-                NumericType.MoveSpeed => "MoveSpeed/移动速度",
                 NumericType.LifeSteal => "LifeSteal/吸血",
                 NumericType.DamageReduction => "DamageReduction/伤害减免",
                 NumericType.Penetration => "Penetration/穿透",

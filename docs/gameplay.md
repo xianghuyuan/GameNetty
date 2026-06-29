@@ -73,13 +73,14 @@ M2C_SpawnWave {
 ### 3. 停移逻辑（玩家）
 *   遍历所有自动技能的 `SkillTargetingConfig.CastRange + EdgeDistance`。
 *   **有技能 CD 就绪**：用 CD 就绪技能中的最短射程停移。
-*   **全部技能 CD 中**：用所有技能中的最短射程停移（等 CD，不冲过头）。
+*   **在线模式全部技能 CD 中**：用所有技能中的最短射程停移（等 CD，不冲过头）。
+*   **离线模式全部技能 CD 中**：继续追击，只有真正可出手的那一刻才停步，避免 `Game` 视角里因为玩家与相机提前停下而误判怪物“减速”。
 *   停移后 `Forward = zero`，但 `FaceDirection` 保持指向目标。
 
 ### 4. 停移逻辑（杂兵）
 *   从 `UnitCombatConfig.AutoSkillIds` / `NormalAttackSkillId` 推算最短射程作为 `AttackRange`。
-*   进入 `AttackRange` 后 `Forward = zero`，停止移动。
-*   CD 中时等待，CD 好后发送 `C2M_ClientBatchHit` 上报伤害。
+*   **在线模式**：进入 `AttackRange` 后 `Forward = zero`，CD 中时等待，CD 好后发送 `C2M_ClientBatchHit` 上报伤害。
+*   **离线模式**：仅在真正出手时短暂停步；CD 中继续追击，避免屏幕相对位移突然变慢。
 
 ---
 
@@ -126,7 +127,8 @@ M2C_SpawnWave {
       │
       ├─ 找最近敌人
       ├─ 判断是否在技能射程内
-      ├─ 在射程 → Forward=zero, FaceDirection→目标, 发 C2M_CastSkill
+      ├─ 在线在射程 → Forward=zero, FaceDirection→目标, 发 C2M_CastSkill
+      ├─ 离线在射程但技能未就绪 → 继续追击，不提前停步
       └─ 超射程 → Forward→目标方向, FaceDirection→目标, 发 C2M_PlayerPositionSync
 
 [每帧 View Update]
@@ -137,7 +139,8 @@ M2C_SpawnWave {
 [杂兵 AI Tick — 每100ms]
       │
       ├─ 找最近友方
-      ├─ 在攻击范围内 → Forward=zero, CD好了就发 C2M_ClientBatchHit
+      ├─ 在线在攻击范围内 → Forward=zero, CD好了就发 C2M_ClientBatchHit
+      ├─ 离线在攻击范围内但 CD 未好 → 继续追击
       └─ 超出范围 → Forward→玩家方向, 增量移动靠近
 
 [Boss — 服务端 100ms tick]

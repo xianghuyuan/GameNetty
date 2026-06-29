@@ -17,7 +17,7 @@ public sealed partial class BuffGroupConfig : Luban.BeanBase
     public BuffGroupConfig(ByteBuf _buf) 
     {
         Id = _buf.ReadInt();
-        {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);EffectIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); EffectIds[__index0] = __e0;}}
+        {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);BuffIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); BuffIds[__index0] = __e0;}}
         ExecMode = _buf.ReadInt();
         Desc = _buf.ReadString();
     }
@@ -28,13 +28,14 @@ public sealed partial class BuffGroupConfig : Luban.BeanBase
     }
 
     /// <summary>
-    /// 效果组ID
+    /// Buff组ID
     /// </summary>
     public readonly int Id;
     /// <summary>
-    /// 效果ID列表
+    /// BuffID列表
     /// </summary>
-    public readonly int[] EffectIds;
+    public readonly int[] BuffIds;
+    public BuffConfig[] BuffIds_Ref;
     /// <summary>
     /// 执行方式
     /// </summary>
@@ -49,13 +50,16 @@ public sealed partial class BuffGroupConfig : Luban.BeanBase
 
     public  void ResolveRef(Tables tables)
     {
+        BuffIds_Ref = new BuffConfig[BuffIds.Length];
+        for (int _i = 0; _i < BuffIds.Length; _i++) { BuffIds_Ref[_i] = tables.BuffConfigCategory.GetOrDefault(BuffIds[_i]); }
+
     }
 
     public override string ToString()
     {
         return "{ "
         + "Id:" + Id + ","
-        + "EffectIds:" + Luban.StringUtil.CollectionToString(EffectIds) + ","
+        + "BuffIds:" + Luban.StringUtil.CollectionToString(BuffIds) + ","
         + "ExecMode:" + ExecMode + ","
         + "Desc:" + Desc + ","
         + "}";

@@ -40,9 +40,8 @@ namespace ET.Server
                 return;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(message.skillId);
-            BuffGroupConfig effectGroupConfig = skillConfig?.BuffGroupIdConfig;
-            if (effectGroupConfig == null)
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(message.skillId);
+            if (skillConfig == null || !skillConfig.IsEnabled)
             {
                 return;
             }
@@ -61,7 +60,7 @@ namespace ET.Server
                     continue;
                 }
 
-                int damage = BattleSkillHelper.ApplyEffects(caster, target, effectGroupConfig, skillConfig);
+                int damage = BattleSkillHelper.ApplyEmitterDamage(caster, target, skillConfig);
 
                 var batchResult = new BatchDamageResult
                 {
@@ -69,13 +68,13 @@ namespace ET.Server
                     SkillId = message.skillId,
                     TargetId = target.Id,
                     Damage = damage,
-                    DamageType = skillConfig.SkillKind == 1 ? 0 : 1,
+                    DamageType = skillConfig.EmitterKind == 1 ? 0 : 1,
                     TargetDead = target.IsDead,
                 };
 
-                NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-                batchResult.TargetCurrentHp = targetNumeric?.GetAsInt(NumericType.Hp) ?? 0;
-                batchResult.TargetMaxHp = targetNumeric?.GetAsInt(NumericType.MaxHp) ?? 0;
+                BattleStatsComponent targetStats = target.GetOrCreateBattleStats();
+                batchResult.TargetCurrentHp = targetStats?.Hp ?? 0;
+                batchResult.TargetMaxHp = targetStats?.MaxHp ?? 0;
 
                 timeline.AccumulatedResults.Add(batchResult);
             }

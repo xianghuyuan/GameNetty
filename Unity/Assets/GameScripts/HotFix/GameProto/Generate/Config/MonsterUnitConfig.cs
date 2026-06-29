@@ -30,6 +30,7 @@ public sealed partial class MonsterUnitConfig : Luban.BeanBase
         AI = _buf.ReadInt();
         AI_Ref = null;
         DropId = _buf.ReadInt();
+        DropId_Ref = null;
         Exp = _buf.ReadInt();
         Gold = _buf.ReadInt();
     }
@@ -92,6 +93,7 @@ public sealed partial class MonsterUnitConfig : Luban.BeanBase
     /// 掉落表ID
     /// </summary>
     public readonly int DropId;
+    public ResourceConfig DropId_Ref;
     /// <summary>
     /// 经验值
     /// </summary>
@@ -107,6 +109,7 @@ public sealed partial class MonsterUnitConfig : Luban.BeanBase
     public  void ResolveRef(Tables tables)
     {
         AI_Ref = tables.AIConfigCategory.GetOrDefault(AI);
+        DropId_Ref = tables.ResourceConfigCategory.GetOrDefault(DropId);
     }
 
     public override string ToString()

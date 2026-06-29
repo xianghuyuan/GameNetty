@@ -6,6 +6,7 @@ namespace ET.Server
     [EntitySystemOf(typeof(WaveManagerComponent))]
     [FriendOf(typeof(WaveManagerComponent))]
     [FriendOf(typeof(BattleRoom))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public static partial class WaveManagerComponentSystem
     {
         [EntitySystem]
@@ -122,6 +123,7 @@ namespace ET.Server
         private static async ETTask SpawnFromSpawnConfig(this WaveManagerComponent self, SpawnConfig spawnConfig)
         {
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
+            BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
 
             // 卷轴战斗中当前只使用 X 坐标，PositionZ 暂时保留但不参与布局。
             float centerX = spawnConfig.PositionX;
@@ -144,7 +146,7 @@ namespace ET.Server
                         Vector3 position = new Vector3(centerX + offsetX, 0, 0);
                         BattleUnit monster = UnitFactory.CreateMonster(battleRoom, monsterInfo.MonsterId, position);
 
-                        battleRoom.Units[monster.Id] = monster;
+                        registry.Register(monster);
                         self.CurrentWaveMonsterIds.Add(monster.Id);
 
                         BattleUnitInfo unitInfo = BattleUnitHelper.CreateBattleUnitInfo(monster);
@@ -179,7 +181,7 @@ namespace ET.Server
                         Vector3 position = new Vector3(centerX + offsetX, 0, 0);
 
                         BattleUnit monster = UnitFactory.CreateMinion(battleRoom, monsterInfo.MonsterId, position, localUnitId);
-                        battleRoom.Units[monster.Id] = monster;
+                        registry.Register(monster);
                         self.CurrentWaveMonsterIds.Add(monster.Id);
                     }
                 }
@@ -206,6 +208,10 @@ namespace ET.Server
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
             BattleSpatialGrid spatialGrid = battleRoom?.GetComponent<BattleSpatialGrid>();
             spatialGrid?.Remove(monsterId);
+
+            // 从注册表移除
+            BattleUnitRegistryComponent registry = battleRoom?.GetComponent<BattleUnitRegistryComponent>();
+            registry?.Unregister(monsterId);
 
             if (self.CurrentWaveMonsterIds.Count == 0 && self.State == WaveState.Fighting)
             {
@@ -325,13 +331,11 @@ namespace ET.Server
             }
             
             BattleRoom battleRoom = self.GetParent<BattleRoom>();
+            BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
             foreach (long monsterId in self.CurrentWaveMonsterIds.ToArray())
             {
-                if (battleRoom.Units.TryGetValue(monsterId, out EntityRef<BattleUnit> monsterRef))
-                {
-                    BattleUnit monster = monsterRef;
-                    monster?.Dispose();
-                }
+                BattleUnit monster = registry?.GetUnit(monsterId);
+                monster?.Dispose();
             }
             
             self.CurrentWaveMonsterIds.Clear();

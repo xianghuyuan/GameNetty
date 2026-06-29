@@ -63,6 +63,11 @@ namespace ET
         public readonly int Reward;
 
         /// <summary>
+        /// Reward
+        /// </summary>
+        public ResourceConfig RewardConfig => ResourceConfigCategory.Instance.GetOrDefault(Reward);
+
+        /// <summary>
         /// TimeLimit
         /// </summary>
         public readonly int TimeLimit;

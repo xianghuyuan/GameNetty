@@ -18,9 +18,9 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
     {
         Id = _buf.ReadInt();
         ConfigId = _buf.ReadInt();
-        NormalAttackSkillId = _buf.ReadInt();
-        NormalAttackSkillId_Ref = null;
-        {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoSkillIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoSkillIds[__index0] = __e0;}}
+        NormalAttackEmitterId = _buf.ReadInt();
+        NormalAttackEmitterId_Ref = null;
+        {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoEmitterIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoEmitterIds[__index0] = __e0;}}
         MoveSpeed = _buf.ReadFloat();
         AutoCastNormalAttack = _buf.ReadBool();
         DefaultTargetPolicy = _buf.ReadString();
@@ -41,14 +41,15 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
     /// </summary>
     public readonly int ConfigId;
     /// <summary>
-    /// 默认普攻技能ID
+    /// 默认普攻发射器ID
     /// </summary>
-    public readonly int NormalAttackSkillId;
-    public SkillConfig NormalAttackSkillId_Ref;
+    public readonly int NormalAttackEmitterId;
+    public EmitterConfig NormalAttackEmitterId_Ref;
     /// <summary>
-    /// AI自动择优技能列表（为空则回退普攻）
+    /// AI自动择优发射器列表（为空则回退普攻）
     /// </summary>
-    public readonly int[] AutoSkillIds;
+    public readonly int[] AutoEmitterIds;
+    public EmitterConfig[] AutoEmitterIds_Ref;
     /// <summary>
     /// 移动速度（米/秒）
     /// </summary>
@@ -71,7 +72,10 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
 
     public  void ResolveRef(Tables tables)
     {
-        NormalAttackSkillId_Ref = tables.SkillConfigCategory.GetOrDefault(NormalAttackSkillId);
+        NormalAttackEmitterId_Ref = tables.EmitterConfigCategory.GetOrDefault(NormalAttackEmitterId);
+        AutoEmitterIds_Ref = new EmitterConfig[AutoEmitterIds.Length];
+        for (int _i = 0; _i < AutoEmitterIds.Length; _i++) { AutoEmitterIds_Ref[_i] = tables.EmitterConfigCategory.GetOrDefault(AutoEmitterIds[_i]); }
+
     }
 
     public override string ToString()
@@ -79,8 +83,8 @@ public sealed partial class UnitCombatConfig : Luban.BeanBase
         return "{ "
         + "Id:" + Id + ","
         + "ConfigId:" + ConfigId + ","
-        + "NormalAttackSkillId:" + NormalAttackSkillId + ","
-        + "AutoSkillIds:" + Luban.StringUtil.CollectionToString(AutoSkillIds) + ","
+        + "NormalAttackEmitterId:" + NormalAttackEmitterId + ","
+        + "AutoEmitterIds:" + Luban.StringUtil.CollectionToString(AutoEmitterIds) + ","
         + "MoveSpeed:" + MoveSpeed + ","
         + "AutoCastNormalAttack:" + AutoCastNormalAttack + ","
         + "DefaultTargetPolicy:" + DefaultTargetPolicy + ","

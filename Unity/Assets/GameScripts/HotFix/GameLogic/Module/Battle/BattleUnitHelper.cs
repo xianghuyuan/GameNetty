@@ -23,7 +23,7 @@ namespace ET
             // 设置关键属性
             battleUnit.OwnerId = unit.Id; // ⭐ 重要：记录对应的 Unit ID
             battleUnit.Camp = UnitCamp.Friend; // 玩家阵营
-            battleUnit.Position = position;
+            battleUnit.Position = BattleAreaConfig.WithBattleUnitSpawnY(position);
             battleUnit.Forward = unit.Forward;
             
             // 添加战斗组件
@@ -32,6 +32,7 @@ namespace ET
             
             // 复制数值
             CopyNumeric(unit, battleUnit);
+            battleUnit.GetOrCreateBattleStats().LoadFromNumeric(battleUnit.GetComponent<NumericComponent>());
             
             Log.Info($"从 Unit 创建 BattleUnit: UnitId={unit.Id}, BattleUnitId={battleUnit.Id}, ConfigId={unit.ConfigId}");
             
@@ -172,7 +173,7 @@ namespace ET
             // 设置属性
             battleUnit.OwnerId = 0; // 怪物没有主人
             battleUnit.Camp = UnitCamp.Enemy; // 敌方阵营
-            battleUnit.Position = position;
+            battleUnit.Position = BattleAreaConfig.WithBattleUnitSpawnY(position);
             
             // 添加组件
             battleUnit.AddComponent<NumericComponent>();
@@ -180,10 +181,128 @@ namespace ET
             
             // 从配置表初始化数值
             InitMonsterNumeric(battleUnit, configId);
+            battleUnit.GetOrCreateBattleStats().LoadFromNumeric(battleUnit.GetComponent<NumericComponent>());
+
+            SetupMinionEmitter(battleUnit, configId, configId);
             
             Log.Info($"创建怪物 BattleUnit: ConfigId={configId}, BattleUnitId={battleUnit.Id}");
             
             return battleUnit;
+        }
+
+        public static void SetupMinionEmitter(BattleUnit battleUnit, int configId, long attackRuntimeId)
+        {
+            if (battleUnit == null)
+            {
+                return;
+            }
+
+            float attackRange = 1.5f;
+            int attackCooldownMs = 1000;
+            float attackHitRatio = 0.5f;
+            int attackSourceConfigId = 0;
+            bool canMoveCast = false;
+            int buffGroupId = 0;
+            ResolveMonsterAttack(configId, ref attackRange, ref attackCooldownMs, ref attackHitRatio, ref attackSourceConfigId, ref canMoveCast, ref buffGroupId);
+
+            SetupMinionEmitter(battleUnit, attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+        }
+
+        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, bool canMoveCast)
+        {
+            SetupMinionEmitter(battleUnit, attackRuntimeId, attackCooldownMs, attackRange, canMoveCast, 0);
+        }
+
+        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
+        {
+            SetupMinionEmitter(battleUnit, attackRuntimeId, attackCooldownMs, attackRange, 0.5f, canMoveCast, buffGroupId);
+        }
+
+        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
+        {
+            SetupMinionEmitter(battleUnit, attackRuntimeId, 0, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+        }
+
+        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackSourceConfigId, int attackCooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
+        {
+            if (battleUnit == null)
+            {
+                return;
+            }
+
+            BattleUnitCombatComponent combatComponent = battleUnit.GetComponent<BattleUnitCombatComponent>();
+            if (combatComponent == null)
+            {
+                battleUnit.AddComponent<BattleUnitCombatComponent, float>(attackRange);
+            }
+            else
+            {
+                combatComponent.AttackRange = attackRange;
+            }
+
+            BattleAttackComponent battleAttack = battleUnit.GetComponent<BattleAttackComponent>();
+            if (battleAttack == null)
+            {
+                battleAttack = battleUnit.AddComponent<BattleAttackComponent>();
+            }
+
+            battleAttack.SetSingleEffectAttack(attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+
+            if (battleUnit.GetComponent<ClientMinionAIComponent>() == null)
+            {
+                battleUnit.AddComponent<ClientMinionAIComponent>();
+            }
+        }
+
+        private static void ResolveMonsterAttack(int configId, ref float attackRange, ref int attackCooldownMs, ref float attackHitRatio, ref int attackSourceConfigId, ref bool canMoveCast, ref int buffGroupId)
+        {
+            UnitCombatConfig combatConfig = ConfigHelper.UnitCombatConfig?.GetOrDefault(configId);
+            if (combatConfig == null)
+            {
+                return;
+            }
+
+            EmitterConfig attackEmitterConfig = ResolveMonsterAttackEmitter(combatConfig);
+            if (attackEmitterConfig == null)
+            {
+                return;
+            }
+
+            SkillTargetingConfig targetingConfig = ConfigHelper.SkillTargetingConfig?.GetOrDefault(attackEmitterConfig.TargetingConfigId);
+            if (targetingConfig != null)
+            {
+                attackRange = targetingConfig.CastRange + targetingConfig.EdgeDistance;
+            }
+
+            attackSourceConfigId = attackEmitterConfig.Id;
+            attackCooldownMs = attackEmitterConfig.CooldownMs > 0 ? attackEmitterConfig.CooldownMs : attackCooldownMs;
+            attackHitRatio = attackEmitterConfig.AttackHitRatio > 0f ? attackEmitterConfig.AttackHitRatio : attackHitRatio;
+            canMoveCast = attackEmitterConfig.CanMoveCast;
+        }
+
+        private static EmitterConfig ResolveMonsterAttackEmitter(UnitCombatConfig combatConfig)
+        {
+            if (combatConfig.AutoEmitterIds_Ref != null)
+            {
+                foreach (EmitterConfig emitterConfig in combatConfig.AutoEmitterIds_Ref)
+                {
+                    if (emitterConfig != null && emitterConfig.IsEnabled)
+                    {
+                        return emitterConfig;
+                    }
+                }
+            }
+
+            if (combatConfig.NormalAttackEmitterId > 0)
+            {
+                EmitterConfig normalAttack = ConfigHelper.EmitterConfig?.GetOrDefault(combatConfig.NormalAttackEmitterId);
+                if (normalAttack != null && normalAttack.IsEnabled)
+                {
+                    return normalAttack;
+                }
+            }
+
+            return null;
         }
         
         /// <summary>

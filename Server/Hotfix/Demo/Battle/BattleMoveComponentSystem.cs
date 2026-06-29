@@ -211,8 +211,8 @@ namespace ET.Server
                 return;
             }
 
-            NumericComponent numeric = owner.GetComponent<NumericComponent>();
-            float moveSpeed = numeric?.GetAsFloat(NumericType.Speed) ?? self.MoveSpeed;
+            BattleStatsComponent stats = owner.GetOrCreateBattleStats();
+            float moveSpeed = stats?.Speed ?? self.MoveSpeed;
             if (moveSpeed <= 0f)
             {
                 moveSpeed = self.MoveSpeed;
@@ -256,9 +256,9 @@ namespace ET.Server
             if (self.ChaseTargetId != 0 && self.ChaseAttackRange > 0f)
             {
                 BattleRoom battleRoom = owner.GetParent<BattleRoom>();
-                if (battleRoom != null && battleRoom.Units.TryGetValue(self.ChaseTargetId, out EntityRef<BattleUnit> targetRef))
+                if (battleRoom != null)
                 {
-                    BattleUnit chaseTarget = targetRef;
+                    BattleUnit chaseTarget = battleRoom.GetUnit(self.ChaseTargetId);
                     if (chaseTarget != null && !chaseTarget.IsDead)
                     {
                         float distToTarget = BattleDistanceHelper.GetDistance(owner.Position, chaseTarget.Position);

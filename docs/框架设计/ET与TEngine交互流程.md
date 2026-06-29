@@ -137,16 +137,12 @@ public static void Set(this NumericComponent self, int numericType, long value)
 namespace ET
 {
     [Event(SceneType.Main)]
-    public class BattleUnitNumericChange_UI : AEvent<Scene, BattleUnitNumericChange>
+    public class BattleUnitNumericChange_UpdatePlayerStatus : AEvent<Scene, BattleUnitNumericChange>
     {
         protected override async ETTask Run(Scene scene, BattleUnitNumericChange args)
         {
-            // 更新 TEngine UI
-            BattleUIHelper.OnNumericChange(
-                args.BattleUnit, 
-                args.NumericType, 
-                args.NewValue
-            );
+            // 玩家状态区、Boss 状态区等正式 UI 由对应窗口或 widget 订阅并刷新。
+            // 不再通过 BattleUIHelper 为每个 BattleUnit 创建信息 widget。
             
             await ETTask.CompletedTask;
         }

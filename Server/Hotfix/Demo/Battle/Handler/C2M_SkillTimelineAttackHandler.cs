@@ -41,13 +41,13 @@ namespace ET.Server
                 return;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(message.skillId);
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(message.skillId);
             if (skillConfig == null || !skillConfig.IsEnabled)
             {
                 return;
             }
 
-            if (!combat.IsSkillReady(skillConfig))
+            if (!combat.IsEmitterReady(skillConfig))
             {
                 return;
             }
@@ -60,7 +60,7 @@ namespace ET.Server
 
             if (hitBoxMinX == 0 && hitBoxMaxX == 0)
             {
-                SkillTargetingConfig targetingConfig = skillConfig.TargetingConfigIdConfig;
+                SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
                 if (targetingConfig != null)
                 {
                     float castRange = targetingConfig.CastRange;
@@ -100,7 +100,7 @@ namespace ET.Server
             BattleUnitHelper.BroadcastSkillCast(caster, message.skillId, message.targetId,
                 new Vector3(casterX + faceDir * 2f, caster.Position.Y, caster.Position.Z));
 
-            combat.StartSkillCooldown(skillConfig);
+            combat.StartEmitterCooldown(skillConfig);
 
             NetworkStateMachineComponent networkState = caster.GetComponent<NetworkStateMachineComponent>();
             networkState?.OnSkillRequestSent();

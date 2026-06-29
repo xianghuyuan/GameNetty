@@ -1,0 +1,74 @@
+{
+  "source": "Codex imagegen for art generation; non-creative chroma-key removal only for alpha layers",
+  "style": "medium-saturation creamy moonlit fantasy, side-scrolling push-forward, no center focal area",
+  "generationRule": "Do not use Python scripts to generate art. Scripts may only remove flat chroma-key backgrounds, inspect dimensions, inspect alpha, or validate naming/meta references.",
+  "baseline": {
+    "asset": "battle_scene_ground_loop.png",
+    "localBaselineY": null,
+    "rule": "All player and monster foot/paw contact points must align to one horizontal Unity world baseline. Do not reuse old baselineY values from previous generated layers; set the final baseline during Unity placement."
+  },
+  "layers": [
+    {
+      "name": "battle_scene_sky.png",
+      "size": [
+        1672,
+        941
+      ],
+      "hasAlpha": false,
+      "loopX": false,
+      "suggestedParallax": 0.05,
+      "role": "opaque L0 sky base"
+    },
+    {
+      "name": "battle_scene_far_hills_loop.png",
+      "size": [
+        1672,
+        941
+      ],
+      "hasAlpha": false,
+      "loopX": true,
+      "suggestedParallax": 0.18,
+      "role": "opaque L1 distant hills layer"
+    },
+    {
+      "name": "battle_scene_mid_forest_loop.png",
+      "size": [
+        1672,
+        941
+      ],
+      "hasAlpha": true,
+      "loopX": true,
+      "suggestedParallax": 0.36,
+      "role": "transparent L2 mid forest band"
+    },
+    {
+      "name": "battle_scene_ground_loop.png",
+      "size": [
+        1672,
+        941
+      ],
+      "hasAlpha": true,
+      "loopX": true,
+      "suggestedParallax": 1.0,
+      "role": "transparent L4 playable combat ground strip"
+    },
+    {
+      "name": "battle_scene_foreground_grass_loop.png",
+      "size": [
+        1672,
+        941
+      ],
+      "hasAlpha": true,
+      "loopX": true,
+      "suggestedParallax": 1.18,
+      "optional": true,
+      "role": "transparent L5 bottom foreground speed layer"
+    }
+  ],
+  "notes": [
+    "The new split layers were generated as separate imagegen assets rather than code-drawn art.",
+    "Sky and far hills are opaque base layers. Mid forest, ground, and foreground grass are alpha layers.",
+    "The old preview image may not represent this split accurately and should not be used as an approval reference.",
+    "Foreground grass is optional and should be disabled if it obscures drops, warnings, or foot contact points."
+  ]
+}

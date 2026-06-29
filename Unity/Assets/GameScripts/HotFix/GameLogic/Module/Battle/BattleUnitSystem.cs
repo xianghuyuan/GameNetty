@@ -31,6 +31,7 @@ namespace ET
             if (oldValue == value) return;
 
             numeric.Set(numericType, (int)value);
+            self.ApplyNumericToBattleStats(numericType, value);
 
             EventSystem.Instance.Publish(self.Scene(), new BattleUnitNumericChange
             {
@@ -39,6 +40,31 @@ namespace ET
                 OldValue = oldValue,
                 NewValue = value
             });
+        }
+
+        private static void ApplyNumericToBattleStats(this BattleUnit self, int numericType, long value)
+        {
+            BattleStatsComponent stats = self.GetComponent<BattleStatsComponent>();
+            if (stats == null)
+            {
+                return;
+            }
+
+            switch (numericType)
+            {
+                case NumericType.Hp:
+                    stats.Hp = (int)value;
+                    break;
+                case NumericType.MaxHp:
+                    stats.MaxHp = (int)value;
+                    break;
+                case NumericType.Attack:
+                    stats.Attack = (int)value;
+                    break;
+                case NumericType.Defense:
+                    stats.Defense = (int)value;
+                    break;
+            }
         }
     }
 }

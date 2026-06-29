@@ -79,9 +79,5 @@ namespace ET.Server
         /// </summary>
         public long TimerId { get; set; }
 
-        /// <summary>
-        /// 效果组配置ID（命中时应用效果）
-        /// </summary>
-        public int BuffGroupId { get; set; }
     }
 }

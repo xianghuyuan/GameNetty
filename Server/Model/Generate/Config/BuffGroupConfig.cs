@@ -17,7 +17,7 @@ namespace ET
         public BuffGroupConfig(ByteBuf _buf)
         {
             Id = _buf.ReadInt();
-            {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);EffectIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); EffectIds[__index0] = __e0;}}
+            {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);BuffIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); BuffIds[__index0] = __e0;}}
             ExecMode = _buf.ReadInt();
             Desc = _buf.ReadString();
 
@@ -30,14 +30,14 @@ namespace ET
         }
 
         /// <summary>
-        /// 效果组ID
+        /// Buff组ID
         /// </summary>
         public readonly int Id;
 
         /// <summary>
-        /// 效果ID列表
+        /// BuffID列表
         /// </summary>
-        public readonly int[] EffectIds;
+        public readonly int[] BuffIds;
 
         /// <summary>
         /// 执行方式
@@ -57,7 +57,7 @@ namespace ET
         {
             return "{ "
             + "Id:" + Id + ","
-            + "EffectIds:" + Luban.StringUtil.CollectionToString(EffectIds) + ","
+            + "BuffIds:" + Luban.StringUtil.CollectionToString(BuffIds) + ","
             + "ExecMode:" + ExecMode + ","
             + "Desc:" + Desc + ","
             + "}";

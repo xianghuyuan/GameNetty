@@ -8,5 +8,6 @@ namespace ET.Server
     {
         public bool IsFrozen { get; set; }
         public long FreezeEndTime { get; set; }
+        public long FreezeTimerId { get; set; }
     }
 }

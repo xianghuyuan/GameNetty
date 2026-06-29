@@ -18,7 +18,7 @@ namespace GameNetty.EditorTools
     public sealed class BattleAutoStrategyEditorWindow : EditorWindow
 #endif
     {
-        private const string MenuPath = "Tools/Battle/Auto Battle Strategy Panel";
+        private const string MenuPath = "Tools/GameNetty/战斗/自动战斗策略";
 
         private static readonly List<RuleGuideRow> RuleGuideRows = new()
         {
@@ -37,7 +37,7 @@ namespace GameNetty.EditorTools
         private static void OpenWindow()
         {
             BattleAutoStrategyEditorWindow window = GetWindow<BattleAutoStrategyEditorWindow>();
-            window.titleContent = new GUIContent("Auto Strategy");
+            window.titleContent = new GUIContent("自动战斗策略");
             window.minSize = new Vector2(760f, 520f);
             window.Show();
         }

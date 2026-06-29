@@ -12,8 +12,10 @@ namespace GameLogic
 
         private partial void OnClickOfflineBtn()
         {
-            OfflineBattleHelper.StartOfflineBattle(global::Init.Root).Coroutine();
+            BattleEntry.StartBattle(global::Init.Root, new BattleStartRequest
+            {
+                Mode = BattleStartMode.Offline,
+            }).Coroutine();
         }
     }
 }
-

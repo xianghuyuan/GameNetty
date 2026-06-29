@@ -8,7 +8,7 @@ namespace ET.Server
         public BattleUnit Attacker;
         public BattleUnit Target;
         public int SkillId;
-        public BuffGroupConfig EffectGroup;
+        public BuffGroupConfig BuffGroup;
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ namespace ET.Server
     public struct SpawnProjectileEvent
     {
         public BattleUnit Caster;
-        public SkillConfig SkillConfig;
+        public EmitterConfig EmitterConfig;
         public BattleUnit Target;
     }
 
@@ -211,5 +211,15 @@ namespace ET.Server
         public BattleUnit Target;
         public System.Numerics.Vector3 CorrectPosition;
         public float CorrectionThreshold;
+    }
+
+    /// <summary>
+    /// Buff移除事件 - 当buff过期或被主动移除时触发。
+    /// 用于在buff结束时还原属性（如AttackBuff/DefenseBuff的临时加成）。
+    /// </summary>
+    public struct BuffRemoveEvent
+    {
+        public BattleUnit Target;
+        public BuffEntity BuffEntity;
     }
 }

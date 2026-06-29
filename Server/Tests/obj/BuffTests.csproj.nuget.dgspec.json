@@ -1,0 +1,450 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Tests/BuffTests.csproj": {}
+  },
+  "projects": {
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj",
+        "projectName": "Core",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/Hotfix.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/Hotfix.csproj",
+        "projectName": "Hotfix",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/Hotfix.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/Loader.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/Loader.csproj"
+              },
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/Loader.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/Loader.csproj",
+        "projectName": "Loader",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/Loader.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Loader/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj"
+              },
+              "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj",
+        "projectName": "Model",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Model/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Core/Core.csproj"
+              },
+              "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/gxx/Documents/UGit/GameNetty/Server/Tests/BuffTests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/Tests/BuffTests.csproj",
+        "projectName": "BuffTests",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Tests/BuffTests.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/Hotfix.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Hotfix/Hotfix.csproj"
+              },
+              "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj": {
+                "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/Model/Model.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.9.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.7.0, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.7, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj",
+        "projectName": "ThirdParty",
+        "projectPath": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/ThirdParty.csproj",
+        "packagesPath": "/Users/gxx/.nuget/packages/",
+        "outputPath": "/Users/gxx/Documents/UGit/GameNetty/Server/ThirdParty/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/gxx/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "noWarn": [
+            "NU1903"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "CommandLineParser": {
+              "target": "Package",
+              "version": "[2.8.0, )"
+            },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[5.8.8, )"
+            },
+            "MemoryPack": {
+              "target": "Package",
+              "version": "[1.21.4, )"
+            },
+            "Microsoft.CodeAnalysis.CSharp": {
+              "target": "Package",
+              "version": "[4.0.1, )"
+            },
+            "Microsoft.CodeAnalysis.Common": {
+              "target": "Package",
+              "version": "[4.0.1, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[2.17.1, )"
+            },
+            "NLog": {
+              "target": "Package",
+              "version": "[4.7.15, )"
+            },
+            "SharpZipLib": {
+              "target": "Package",
+              "version": "[1.3.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

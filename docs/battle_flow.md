@@ -1,6 +1,8 @@
 # 战斗模块流程图
 
 > 基于 Server/Hotfix/Demo/Battle/ 及相关代码生成，随代码同步更新。
+>
+> 最后更新: 2026-04-13
 
 ---
 
@@ -18,7 +20,8 @@
   │                              │    │       ├─ AddComponent<SlotManagerComponent>
   │                              │    │       ├─ AddComponent<BattleSpatialGrid>(5f)
   │                              │    │       ├─ AddComponent<SkillTimelineComponent>
-  │                              │    │       └─ AddComponent<BossSyncComponent>
+  │                              │    │       ├─ AddComponent<BossSyncComponent>
+  │                              │    │       └─ AddComponent<BattleUnitRegistryComponent>  ← 统一注册表
   │                              │    ├─ battleRoom.AddPlayer(playerId)
   │                              │    ├─ roomManager 注册映射
   │                              │    └─ battleRoom.InitTeamBattle(mapScene, memberIds, battleType)
@@ -33,34 +36,49 @@
 InitTeamBattle(mapScene, memberIds, battleType)
 │
 ├─ 遍历 memberIds 创建英雄单位
-│   ├─ UnitFactory.CreateHero(battleRoom, unitId, configId, position)
+│   ├─ UnitFactory.CreateHero(battleRoom, unit, position)
 │   │   ├─ Camp = Friend
-│   │   ├─ AddComponent<NumericComponent>        → 初始化 MaxHp=1000, Attack=10, Defense=1, Speed=2
+│   │   ├─ AddComponent<NumericComponent>        → 初始化 MaxHp/Attack/Defense/Speed
 │   │   ├─ AddComponent<NumericNoticeComponent>
 │   │   ├─ AddComponent<BuffComponent>
-│   │   ├─ AddComponent<BattleUnitCombatComponent> → AttackCooldown=1000, AttackRange=2.5
-│   │   ├─ ApplyNormalAttackConfigFromCombatConfig → 从 UnitCombatConfig 读取技能/速度覆盖
-│   │   └─ AddComponent<NetworkStateMachineComponent>
-│   ├─ battleRoom.Units[unit.Id] = unit
+│   │   ├─ AddComponent<BattleUnitCombatComponent>
+│   │   └─ ApplyNormalAttackConfigFromCombatConfig → 从 UnitCombatConfig 读取技能/速度覆盖
+│   ├─ registry.Register(heroUnit)              ← 通过 BattleUnitRegistryComponent 注册
 │   └─ spatialGrid.Insert(unit.Id, position.X)
 │
 ├─ if battleType == 2 (Boss战):
 │   ├─ UnitFactory.CreateMonster(battleRoom, configId, position=EnemySpawnX)
 │   │   ├─ Camp = Enemy
-│   │   ├─ AddComponent<NumericComponent>        → 从 MonsterUnitConfig 读取 MaxHp/Attack/Defense/Speed
+│   │   ├─ AddComponent<NumericComponent>        → 从 MonsterUnitConfig 读取属性
 │   │   ├─ AddComponent<BattleMoveComponent>     → 100ms 移动tick
 │   │   ├─ AddComponent<BattleActionDecisionComponent> → 100ms AI决策tick
 │   │   ├─ AddComponent<BuffComponent>
 │   │   ├─ AddComponent<BattleUnitCombatComponent>
 │   │   ├─ ApplyNormalAttackConfigFromCombatConfig → 从 UnitCombatConfig 读取技能/速度覆盖
 │   │   └─ if MonsterType==Boss → Publish BossCreatedEvent → BossSyncComponent.RegisterBoss
-│   └─ battleRoom.Units[bossUnit.Id] = bossUnit
+│   └─ registry.Register(bossUnit)             ← 通过 BattleUnitRegistryComponent 注册
 │
-└─ 初始化波次管理器
-    └─ AddComponent<WaveManagerComponent>(stageId, waveConfigIds)
+└─ 初始化波次管理器（配置驱动）
+    └─ AddComponent<WaveManagerComponent>(stageConfigId, waveConfigIds)
+        ├─ StageConfigId, WaveConfigIds (从 StageConfig 获取)
         ├─ CurrentWaveIndex = -1
         ├─ State = WaveState.None
         └─ WaveInterval = 5000ms, AutoStartNextWave = true
+```
+
+### InitBattle 内部流程（单人战斗）
+
+```
+InitBattle(playerUnit, stageId, battleType)
+│
+├─ 创建玩家战斗单位
+│   ├─ UnitFactory.CreateHero(battleRoom, playerUnit, PlayerSpawnX)
+│   ├─ registry.Register(heroUnit)
+│   └─ spatialGrid.Insert(heroUnit.Id, heroUnit.Position.X)
+│
+└─ 初始化波次管理器
+    └─ AddComponent<WaveManagerComponent>(stageId, stageInfo.WaveConfigIds)
+        └─ 从 StageConfigInfo 获取 WaveConfigIds（按 WaveNumber 排序）
 ```
 
 ---
@@ -73,7 +91,7 @@ InitTeamBattle(mapScene, memberIds, battleType)
 ├─ battleRoom.StartFirstWave()
 │   ├─ WaitFrameAsync()  // 等一帧确保组件就绪
 │   ├─ SendHeroUnits()
-│   │   ├─ 收集 Camp==Friend 的 BattleUnit
+│   │   ├─ 收集 Camp==Friend 的 BattleUnit (via GetUnitsByCamp)
 │   │   ├─ BattleUnitHelper.CreateBattleUnitInfo(hero)
 │   │   └─ 广播 M2C_CreateBattleUnits (battleId, units[])
 │   │       → 客户端收到后创建英雄 UI
@@ -86,6 +104,8 @@ InitTeamBattle(mapScene, memberIds, battleType)
 │           └─ SpawnWaveMonsters(waveConfigId)
 │               └─ SpawnWaveMonstersFromBatches(waveConfig)
 │                   └─ 遍历 waveConfig.Batches
+│                       ├─ 读取 SpawnConfig (PositionX, SpreadRange, Monsters[])
+│                       ├─ 支持 batch.Delay 延迟生成
 │                       └─ SpawnFromSpawnConfig(spawnConfig)
 │                           │
 │               ┌───────────┴───────────┐
@@ -98,12 +118,13 @@ InitTeamBattle(mapScene, memberIds, battleType)
 │   ├─ NumericComp (全属性)     ├─ NumericComp (仅基础属性)
 │   ├─ BattleMoveComp           ├─ 无 BattleMoveComp
 │   ├─ DecisionComp             ├─ 无 DecisionComp
+│   ├─ registry.Register()      ├─ registry.Register()
 │   ├─ 注册 SpatialGrid         └─ 注册 SpatialGrid
 │   └─ 广播 M2C_CreateBattleUnits       │
 │                                   广播 M2C_SpawnWave
 │                                   ├─ monsterConfigId
-│                                   ├─ count, centerX
-│                                   ├─ spreadRange
+│                                   ├─ count, centerX, spreadRange
+│                                   ├─ moveDirX, moveDirY
 │                                   └─ startUnitId
 │                                        │
 │                                   客户端收到后:
@@ -133,7 +154,7 @@ BattleActionDecisionComponent — 100ms/tick
 │   │   ├─ GetAutoSkillIds() → 收集自动技能列表
 │   │   │   ├─ AutoSkillIds[] 中的技能
 │   │   │   └─ 如果 AutoCastNormalAttack → 加入 NormalAttackSkillId
-│   │   ├─ 找最近敌人 (遍历 battleRoom.Units)
+│   │   ├─ 找最近敌人 (battleRoom.ForEachUnit → via BattleUnitRegistryComponent)
 │   │   └─ 按优先级遍历技能，检查CD + 射程
 │   │       └─ 输出 AutoCastPlan { skillId, target, desiredPosition, requiredMoveDistance }
 │   │
@@ -190,13 +211,13 @@ C2M_CastSkill ──►              RequestCastEvent
     │   ├─ 施法者存活
     │   ├─ SkillConfig 存在且启用
     │   ├─ TargetingConfig + BuffGroupConfig 完整
-    │   ├─ 攻击CD就绪
+    │   ├─ 攻击CD就绪 (combat.IsSkillReady)
     │   └─ 自动模式限制检查 (PlayerCombatModeComponent)
     │
     ├─ 目标选取 SelectTargets()
     │   ├─ 指定目标模式: 直接验证
-    │   ├─ 最近敌人模式: SpatialGrid 查询
-    │   └─ 范围内所有敌人: 距离筛选
+    │   ├─ 最近敌人模式: battleRoom.ForEachUnit 距离筛选
+    │   └─ 范围内所有敌人: 距离筛选 + SortRule 排序 + MaxTargetCount 截断
     │
     ├─ 广播施法 M2C_SkillCast (casterId, skillId, targetId, targetPos)
     │
@@ -206,20 +227,20 @@ C2M_CastSkill ──►              RequestCastEvent
     │
     └─ else (瞬发):
         └─ ApplyEffects(caster, target, buffGroupConfig, skillConfig)
-            │
+            │   ← 所有效果统一视为 buff 效果
             ├─ Damage效果:
             │   ├─ CalculateDamage (attack * ratioAtk - defense * ratioDef)
             │   ├─ target.TakeDamage(damage)
             │   ├─ BroadcastDamage (M2C_Damage)
-            │   └─ if 死亡 → BroadcastUnitDead (M2C_UnitDead, 仅Boss)
-            │
+            │   └─ if 死亡 → BroadcastUnitDead
             ├─ Heal效果: target.Heal(amount)
-            │
-            ├─ Knockback效果:
-            │   └─ Publish KnockbackEvent → 移动组件处理 + 广播
-            │
-            └─ Freeze/Stun效果:
-                └─ BuffComponent.AddBuff → 创建 BuffEntity
+            ├─ Knockback效果: Publish KnockbackEvent → 移动组件处理 + 广播
+            ├─ LifeSteal效果: 先造成伤害，再按比例回复施法者
+            ├─ Shield效果: ShieldComponent.ApplyShield
+            ├─ AttackBuff/DefenseBuff: NumericComponent 加成 + BuffComponent 注册
+            ├─ SlowDown效果: SlowDownComponent.ApplySlow
+            └─ Freeze/Stun/DOT等持续效果:
+                └─ BuffComponent.AddBuff → 创建 BuffEntity (带 Duration + TickInterval)
 ```
 
 ### 3.4 技能时间轴 (SkillTimelineComponent)
@@ -253,10 +274,11 @@ ClientMinionAIComponent.Tick()
 ├─ 设置 FaceDirection → 始终朝向目标
 │
 ├─ 在 AttackRange 内:
-│   ├─ Forward = zero (停止移动)
+│   ├─ 在线: Forward = zero (停止移动)
+│   ├─ 离线: 仅在真正出手时短暂停步
 │   ├─ 检查攻击 CD (AttackCooldown)
-│   ├─ CD 好了 → 发送 C2M_ClientBatchHit (casterId=杂兵, hitUnitIds=[玩家])
-│   └─ CD 未好 → 等待
+│   ├─ CD 好了 → 发送 C2M_ClientBatchHit / 本地命中结算
+│   └─ CD 未好 → 在线等待, 离线继续追击
 │
 └─ 超出 AttackRange:
     ├─ Forward = faceDir (继续移动)
@@ -317,11 +339,12 @@ BossSyncComponent — 50ms/tick
 ### 3.9 波次推进
 
 ```
-WaveManagerComponent
+WaveManagerComponent (配置驱动: WaveConfig → SpawnConfig → Monsters)
 │
 ├─ 怪物死亡 → OnMonsterDead(monsterId)
 │   ├─ 从 CurrentWaveMonsterIds 移除
 │   ├─ 从 SpatialGrid 移除
+│   ├─ 从 BattleUnitRegistryComponent 移除 (registry.Unregister)
 │   └─ if 怪物列表为空 && State == Fighting
 │       └─ OnWaveCompleted()
 │           ├─ State = WaveState.Completed
@@ -329,7 +352,12 @@ WaveManagerComponent
 │           └─ if 还有下一波 && AutoStartNextWave
 │               └─ StartNextWave()  → 回到 Phase 2 的刷怪流程
 │
+├─ TriggerNextWave() → 手动触发下一波（需 State == Completed）
+│
 └─ 所有波次完成 → OnAllWavesCompleted()
+    ├─ battleRoom.State = End
+    ├─ 广播 M2C_BattleEnd
+    ├─ WaitAsync(5000) → 清理所有玩家映射 → battleRoom.Dispose()
     └─ 进入 Phase 4
 ```
 
@@ -343,13 +371,12 @@ WaveManagerComponent
   │  OnAllWavesCompleted()            │
   │   ├─ battleRoom.State = End       │
   │   ├─ 广播 M2C_BattleEnd ────────► │  展示结算界面
-  │   │   (success=true, duration)    │  ├─ 战斗统计
-  │   │                               │  ├─ 掉落物品
-  │   │                               │  └─ 经验/金币
+  │   │   (success=true)              │
   │   ├─ WaitAsync(5000)              │
   │   │                               │
   │   └─ 清理:                        │
-  │       ├─ roomManager 移除映射     │
+  │       ├─ 遍历 battleRoom.PlayerIds → roomManager.RemoveUnitFromBattleRoom
+  │       ├─ roomManager.RemoveBattleRoom(battleRoom.Id)
   │       └─ battleRoom.Dispose()     │
   │                                   │
   │                    OR             │
@@ -376,8 +403,11 @@ WaveManagerComponent
 
 | 方向 | 消息 | 触发时机 |
 |------|------|----------|
-| C→S | `C2M_TeamStartBattle` | 开始战斗 |
+| C→S | `C2M_TeamStartBattle` | 开始组队战斗 |
+| C→S | `C2M_StartBattle` | 开始单人战斗 |
+| C→S | `C2M_BattleReady` | 客户端战斗准备就绪 |
 | S→C | `M2C_TeamStartBattle` | 战斗房间创建响应 |
+| S→C | `M2C_StartBattle` | 单人战斗响应 |
 | S→C | `M2C_CreateBattleUnits` | 英雄/Boss创建信息 |
 | S→C | `M2C_WaveStart` | 波次开始 |
 | S→C | `M2C_SpawnWave` | 杂兵刷怪指令 |
@@ -445,6 +475,8 @@ View 层 (每帧):
 | 文件 | 职责 |
 |------|------|
 | `Server/Hotfix/Demo/Battle/BattleRoomSystem.cs` | 战斗房间生命周期 |
+| `Server/Model/Demo/Battle/BattleUnitRegistryComponent.cs` | 战斗单位注册表（Model） |
+| `Server/Hotfix/Demo/Battle/BattleUnitRegistryComponentSystem.cs` | 注册/查询/遍历单位 |
 | `Server/Hotfix/Demo/Battle/BattleActionDecisionComponentSystem.cs` | AI决策循环 |
 | `Server/Hotfix/Demo/Battle/BattleMoveComponentSystem.cs` | 服务端移动+事件处理 |
 | `Server/Hotfix/Demo/Battle/BattleSkillHelper.cs` | 技能选择/执行/伤害计算 |

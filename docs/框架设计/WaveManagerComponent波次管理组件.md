@@ -1,8 +1,10 @@
 # WaveManagerComponent 波次管理组件
 
+> 最后更新: 2026-04-13
+
 ## 📝 概述
 
-`WaveManagerComponent` 是波次战斗的核心组件，负责管理波次流程、怪物生成、波次完成判定等功能。
+`WaveManagerComponent` 是波次战斗的核心组件，负责管理波次流程、配置驱动的怪物生成、波次完成判定等功能。挂载在 `BattleRoom` 上。
 
 ---
 
@@ -10,17 +12,21 @@
 
 ### 组件定义
 
+**文件**: `Server/Model/Demo/Battle/WaveManagerComponent.cs`
+
 ```csharp
 [ComponentOf(typeof(BattleRoom))]
-public class WaveManagerComponent : Entity, IAwake<int>, IDestroy
+public class WaveManagerComponent : Entity, IAwake<int, List<int>>, IDestroy
 {
-    public int TotalWaves { get; set; }              // 总波数
-    public int CurrentWave { get; set; }             // 当前波次（从1开始）
-    public WaveState State { get; set; }             // 当前波次状态
-    public long WaveStartTime { get; set; }          // 当前波次开始时间
+    public int StageConfigId { get; set; }          // 关卡配置ID
+    public int TotalWaves { get; set; }             // 总波数（从 WaveConfigIds.Count 计算）
+    public List<int> WaveConfigIds { get; set; }    // 波次配置ID列表
+    public int CurrentWaveIndex { get; set; }       // 当前波次索引（从0开始）
+    public WaveState State { get; set; }            // 当前波次状态
+    public long WaveStartTime { get; set; }         // 当前波次开始时间
     public List<long> CurrentWaveMonsterIds { get; set; }  // 当前波次的怪物ID列表
-    public int WaveInterval { get; set; }            // 波次间隔时间（毫秒）
-    public bool AutoStartNextWave { get; set; }      // 是否自动开始下一波
+    public int WaveInterval { get; set; }           // 波次间隔时间（毫秒）
+    public bool AutoStartNextWave { get; set; }     // 是否自动开始下一波
 }
 ```
 
@@ -45,13 +51,20 @@ public enum WaveState
 ```
 开始战斗
     ↓
-StartFirstWave() - 开始第一波
+StartFirstWave() → StartNextWave()
     ↓
-SpawnWaveMonsters() - 生成怪物
+读取 WaveConfig → 遍历 Batches → 读取 SpawnConfig
+    ↓
+SpawnFromSpawnConfig: 区分 Boss/精英 vs 杂兵
+    ├─ Boss/精英: CreateMonster → registry.Register → 广播 M2C_CreateBattleUnits
+    └─ 杂兵: CreateMinion → registry.Register → 广播 M2C_SpawnWave（客户端本地创建）
     ↓
 State = Fighting - 战斗中
     ↓
 OnMonsterDead() - 怪物死亡回调
+    ├─ CurrentWaveMonsterIds.Remove
+    ├─ SpatialGrid.Remove
+    └─ Registry.Unregister
     ↓
 所有怪物死亡？
     ↓ 是
@@ -59,45 +72,81 @@ OnWaveCompleted() - 波次完成
     ↓
 还有下一波？
     ↓ 是
-等待间隔时间
-    ↓
-StartNextWave() - 开始下一波
+AutoStartNextWave?
+    ├─ 是 → StartNextWave() - 自动开始下一波
+    └─ 否 → State = Completed, 等待 TriggerNextWave() 手动触发
     ↓
 （循环）
     ↓ 否
 OnAllWavesCompleted() - 所有波次完成
-    ↓
-战斗胜利
+    ├─ battleRoom.State = End
+    ├─ 广播 M2C_BattleEnd
+    ├─ WaitAsync(5000)
+    └─ 清理 + battleRoom.Dispose()
 ```
+
+### 2. 配置驱动的刷怪体系
+
+```
+WaveManagerComponent
+  └─ WaveConfigIds[] (List<int>)
+       └─ WaveConfig (per wave)
+            ├─ Batches[] (支持延迟刷怪)
+            │    ├─ SpawnId → SpawnConfig
+            │    └─ Delay (ms, 可选延迟)
+            └─ SpawnConfig
+                 ├─ PositionX, SpreadRange
+                 └─ Monsters[]
+                      ├─ MonsterId → MonsterUnitConfig
+                      └─ Count
+```
+
+**怪物类型路由**（SpawnFromSpawnConfig 内部）:
+- `MonsterType == 3` (Boss/精英) → `UnitFactory.CreateMonster` → 完整服务端实体
+- `MonsterType != 3` (杂兵) → `UnitFactory.CreateMinion` → 轻量服务端实体 + `M2C_SpawnWave` 下发给客户端
 
 ---
 
 ## 📋 核心方法
 
+### Awake(stageConfigId, waveConfigIds)
+初始化波次管理器
+
+```csharp
+WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int, List<int>>(stageId, waveConfigIds);
+// stageId: 关卡配置ID
+// waveConfigIds: 波次配置ID列表（从 StageConfig 获取）
+// TotalWaves 自动从 waveConfigIds.Count 计算
+```
+
 ### StartFirstWave()
 开始第一波
 
 ```csharp
-WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int>(totalWaves);
 await waveManager.StartFirstWave();
+// 内部调用 StartNextWave()
 ```
 
-### StartNextWave()
-开始下一波
+### TriggerNextWave()
+手动触发下一波（需 State == Completed）
 
 ```csharp
-await waveManager.StartNextWave();
+await waveManager.TriggerNextWave();
+// 仅在 AutoStartNextWave = false 时需要手动调用
 ```
 
-**流程**：
-1. 检查是否还有下一波
-2. 进入准备状态
-3. 广播波次开始消息 `M2C_WaveStart`
-4. 等待间隔时间（第一波除外）
-5. 生成怪物
-6. 进入战斗状态
+### StartNextWave() (internal)
+开始下一波
 
-### OnMonsterDead()
+**流程**：
+1. 检查是否还有下一波 (CurrentWaveIndex < TotalWaves - 1)
+2. 如果所有波次已完成 → OnAllWavesCompleted
+3. CurrentWaveIndex++，进入 Preparing 状态
+4. 读取 WaveConfig → 计算 monsterCount → 广播 M2C_WaveStart
+5. SpawnWaveMonsters(waveConfigId) → 配置驱动的刷怪
+6. 进入 Fighting 状态
+
+### OnMonsterDead(monsterId)
 怪物死亡回调
 
 ```csharp
@@ -106,25 +155,38 @@ await waveManager.OnMonsterDead(monsterId);
 
 **功能**：
 - 从当前波次列表移除怪物
+- 从 SpatialGrid 移除
+- 从 BattleUnitRegistryComponent 移除 (Unregister)
 - 检查是否所有怪物都死亡
 - 如果是，触发波次完成
 
-### OnWaveCompleted()
+### OnWaveCompleted() (internal)
 当前波次完成
 
 **功能**：
 - 设置状态为已完成
 - 计算耗时
 - 广播波次完成消息 `M2C_WaveComplete`
-- 自动开始下一波（如果启用）
+- 如果 AutoStartNextWave → 自动开始下一波
+- 否则保持 Completed 状态等待 TriggerNextWave()
 
-### OnAllWavesCompleted()
+### OnAllWavesCompleted() (internal)
 所有波次完成
 
 **功能**：
-- 设置战斗状态为结束
+- 设置 battleRoom.State = End
 - 广播战斗结束消息 `M2C_BattleEnd`
-- 延迟清理房间
+- WaitAsync(5000) 延迟
+- 清理所有玩家映射 → roomManager 移除 → battleRoom.Dispose()
+
+### ForceCompleteCurrentWave()
+强制完成当前波次（调试用）
+
+```csharp
+await waveManager.ForceCompleteCurrentWave();
+// 遍历 CurrentWaveMonsterIds → Dispose 所有怪物 → OnWaveCompleted
+// 通过 BattleUnitRegistryComponent 查找并 Dispose
+```
 
 ---
 
@@ -133,22 +195,29 @@ await waveManager.OnMonsterDead(monsterId);
 ### 服务端：初始化波次战斗
 
 ```csharp
-private async ETTask InitWaveBattle(BattleRoom battleRoom, Unit unit, int totalWaves)
+private void InitWaveBattle(BattleRoom battleRoom, Unit playerUnit, int stageId)
 {
     // 1. 创建玩家战斗单位
     BattleUnit playerUnit = UnitFactory.CreateHero(
         battleRoom, 
-        unit.Id, 
-        unit.ConfigId, 
-        new Vector3(0, 0, 0)
+        playerUnit, 
+        new Vector3(PlayerSpawnX, 0, 0)
     );
     
-    battleRoom.Units[playerUnit.Id] = playerUnit;
+    // 通过注册表注册
+    BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
+    registry.Register(playerUnit);
     
-    // 2. 添加波次管理组件
-    WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int>(totalWaves);
+    // 2. 获取关卡配置
+    StageConfigInfo stageInfo = GetStageConfig(stageId);
     
-    // 3. 开始第一波
+    // 3. 添加波次管理组件（配置驱动）
+    WaveManagerComponent waveManager = battleRoom.AddComponent<WaveManagerComponent, int, List<int>>(
+        stageId, 
+        stageInfo.WaveConfigIds
+    );
+    
+    // 4. 开始第一波（通常在 StartFirstWave 中调用）
     await waveManager.StartFirstWave();
 }
 ```
@@ -156,26 +225,11 @@ private async ETTask InitWaveBattle(BattleRoom battleRoom, Unit unit, int totalW
 ### 服务端：怪物死亡处理
 
 ```csharp
-// 在怪物死亡事件中
-[Event(SceneType.Battle)]
-public class BattleUnitDeadEvent_WaveManager : AEvent<Scene, BattleUnitDeadEvent>
-{
-    protected override async ETTask Run(Scene scene, BattleUnitDeadEvent args)
-    {
-        BattleRoom battleRoom = scene as BattleRoom;
-        if (battleRoom == null) return;
-        
-        // 检查是否是怪物
-        if (args.Unit.Camp != UnitCamp.Enemy) return;
-        
-        // 通知波次管理器
-        WaveManagerComponent waveManager = battleRoom.GetComponent<WaveManagerComponent>();
-        if (waveManager != null)
-        {
-            await waveManager.OnMonsterDead(args.Unit.Id);
-        }
-    }
-}
+// 怪物死亡事件中，WaveManagerComponent.OnMonsterDead 已包含以下逻辑:
+// 1. CurrentWaveMonsterIds.Remove(monsterId)
+// 2. SpatialGrid.Remove(monsterId) 
+// 3. BattleUnitRegistryComponent.Unregister(monsterId)
+// 无需外部手动处理
 ```
 
 ### 客户端：接收波次消息
@@ -222,39 +276,38 @@ public class M2C_WaveCompleteHandler : MessageHandler<Scene, M2C_WaveComplete>
 
 ## ⚙️ 配置说明
 
-### 怪物数量规则
+### 配置驱动的刷怪体系
+
+波次管理器完全由配置表驱动，涉及以下配置表：
+
+| 配置表 | 用途 |
+|--------|------|
+| `WaveConfig` | 波次配置，包含 Batches 列表 |
+| `SpawnConfig` | 刷怪批次配置，定义位置、扩散范围、怪物列表 |
+| `MonsterUnitConfig` | 怪物属性配置，包含 Type 字段区分 Boss/精英/杂兵 |
+| `UnitCombatConfig` | 战斗配置，包含 AutoSkillIds、NormalAttackSkillId |
+
+### 怪物类型路由
 
 ```csharp
-private static int GetMonsterCountForWave(this WaveManagerComponent self, int wave)
-{
-    // 简单的递增规则：每波增加1个怪物
-    // 第1波: 3个，第2波: 4个，第3波: 5个...
-    return 2 + wave;
+// SpawnFromSpawnConfig 内部逻辑:
+MonsterUnitConfig monsterConfig = MonsterUnitConfigCategory.Instance.GetOrDefault(monsterInfo.MonsterId);
+bool isBoss = monsterConfig != null && monsterConfig.Type == 3;
+
+if (isBoss) {
+    // Boss/精英 → CreateMonster (完整服务端实体) + 广播 M2C_CreateBattleUnits
+} else {
+    // 杂兵 → CreateMinion (轻量服务端实体) + 广播 M2C_SpawnWave (客户端本地创建)
 }
 ```
 
-**可自定义为**：
-- 固定数量
-- 线性增长
-- 指数增长
-- 从配置表读取
-
-### 怪物配置ID
+### 怪物数量
 
 ```csharp
-private static int GetMonsterConfigIdForWave(this WaveManagerComponent self, int wave)
-{
-    // TODO: 从配置表读取
-    // 可以根据波次返回不同的怪物类型
-    return 2001; // 普通怪物配置ID
-}
+// 从配置计算总怪物数:
+GetTotalMonsterCount(waveConfigId)
+// 遍历 WaveConfig.Batches → SpawnConfig → Monsters[] → 累加 Count
 ```
-
-**可扩展为**：
-- 每波不同的怪物类型
-- 混合多种怪物
-- Boss波（特殊波次）
-- 精英怪物
 
 ### 波次间隔时间
 
@@ -319,38 +372,25 @@ message M2C_BattleEnd // IMessage
 // 设置为手动模式
 waveManager.AutoStartNextWave = false;
 
-// 玩家点击"开始下一波"按钮时
-await waveManager.StartNextWave();
+// 波次完成后不会自动开始下一波
+// 需要手动触发
+await waveManager.TriggerNextWave();
 ```
 
 ### 2. 强制完成当前波次（调试用）
 
 ```csharp
 await waveManager.ForceCompleteCurrentWave();
+// 通过 BattleUnitRegistryComponent 获取并 Dispose 所有怪物
 ```
 
-### 3. 自定义怪物生成位置
+### 3. 批次延迟生成
 
+在 `WaveConfig.Batches` 中配置 `Delay` 字段，可以实现批次间的延迟生成：
 ```csharp
-// 修改 SpawnWaveMonsters 方法
-float3 position = new float3(
-    Random.Range(-5, 5),  // 随机X位置
-    0,
-    Random.Range(5, 15)   // 随机Z位置
-);
-```
-
-### 4. Boss波
-
-```csharp
-private static int GetMonsterConfigIdForWave(this WaveManagerComponent self, int wave)
+if (batch.Delay > 0)
 {
-    // 每5波出现一个Boss
-    if (wave % 5 == 0)
-    {
-        return 3001; // Boss配置ID
-    }
-    return 2001; // 普通怪物配置ID
+    await self.Root().GetComponent<TimerComponent>().WaitAsync(batch.Delay);
 }
 ```
 
@@ -390,67 +430,51 @@ public class WaveUIController : MonoBehaviour
 
 ## ⚠️ 注意事项
 
-### 1. 怪物死亡必须通知波次管理器
+### 1. 怪物死亡必须通过 OnMonsterDead 处理
 
 ```csharp
-// ❌ 错误：怪物死亡后没有通知
-monster.Dispose();
-
-// ✅ 正确：先通知波次管理器
-await waveManager.OnMonsterDead(monster.Id);
-monster.Dispose();
+// OnMonsterDead 内部已包含:
+// 1. CurrentWaveMonsterIds.Remove(monsterId)
+// 2. SpatialGrid.Remove(monsterId)
+// 3. Registry.Unregister(monsterId)
+// 确保怪物死亡时调用 OnMonsterDead 以维护数据一致性
 ```
 
-### 2. 房间清理时机
+### 2. 注册表一致性
 
-波次管理器会在所有波次完成后自动清理房间，延迟5秒给客户端显示结算界面。
+所有通过 WaveManager 创建的怪物都会通过 `BattleUnitRegistryComponent.Register()` 注册。死亡时通过 `OnMonsterDead` 自动 Unregister。外部代码不应直接操作注册表，而是通过 BattleRoom 的 `GetUnit/ForEachUnit` 方法。
 
-### 3. 并发问题
+### 3. 房间清理时机
 
-波次管理器使用 `async/await`，确保波次流程按顺序执行，不会出现并发问题。
+波次管理器会在所有波次完成后自动清理房间：先等待 5 秒给客户端显示结算界面，然后清理所有玩家映射并 Dispose BattleRoom。
+
+### 4. 配置完整性
+
+确保 `WaveConfig` → `SpawnConfig` → `MonsterUnitConfig` 配置链完整。配置缺失时会有 Log.Error 提示，不会崩溃但该批次不会生成怪物。
 
 ---
 
 ## 🚀 扩展建议
 
-### 1. 配置表驱动
+### 1. 波次事件系统
 
 ```csharp
-// 从配置表读取波次配置
-WaveConfig config = WaveConfigCategory.Instance.Get(waveId);
-int monsterCount = config.MonsterCount;
-int monsterConfigId = config.MonsterConfigId;
+// 在 OnWaveCompleted 中发布波次完成事件
+// 可用于：奖励发放、成就计数、难度调整等
 ```
 
-### 2. 随机事件
+### 2. 动态难度调整
 
 ```csharp
-// 某些波次触发随机事件
-if (wave == 3)
-{
-    SpawnEliteMonster(); // 生成精英怪
-}
+// 根据玩家数量或战斗时长调整怪物属性
+// 可在 SpawnFromSpawnConfig 中读取调整后的属性
 ```
 
-### 3. 奖励系统
+### 3. 多波次并行
 
 ```csharp
-// 波次完成后给予奖励
-private async ETTask OnWaveCompleted(this WaveManagerComponent self)
-{
-    // 给予金币奖励
-    GiveWaveReward(self.CurrentWave);
-    
-    // ...
-}
-```
-
-### 4. 难度调整
-
-```csharp
-// 根据玩家数量调整怪物数量
-int playerCount = battleRoom.PlayerIds.Count;
-int monsterCount = baseCount * playerCount;
+// 当前是严格串行，如需多波同时存在
+// 可修改 AutoStartNextWave 逻辑允许波次叠加
 ```
 
 ---
@@ -463,5 +487,6 @@ int monsterCount = baseCount * playerCount;
 ---
 
 **创建日期**: 2026-03-04
+**更新日期**: 2026-04-13
 **作者**: Droid
-**版本**: v1.0
+**版本**: v2.0

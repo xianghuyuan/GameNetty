@@ -48,7 +48,7 @@ namespace ET
         {
             BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitInfo.unitId, unitInfo.configId);
             unit.Camp = (UnitCamp)unitInfo.camp;
-            unit.Position = unitInfo.position;
+            unit.Position = BattleAreaConfig.WithBattleUnitSpawnY(unitInfo.position);
             unit.FaceDirection = 1f;
             unit.IsBoss = unitInfo.isBoss;
             unit.OwnerId = unitInfo.ownerId;
@@ -62,17 +62,14 @@ namespace ET
             {
                 numeric.Set(NumericType.Speed, unitInfo.speed);
             }
+            unit.GetOrCreateBattleStats().SetCore(unitInfo.hp, unitInfo.maxHp, unitInfo.attack, unitInfo.defense, unitInfo.speed, false);
 
             unit.AddComponent<BattleUnitCombatComponent, float>(unitInfo.attackRange);
 
             if (unit.Camp == UnitCamp.Friend)
             {
-                BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
-                if (combat != null)
-                {
-                    combat.AutoSkillIds = new[] { 11001 };
-                }
-
+                unit.AddComponent<VehicleComponent>();
+                unit.AddComponent<BattleAttackComponent>();
                 unit.AddComponent<ClientPlayerAIComponent>();
             }
 

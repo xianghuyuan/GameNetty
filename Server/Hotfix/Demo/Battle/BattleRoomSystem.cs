@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ET.Server
@@ -5,6 +6,7 @@ namespace ET.Server
     [EntitySystemOf(typeof(BattleRoom))]
     [FriendOf(typeof(BattleRoom))]
     [FriendOf(typeof(SlotManagerComponent))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public static partial class BattleRoomSystem
     {
         private const float PlayerSpawnX = -5f;
@@ -24,6 +26,8 @@ namespace ET.Server
             self.AddComponent<SkillTimelineComponent>();
             // Boss高频同步 - 20Hz位置/状态同步
             self.AddComponent<BossSyncComponent>();
+            // 战斗单位注册表 - 统一管理所有 BattleUnit
+            self.AddComponent<BattleUnitRegistryComponent>();
         }
 
 
@@ -32,7 +36,6 @@ namespace ET.Server
         private static void Destroy(this BattleRoom self)
         {
             self.PlayerIds.Clear();
-            self.Units.Clear();
             self.State = BattleState.End;
         }
 
@@ -51,48 +54,44 @@ namespace ET.Server
 
         public static BattleUnit GetUnit(this BattleRoom self, long unitId)
         {
-            if (self.Units.TryGetValue(unitId, out EntityRef<BattleUnit> unitRef))
-            {
-                return unitRef;
-            }
-            return null;
+            BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+            return registry != null ? registry.GetUnit(unitId) : null;
         }
 
         public static void RemoveUnit(this BattleRoom self, long unitId)
         {
-            if (self.Units.TryGetValue(unitId, out EntityRef<BattleUnit> unitRef))
+            BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+            if (registry != null)
             {
-                BattleUnit unit = unitRef;
+                BattleUnit unit = registry.GetUnit(unitId);
                 unit?.Dispose();
-                self.Units.Remove(unitId);
+                registry.Unregister(unitId);
             }
+        }
+
+        public static void ForEachUnit(this BattleRoom self, Action<BattleUnit> action)
+        {
+            BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+            registry?.ForEachUnit(action);
         }
 
         public static List<BattleUnit> GetAllUnits(this BattleRoom self)
         {
             List<BattleUnit> units = new List<BattleUnit>();
-            foreach (var kv in self.Units)
-            {
-                BattleUnit unit = kv.Value;
-                if (unit != null && !unit.IsDead)
-                {
-                    units.Add(unit);
-                }
-            }
+            self.ForEachUnit(unit => units.Add(unit));
             return units;
         }
 
         public static List<BattleUnit> GetUnitsByCamp(this BattleRoom self, UnitCamp camp)
         {
             List<BattleUnit> units = new List<BattleUnit>();
-            foreach (var kv in self.Units)
+            self.ForEachUnit(unit =>
             {
-                BattleUnit unit = kv.Value;
-                if (unit != null && !unit.IsDead && unit.Camp == camp)
+                if (unit.Camp == camp)
                 {
                     units.Add(unit);
                 }
-            }
+            });
             return units;
         }
 
@@ -103,7 +102,8 @@ namespace ET.Server
         {
             // 创建玩家战斗单位
             BattleUnit heroUnit = UnitFactory.CreateHero(self, playerUnit, new System.Numerics.Vector3(PlayerSpawnX, 0, 0));
-            self.Units[heroUnit.Id] = heroUnit;
+            BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+            registry.Register(heroUnit);
 
             // 注册英雄到空间网格
             BattleSpatialGrid spatialGrid = self.GetComponent<BattleSpatialGrid>();
@@ -139,7 +139,8 @@ namespace ET.Server
                 float xOffset = (index - centerOffset) * TeamMemberSpacingX;
                 var position = new System.Numerics.Vector3(PlayerSpawnX + xOffset, 0, 0);
                 BattleUnit battleUnit = UnitFactory.CreateHero(self, unit, position);
-                self.Units[battleUnit.Id] = battleUnit;
+                BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+                registry.Register(battleUnit);
 
                 // 注册英雄到空间网格
                 BattleSpatialGrid spatialGrid = self.GetComponent<BattleSpatialGrid>();
@@ -152,7 +153,8 @@ namespace ET.Server
             if (battleType == 2) // Boss
             {
                 BattleUnit bossUnit = UnitFactory.CreateMonster(self, self.ConfigId, new System.Numerics.Vector3(EnemySpawnX, 0, 0));
-                self.Units[bossUnit.Id] = bossUnit;
+                BattleUnitRegistryComponent registry = self.GetComponent<BattleUnitRegistryComponent>();
+                registry.Register(bossUnit);
 
                 // Boss注册到Boss同步组件
                 BossSyncComponent bossSync = self.GetComponent<BossSyncComponent>();

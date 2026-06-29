@@ -17,10 +17,10 @@ namespace GameLogic
 		#region 脚本工具生成的代码
 
 		private UIBindComponent m_bindComponent;
-		private Button m_btnBegin = null!;
-		private TextMeshProUGUI m_tmpBegin = null!;
-		private Button m_btnExit = null!;
-		private TextMeshProUGUI m_tmpExit = null!;
+		private UIButton m_btnBegin = null!;
+		private UIText m_tmpBegin = null!;
+		private UIButton m_btnExit = null!;
+		private UIText m_tmpExit = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -30,12 +30,12 @@ namespace GameLogic
 				Log.Error($"根物体: {gameObject.name} 缺少组件 UIBindComponent, 请检查！！！");
 				return;
 			}
-			m_btnBegin = m_bindComponent.GetComponent<Button>(0);
-			m_tmpBegin = m_bindComponent.GetComponent<TextMeshProUGUI>(1);
-			m_btnExit = m_bindComponent.GetComponent<Button>(2);
-			m_tmpExit = m_bindComponent.GetComponent<TextMeshProUGUI>(3);
-			m_btnBegin.onClick.AddListener(OnClickBeginBtn);
-			m_btnExit.onClick.AddListener(OnClickExitBtn);
+			m_btnBegin = m_bindComponent.GetComponent<UIButton>(0);
+			m_tmpBegin = m_bindComponent.GetComponent<UIText>(1);
+			m_btnExit = m_bindComponent.GetComponent<UIButton>(2);
+			m_tmpExit = m_bindComponent.GetComponent<UIText>(3);
+			m_btnBegin.SetClick(OnClickBeginBtn);
+			m_btnExit.SetClick(OnClickExitBtn);
 		}
 
 		#endregion

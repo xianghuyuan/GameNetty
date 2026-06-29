@@ -6,6 +6,7 @@ namespace ET.Server
     [FriendOf(typeof(WaveManagerComponent))]
     [FriendOf(typeof(BattleRoom))]
     [FriendOf(typeof(SlotManagerComponent))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public class BattleUnitDead_Event : AEvent<Scene, BattleUnitDead>
     {
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
@@ -23,14 +24,8 @@ namespace ET.Server
             }
             
             // 通知所有以该单位为目标的角色重新决策
-            foreach (var kv in battleRoom.Units)
+            battleRoom.ForEachUnit(unit =>
             {
-                BattleUnit unit = kv.Value;
-                if (unit == null || unit.IsDead)
-                {
-                    continue;
-                }
-
                 BattleActionDecisionComponent decision = unit.GetComponent<BattleActionDecisionComponent>();
                 if (decision != null)
                 {
@@ -40,7 +35,7 @@ namespace ET.Server
                         decision.MakeDecision();
                     }
                 }
-            }
+            });
 
             // 释放该单位占用的站位插槽
             SlotManagerComponent slotManager = battleRoom.GetComponent<SlotManagerComponent>();
@@ -61,15 +56,13 @@ namespace ET.Server
             else
             {
                 bool allHeroesDead = true;
-                foreach (var kv in battleRoom.Units)
+                battleRoom.ForEachUnit(unit =>
                 {
-                    BattleUnit unit = kv.Value;
-                    if (unit != null && unit.Camp == UnitCamp.Friend && !unit.IsDead)
+                    if (unit.Camp == UnitCamp.Friend)
                     {
                         allHeroesDead = false;
-                        break;
                     }
-                }
+                });
                 
                 if (allHeroesDead)
                 {

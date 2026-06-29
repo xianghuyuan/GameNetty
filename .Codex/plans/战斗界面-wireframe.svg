@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <style>
+      .bg { fill: #eef2ef; }
+      .safe { fill: none; stroke: #b8c2ba; stroke-width: 2; stroke-dasharray: 10 8; }
+      .play { fill: #dfe8e1; stroke: #9caf9e; stroke-width: 2; }
+      .hud { fill: #ffffff; stroke: #4d5a50; stroke-width: 2; rx: 10; }
+      .hud-soft { fill: #f8faf8; stroke: #7b887e; stroke-width: 2; rx: 8; }
+      .dev { fill: #fff5e8; stroke: #a66a2f; stroke-width: 2; rx: 8; }
+      .growth { fill: #f1f7ff; stroke: #4b719e; stroke-width: 2; rx: 8; }
+      .danger { fill: #fff0f1; stroke: #a94b5b; stroke-width: 2; rx: 8; }
+      .title { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #202621; }
+      .label { font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #202621; }
+      .small { font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #5f6b62; }
+      .tiny { font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #6b756d; }
+      .bar-bg { fill: #d7ded8; }
+      .bar-fill { fill: #63a878; }
+      .boss-fill { fill: #c85c68; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1280" height="720"/>
+  <rect class="play" x="210" y="120" width="860" height="480" rx="14"/>
+  <text class="title" x="640" y="360" text-anchor="middle">战斗主体区域</text>
+  <text class="small" x="640" y="388" text-anchor="middle">单位、怪潮、弹道、特效优先；HUD 不压中心视野</text>
+
+  <rect class="safe" x="40" y="36" width="1200" height="648" rx="18"/>
+  <text class="tiny" x="54" y="62">安全区 / UI 不贴边</text>
+
+  <!-- Top center battle progress -->
+  <rect class="hud" x="500" y="38" width="280" height="56"/>
+  <text class="label" x="640" y="62" text-anchor="middle">波次信息</text>
+  <text class="small" x="640" y="84" text-anchor="middle">第 3/10 波 · 候选进度可选</text>
+
+  <!-- Boss area -->
+  <rect class="danger" x="380" y="104" width="520" height="58"/>
+  <text class="label" x="410" y="128">Boss 名称</text>
+  <rect class="bar-bg" x="510" y="119" width="350" height="18" rx="9"/>
+  <rect class="boss-fill" x="510" y="119" width="245" height="18" rx="9"/>
+  <text class="small" x="685" y="154" text-anchor="middle">有 Boss 时显示，无 Boss 时隐藏</text>
+
+  <!-- Player status -->
+  <rect class="hud" x="54" y="520" width="300" height="120"/>
+  <text class="label" x="78" y="548">玩家状态</text>
+  <rect class="hud-soft" x="78" y="566" width="56" height="56"/>
+  <text class="tiny" x="106" y="598" text-anchor="middle">头像</text>
+  <rect class="bar-bg" x="150" y="574" width="170" height="18" rx="9"/>
+  <rect class="bar-fill" x="150" y="574" width="126" height="18" rx="9"/>
+  <text class="small" x="150" y="613">HP 1234 / 1600</text>
+  <text class="tiny" x="150" y="632">控制模式文本：开发期可见</text>
+
+  <!-- Emitter slots with owned buff stacks -->
+  <rect class="growth" x="930" y="390" width="300" height="210"/>
+  <text class="label" x="954" y="418">发射器槽位</text>
+  <text class="small" x="954" y="442">每个发射器内部显示自己的 BuffStack</text>
+
+  <rect class="hud-soft" x="954" y="462" width="78" height="100"/>
+  <rect class="hud" x="964" y="472" width="20" height="20"/>
+  <text class="tiny" x="974" y="486" text-anchor="middle">B</text>
+  <rect class="hud" x="988" y="472" width="20" height="20"/>
+  <text class="tiny" x="998" y="486" text-anchor="middle">B</text>
+  <rect class="hud" x="1010" y="472" width="16" height="20"/>
+  <text class="tiny" x="1018" y="486" text-anchor="middle">+2</text>
+  <rect class="hud" x="972" y="510" width="42" height="42"/>
+  <text class="tiny" x="993" y="535" text-anchor="middle">发射器</text>
+
+  <rect class="hud-soft" x="1048" y="462" width="78" height="100"/>
+  <rect class="hud" x="1058" y="472" width="20" height="20"/>
+  <text class="tiny" x="1068" y="486" text-anchor="middle">B</text>
+  <rect class="hud" x="1066" y="510" width="42" height="42"/>
+  <text class="tiny" x="1087" y="535" text-anchor="middle">发射器</text>
+
+  <rect class="hud-soft" x="1142" y="462" width="78" height="100"/>
+  <rect class="hud" x="1152" y="472" width="20" height="20"/>
+  <text class="tiny" x="1162" y="486" text-anchor="middle">B</text>
+  <rect class="hud" x="1176" y="472" width="20" height="20"/>
+  <text class="tiny" x="1186" y="486" text-anchor="middle">B</text>
+  <rect class="hud" x="1160" y="510" width="42" height="42"/>
+  <text class="tiny" x="1181" y="535" text-anchor="middle">发射器</text>
+
+  <text class="tiny" x="954" y="584">Buff 归属清楚；过多时显示 +N，点击展开详情</text>
+
+  <!-- System buttons -->
+  <rect class="hud" x="1040" y="42" width="170" height="54"/>
+  <rect class="hud-soft" x="1058" y="55" width="34" height="28"/>
+  <text class="tiny" x="1075" y="74" text-anchor="middle">暂停</text>
+  <rect class="hud-soft" x="1104" y="55" width="34" height="28"/>
+  <text class="tiny" x="1121" y="74" text-anchor="middle">设置</text>
+  <rect class="hud-soft" x="1150" y="55" width="42" height="28"/>
+  <text class="tiny" x="1171" y="74" text-anchor="middle">Debug</text>
+
+  <!-- Dev drawer -->
+  <rect class="dev" x="54" y="112" width="210" height="118"/>
+  <text class="label" x="78" y="140">开发调试入口</text>
+  <text class="small" x="78" y="166">GM 面板 / 刷怪 / 状态</text>
+  <text class="tiny" x="78" y="192">集中放置，视觉权重低</text>
+  <text class="tiny" x="78" y="212">后续支持隐藏</text>
+
+  <!-- Notes -->
+  <rect class="hud-soft" x="398" y="636" width="484" height="42"/>
+  <text class="small" x="640" y="662" text-anchor="middle">第一版不包含主动技能按钮 / 手动释放入口</text>
+</svg>

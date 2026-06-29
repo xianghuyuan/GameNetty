@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GameNetty 任务看板</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">GameNetty / Codex Plans</p>
+      <h1>研发任务看板</h1>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="看板筛选">
+      <button class="filter is-active" type="button" data-filter="all">全部</button>
+      <button class="filter" type="button" data-filter="todo">未开始</button>
+      <button class="filter" type="button" data-filter="doing">进行中</button>
+      <button class="filter" type="button" data-filter="review">待验收</button>
+      <button class="filter" type="button" data-filter="done">完成</button>
+      <button class="filter" type="button" data-filter="blocked">阻塞</button>
+    </section>
+
+    <section class="board" id="board" aria-label="任务状态"></section>
+  </main>
+
+  <aside class="detail-panel" id="detailPanel" aria-label="任务详情" aria-hidden="true">
+    <button class="icon-button" type="button" id="closeDetail" aria-label="关闭详情">×</button>
+    <p class="detail-type" id="detailType"></p>
+    <h2 id="detailTitle"></h2>
+    <p id="detailDescription"></p>
+    <dl id="detailMeta"></dl>
+    <a class="open-link" id="detailLink" href="#">打开 Plan</a>
+  </aside>
+
+  <script src="./board.js"></script>
+</body>
+</html>

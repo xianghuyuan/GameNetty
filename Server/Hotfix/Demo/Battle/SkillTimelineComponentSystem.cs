@@ -30,6 +30,7 @@ namespace ET.Server
     [FriendOf(typeof(SkillTimelineComponent))]
     [FriendOf(typeof(BattleRoom))]
     [FriendOf(typeof(BattleUnit))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public static partial class SkillTimelineComponentSystem
     {
         /// <summary>时间轴检测频率（毫秒），20ms</summary>
@@ -141,10 +142,9 @@ namespace ET.Server
                 return;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(entry.SkillId);
-            SkillTargetingConfig targetingConfig = skillConfig?.TargetingConfigIdConfig;
-            BuffGroupConfig effectGroupConfig = skillConfig?.BuffGroupIdConfig;
-            if (skillConfig == null || effectGroupConfig == null)
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(entry.SkillId);
+            SkillTargetingConfig targetingConfig = skillConfig != null ? SkillTargetingConfigCategory.Instance.GetOrDefault(skillConfig.TargetingConfigId) : null;
+            if (skillConfig == null || targetingConfig == null)
             {
                 return;
             }
@@ -158,14 +158,13 @@ namespace ET.Server
             else
             {
                 // 降级为全遍历
-                foreach (var kv in battleRoom.Units)
+                battleRoom.ForEachUnit(unit =>
                 {
-                    BattleUnit unit = kv.Value;
-                    if (unit != null && !unit.IsDead && unit.Id != entry.CasterId && unit.Camp != caster.Camp)
+                    if (unit.Id != entry.CasterId && unit.Camp != caster.Camp)
                     {
                         candidateIds.Add(unit.Id);
                     }
-                }
+                });
             }
 
             foreach (long unitId in candidateIds)
@@ -196,7 +195,7 @@ namespace ET.Server
                     continue;
                 }
 
-                int damage = BattleSkillHelper.ApplyEffects(caster, target, effectGroupConfig, skillConfig);
+                int damage = BattleSkillHelper.ApplyEmitterDamage(caster, target, skillConfig);
 
                 // Boss伤害：记录，等待批量下发
                 var bossResult = new BossDamageResult
@@ -204,12 +203,12 @@ namespace ET.Server
                     AttackerId = entry.CasterId,
                     SkillId = entry.SkillId,
                     Damage = damage,
-                    DamageType = skillConfig.SkillKind == 1 ? 0 : 1,
+                    DamageType = skillConfig.EmitterKind == 1 ? 0 : 1,
                 };
 
-                NumericComponent targetNumeric = target.GetComponent<NumericComponent>();
-                bossResult.BossCurrentHp = targetNumeric?.GetAsInt(NumericType.Hp) ?? 0;
-                bossResult.BossMaxHp = targetNumeric?.GetAsInt(NumericType.MaxHp) ?? 0;
+                BattleStatsComponent targetStats = target.GetOrCreateBattleStats();
+                bossResult.BossCurrentHp = targetStats?.Hp ?? 0;
+                bossResult.BossMaxHp = targetStats?.MaxHp ?? 0;
 
                 self.AccumulatedBossResults.Add(bossResult);
             }

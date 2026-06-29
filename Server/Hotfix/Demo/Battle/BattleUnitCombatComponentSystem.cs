@@ -40,7 +40,7 @@ namespace ET.Server
                     casting = unit.AddComponent<CastingComponent>();
                 }
 
-                SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(args.SkillId);
+                EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(args.SkillId);
                 int lockDuration = CastingComponentSystem.GetCastLockDuration(skillConfig?.CooldownMs ?? 1000);
                 casting.ApplyCasting(args.SkillId, lockDuration);
             }
@@ -60,7 +60,7 @@ namespace ET.Server
             self.LastAttackTime = 0;
             self.AttackRange = 2.0f;
             self.CanAttack = true;
-            self.SkillCooldownEnds.Clear();
+            self.EmitterCooldownEnds.Clear();
         }
         
         [EntitySystem]
@@ -68,7 +68,7 @@ namespace ET.Server
         {
             self.LastAttackTime = 0;
             self.CanAttack = false;
-            self.SkillCooldownEnds.Clear();
+            self.EmitterCooldownEnds.Clear();
         }
         
         public static bool IsAttackReady(this BattleUnitCombatComponent self)
@@ -97,7 +97,7 @@ namespace ET.Server
             self.AttackRange = range;
         }
 
-        public static bool IsSkillReady(this BattleUnitCombatComponent self, SkillConfig skillConfig)
+        public static bool IsEmitterReady(this BattleUnitCombatComponent self, EmitterConfig skillConfig)
         {
             if (skillConfig == null || !self.CanAttack)
             {
@@ -106,7 +106,7 @@ namespace ET.Server
 
             long currentTime = TimeInfo.Instance.ServerFrameTime();
             int cooldownKey = skillConfig.CooldownGroupId != 0 ? skillConfig.CooldownGroupId : skillConfig.Id;
-            if (!self.SkillCooldownEnds.TryGetValue(cooldownKey, out long cooldownEnd))
+            if (!self.EmitterCooldownEnds.TryGetValue(cooldownKey, out long cooldownEnd))
             {
                 return true;
             }
@@ -114,13 +114,13 @@ namespace ET.Server
             return currentTime >= cooldownEnd;
         }
 
-        public static long StartSkillCooldown(this BattleUnitCombatComponent self, SkillConfig skillConfig)
+        public static long StartEmitterCooldown(this BattleUnitCombatComponent self, EmitterConfig skillConfig)
         {
             long cooldownEnd = TimeInfo.Instance.ServerFrameTime() + (skillConfig?.CooldownMs ?? self.AttackCooldown);
             if (skillConfig != null)
             {
                 int cooldownKey = skillConfig.CooldownGroupId != 0 ? skillConfig.CooldownGroupId : skillConfig.Id;
-                self.SkillCooldownEnds[cooldownKey] = cooldownEnd;
+                self.EmitterCooldownEnds[cooldownKey] = cooldownEnd;
                 self.AttackCooldown = skillConfig.CooldownMs;
             }
 

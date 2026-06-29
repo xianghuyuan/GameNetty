@@ -17,10 +17,10 @@ namespace GameLogic
 		#region 脚本工具生成的代码
 
 		private UIBindComponent m_bindComponent;
-		private InputField m_inputAccount = null!;
-		private InputField m_inputPassword = null!;
-		private Button m_btnLogin = null!;
-		private Button m_btnOffline = null!;
+		private TMP_InputField m_inputAccount = null!;
+		private TMP_InputField m_inputPassword = null!;
+		private UIButton m_btnLogin = null!;
+		private UIButton m_btnOffline = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -30,12 +30,12 @@ namespace GameLogic
 				Log.Error($"根物体: {gameObject.name} 缺少组件 UIBindComponent, 请检查！！！");
 				return;
 			}
-			m_inputAccount = m_bindComponent.GetComponent<InputField>(0);
-			m_inputPassword = m_bindComponent.GetComponent<InputField>(1);
-			m_btnLogin = m_bindComponent.GetComponent<Button>(2);
-			m_btnOffline = m_bindComponent.GetComponent<Button>(3);
-			m_btnLogin.onClick.AddListener(OnClickLoginBtn);
-			m_btnOffline.onClick.AddListener(OnClickOfflineBtn);
+			m_inputAccount = m_bindComponent.GetComponent<TMP_InputField>(0);
+			m_inputPassword = m_bindComponent.GetComponent<TMP_InputField>(1);
+			m_btnLogin = m_bindComponent.GetComponent<UIButton>(2);
+			m_btnOffline = m_bindComponent.GetComponent<UIButton>(3);
+			m_btnLogin.SetClick(OnClickLoginBtn);
+			m_btnOffline.SetClick(OnClickOfflineBtn);
 		}
 
 		#endregion

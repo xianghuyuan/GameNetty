@@ -1,0 +1,104 @@
+{
+  "id": "battle-main-window",
+  "title": "战斗界面 HUD",
+  "status": "in_progress",
+  "workflow": ".Codex/workflows/ui-prefab-workflow.md",
+  "current_node": "unity_import",
+  "nodes": [
+    {
+      "id": "requirement_intake",
+      "title": "需求确认",
+      "status": "done",
+      "kind": "requirement",
+      "harness": ".Codex/plans/战斗界面-harness.md",
+      "description": "确认第一版战斗 HUD 只展示发射器槽位和槽位内 BuffStack。",
+      "artifacts": [
+        ".Codex/plans/战斗界面-feature-spec.md",
+        ".Codex/plans/战斗界面-wireframe.svg"
+      ],
+      "actions": []
+    },
+    {
+      "id": "visual_mockup",
+      "title": "视觉稿确认",
+      "status": "done",
+      "kind": "visual",
+      "harness": ".Codex/plans/战斗界面-harness.md",
+      "description": "完成单一水平基线版本战斗 HUD 视觉稿，作为后续素材拆分参考。",
+      "artifacts": [
+        ".Codex/plans/战斗界面-visual-mockup-spec.md",
+        ".Codex/artifacts/battle-ui/效果图/battle_main_cream_single_baseline_mockup.png"
+      ],
+      "actions": []
+    },
+    {
+      "id": "asset_prompt_tree",
+      "title": "素材 Prompt 树",
+      "status": "review",
+      "kind": "asset",
+      "harness": ".Codex/plans/BattleMainWindow-asset-slice-spec.md",
+      "description": "把战斗 HUD 素材 prompt 作为文档树管理；manifest 仅保留为规格参考，禁止通过 Python 脚本生图。",
+      "artifacts": [
+        ".Codex/plans/BattleMainWindow-asset-slice-spec.md",
+        ".codex/plans/battle_main_window_hud.asset-manifest.json"
+      ],
+      "actions": [],
+      "last_run": {
+        "action_id": "deprecated_python_imagegen_flow",
+        "returncode": 0,
+        "log": "Python 生图流程已废弃；后续正式素材只允许通过 Codex imagegen 或人工美术工具生产。",
+        "finished_at": "2026-06-16T17:30:00+08:00"
+      }
+    },
+    {
+      "id": "asset_generation",
+      "title": "生成透明 PNG",
+      "status": "review",
+      "kind": "asset",
+      "harness": ".Codex/plans/BattleMainWindow-asset-slice-spec.md",
+      "description": "t0 透明 PNG 素材已存在；后续新增或替换素材必须通过 Codex imagegen 或人工美术工具生产，禁止 Python 脚本生图。",
+      "artifacts": [
+        "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/"
+      ],
+      "actions": [],
+      "last_run": {
+        "action_id": "user_generated_t0_assets",
+        "returncode": 0,
+        "log": "用户已生成 t0 素材；已在 Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/ 下检查到平铺 PNG 产物。",
+        "finished_at": "2026-06-09T17:45:35+08:00"
+      }
+    },
+    {
+      "id": "unity_import",
+      "title": "Unity 导入与 Prefab 使用",
+      "status": "todo",
+      "kind": "unity",
+      "harness": ".Codex/plans/战斗界面-harness.md",
+      "description": "素材确认后进入 BattleMainWindow Prefab 接入和 Unity 验证。",
+      "artifacts": [
+        "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/"
+      ],
+      "actions": []
+    },
+    {
+      "id": "prefab_spec",
+      "title": "BattleMainWindow Prefab Spec",
+      "status": "done",
+      "kind": "prefab",
+      "harness": ".Codex/plans/战斗界面-harness.md",
+      "description": "基于 t0 素材和现有 BattleMainWindow Prefab / 生成绑定代码补齐 Prefab Spec。",
+      "artifacts": [
+        ".codex/plans/BattleMainWindow-prefab-spec.md",
+        "Unity/Assets/AssetRaw/UI/Battle/BattleMainWindow.prefab",
+        "Unity/Assets/GameScripts/HotFix/GameLogic/UI/Gen/BattleMainWindow_Gen.g.cs"
+      ],
+      "actions": [],
+      "last_run": {
+        "action_id": "write_prefab_spec",
+        "returncode": 0,
+        "log": "已生成 Prefab Spec；Unity MCP 当前未暴露资源，尚未进行 Editor 侧保存/截图验证。",
+        "finished_at": "2026-06-09T17:48:44+08:00"
+      }
+    }
+  ]
+}

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BattleMain UI 素材任务看板</title>
+  <style>
+    :root {
+      --bg: #172421;
+      --bg-2: #21362f;
+      --panel: #2b2118;
+      --paper: #d7bc78;
+      --paper-2: #a97b45;
+      --line: #7b5731;
+      --text: #fff2c2;
+      --muted: #d0bd8c;
+      --green: #74bd78;
+      --blue: #6cb8d1;
+      --red: #c96058;
+      --gold: #e7c06c;
+      --shadow: rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(112, 174, 152, 0.24), transparent 34%),
+        linear-gradient(180deg, #10201e 0%, var(--bg) 46%, #1f3428 100%);
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      border: 1px solid rgba(231, 192, 108, 0.42);
+      background: rgba(43, 33, 24, 0.82);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      color: #2d2117;
+      background: var(--gold);
+      border-color: #ffe2a0;
+      font-weight: 700;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      min-height: 86px;
+      border: 2px solid var(--line);
+      background: linear-gradient(180deg, rgba(54, 41, 29, 0.96), rgba(31, 24, 17, 0.96));
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 10px 22px var(--shadow);
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 26px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(96px, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .step {
+      min-height: 58px;
+      border: 1px solid rgba(215, 188, 120, 0.32);
+      background: rgba(33, 26, 18, 0.76);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      position: relative;
+    }
+
+    .step::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -8px;
+      width: 8px;
+      border-top: 2px solid rgba(231, 192, 108, 0.42);
+    }
+
+    .step:last-child::after {
+      display: none;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(250px, 1fr));
+      gap: 14px;
+      align-items: start;
+      overflow-x: auto;
+      padding-bottom: 16px;
+    }
+
+    .lane {
+      min-width: 250px;
+      border: 2px solid rgba(123, 87, 49, 0.85);
+      background: rgba(25, 21, 15, 0.7);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 12px 28px var(--shadow);
+    }
+
+    .lane-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--paper);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .count {
+      color: #2d2117;
+      background: var(--paper);
+      border-radius: 999px;
+      min-width: 28px;
+      padding: 2px 8px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .card {
+      border: 2px solid #6b4a2d;
+      background: linear-gradient(180deg, #dbc582, #a77b48);
+      color: #2a1d12;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 8px 18px var(--shadow);
+    }
+
+    .card.hidden {
+      display: none;
+    }
+
+    .card-head {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .task-id {
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .required {
+      border-radius: 6px;
+      padding: 2px 7px;
+      color: #fff5d3;
+      font-size: 12px;
+      font-weight: 700;
+      background: #7d362c;
+    }
+
+    .asset {
+      margin: 6px 0;
+      font-family: Menlo, Consolas, monospace;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 4px 8px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .meta b {
+      color: #5a351f;
+    }
+
+    .next {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(90, 53, 31, 0.42);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 18px;
+      border: 1px solid rgba(215, 188, 120, 0.28);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--muted);
+      background: rgba(25, 21, 15, 0.58);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        padding: 16px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="topbar">
+      <div>
+        <h1>BattleMain UI 素材任务看板</h1>
+        <div class="subtitle">轻量中台视图：按资源任务推进 Source 评审、裁切、归档和 Unity 验收。</div>
+      </div>
+      <div class="toolbar" aria-label="状态筛选">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="Todo">待生成</button>
+        <button class="chip" data-filter="Done">已完成</button>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="任务统计">
+      <div class="stat"><span>当前批次</span><strong>p0_round_01</strong></div>
+      <div class="stat"><span>已生成并导入</span><strong>7 / 19</strong></div>
+      <div class="stat"><span>待生成必需资源</span><strong>12</strong></div>
+      <div class="stat"><span>已完成</span><strong>7</strong></div>
+    </section>
+
+    <section class="workflow" aria-label="生产流水线">
+      <div class="step">1. 资源表锁定</div>
+      <div class="step">2. 生图批次</div>
+      <div class="step">3. Source 初筛</div>
+      <div class="step">4. 重生或通过</div>
+      <div class="step">5. 裁切到 Final</div>
+      <div class="step">6. Final 复检</div>
+      <div class="step">7. 正式归档</div>
+      <div class="step">8. Unity 验收</div>
+    </section>
+
+    <section class="board" aria-label="任务看板" id="board"></section>
+
+    <section class="footer">
+      Source 目录：Unity/Assets/AssetRaw/UIRaw/_Incoming/Battle/battle_main/Source/p0_round_01/<br>
+      Final 目录：Unity/Assets/AssetRaw/UIRaw/_Incoming/Battle/battle_main/Final/<br>
+      正式目录：Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/battle_main/
+    </section>
+  </main>
+
+  <script>
+    const lanes = [
+      { key: "Todo", title: "Todo" },
+      { key: "ReviewSource", title: "Review Source" },
+      { key: "Cropping", title: "Cropping" },
+      { key: "ReviewFinal", title: "Review Final" },
+      { key: "UnityVerify", title: "Unity Verify" },
+      { key: "Done", title: "Done" }
+    ];
+
+    const tasks = [
+      ["BMUI-P0-001", "Done", "hp_bar_bg.png", "416x56", "p0_round_01", "玩家血条底图，9-slice", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-002", "Done", "hp_bar_fill.png", "352x28", "p0_round_01", "玩家 HP 填充，Image Filled", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-003", "Done", "hp_bar_frame.png", "416x56", "p0_round_01", "玩家血条边框，9-slice", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-004", "Done", "boss_hp_bar_bg.png", "960x72", "p0_round_01", "Boss 血条底图，9-slice", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-005", "Done", "boss_hp_bar_fill.png", "880x36", "p0_round_01", "Boss HP 填充，Image Filled", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-006", "Done", "boss_hp_bar_frame.png", "960x72", "p0_round_01", "Boss 血条边框，9-slice", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P0-007", "Done", "wave_panel_bg.png", "360x96", "p0_round_01", "波次文本底板，9-slice", "已完成 Unity 导入和 Prefab 验收。"],
+      ["BMUI-P1-001", "Todo", "hp_icon.png", "72x72", "-", "生命图标", "按已确认血条风格生成。"],
+      ["BMUI-P1-002", "Todo", "boss_name_plate.png", "360x96", "-", "Boss 名称底牌", "按已确认 Boss 血条风格生成。"],
+      ["BMUI-P2-001", "Todo", "emitter_card_bg.png", "160x224", "-", "发射器槽底", "先生成，确定发射器卡基调。"],
+      ["BMUI-P2-002", "Todo", "emitter_card_selected.png", "176x240", "-", "选中发射器高亮底", "依赖 emitter_card_bg.png。"],
+      ["BMUI-P2-003", "Todo", "buff_socket_small.png", "40x40", "-", "发射器槽内 Buff 小标记底", "依赖发射器卡底部布局。"],
+      ["BMUI-P2-004", "Todo", "buff_popup_bg.png", "380x200", "-", "发射器 Buff 操作弹窗底", "依赖操作弹窗视觉关系。"],
+      ["BMUI-P2-005", "Todo", "buff_socket_slot.png", "88x88", "-", "操作弹窗内 Buff 挂载槽", "依赖 buff_popup_bg.png。"],
+      ["BMUI-P2-006", "Todo", "buff_socket_add.png", "88x88", "-", "操作弹窗内新增 Buff 槽", "依赖 buff_socket_slot.png。"],
+      ["BMUI-P2-007", "Todo", "buff_link_ribbon.png", "240x48", "-", "选中发射器到弹窗的纸带连接", "依赖选中发射器到弹窗的连接方向。"],
+      ["BMUI-P2-008", "Todo", "emitter_rope.png", "760x80", "-", "发射器栏容器装饰", "发射器卡确定后补容器装饰。"],
+      ["BMUI-P2-009", "Todo", "emitter_cooldown_mask.png", "128x128", "-", "发射器 CD 遮罩", "发射器卡图标区域确定后生成。"],
+      ["BMUI-P2-010", "Todo", "emitter_lock.png", "128x128", "-", "发射器锁定遮罩", "发射器卡图标区域确定后生成。"]
+    ].map(([id, status, asset, size, batch, usage, next]) => ({ id, status, asset, size, batch, usage, next }));
+
+    const board = document.querySelector("#board");
+    const buttons = document.querySelectorAll(".chip");
+
+    function render(filter = "all") {
+      board.innerHTML = "";
+
+      lanes.forEach((lane) => {
+        const laneTasks = tasks.filter((task) => task.status === lane.key && (filter === "all" || task.status === filter));
+        const laneEl = document.createElement("article");
+        laneEl.className = "lane";
+        laneEl.innerHTML = `<div class="lane-title"><span>${lane.title}</span><span class="count">${laneTasks.length}</span></div>`;
+
+        laneTasks.forEach((task) => {
+          const card = document.createElement("section");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-head">
+              <div class="task-id">${task.id}</div>
+              <div class="required">必需</div>
+            </div>
+            <div class="asset">${task.asset}</div>
+            <div class="meta">
+              <b>尺寸</b><span>${task.size}</span>
+              <b>批次</b><span>${task.batch}</span>
+              <b>用途</b><span>${task.usage}</span>
+            </div>
+            <div class="next">${task.next}</div>
+          `;
+          laneEl.appendChild(card);
+        });
+
+        board.appendChild(laneEl);
+      });
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        buttons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        render(button.dataset.filter);
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

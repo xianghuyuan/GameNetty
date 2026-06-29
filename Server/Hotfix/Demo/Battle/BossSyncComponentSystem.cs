@@ -16,6 +16,7 @@ namespace ET.Server
     [FriendOf(typeof(BossSyncComponent))]
     [FriendOf(typeof(BattleRoom))]
     [FriendOf(typeof(BattleUnit))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public static partial class BossSyncComponentSystem
     {
         [EntitySystem]
@@ -71,13 +72,9 @@ namespace ET.Server
 
             foreach (long bossId in self.BossUnitIds)
             {
-                // 内联 GetUnit：直接访问字典，避免 BossSyncComponentSystem → BattleRoomSystem 的静态类引用
-                if (!battleRoom.Units.TryGetValue(bossId, out EntityRef<BattleUnit> bossRef))
-                {
-                    continue;
-                }
-
-                BattleUnit boss = bossRef;
+                // 内联 GetUnit：直接访问注册表字典，避免 BossSyncComponentSystem → BattleRoomSystem 的静态类引用
+                BattleUnitRegistryComponent registry = battleRoom.GetComponent<BattleUnitRegistryComponent>();
+                BattleUnit boss = registry?.GetUnit(bossId);
                 if (boss == null || boss.IsDead)
                 {
                     continue;
@@ -97,9 +94,9 @@ namespace ET.Server
                 syncMsg.currentSkillId = (casting != null && casting.IsCasting) ? casting.SkillId : 0;
 
                 // HP信息
-                NumericComponent numeric = boss.GetComponent<NumericComponent>();
-                syncMsg.currentHp = numeric?.GetAsInt(NumericType.Hp) ?? 0;
-                syncMsg.maxHp = numeric?.GetAsInt(NumericType.MaxHp) ?? 0;
+                BattleStatsComponent stats = boss.GetOrCreateBattleStats();
+                syncMsg.currentHp = stats?.Hp ?? 0;
+                syncMsg.maxHp = stats?.MaxHp ?? 0;
 
                 // 内联 BroadcastToPlayers：直接遍历玩家发送，避免 BossSyncComponentSystem → BattleRoomSystem 的静态类引用
                 Scene mapScene = battleRoom.Root();

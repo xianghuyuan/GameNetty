@@ -17,14 +17,14 @@ namespace ET.Server
             unitInfo.isBoss = unit.IsBoss;
             unitInfo.ownerId = unit.OwnerId;
 
-            NumericComponent numeric = unit.GetComponent<NumericComponent>();
-            if (numeric != null)
+            BattleStatsComponent stats = unit.GetOrCreateBattleStats();
+            if (stats != null)
             {
-                unitInfo.hp = numeric.GetAsInt(NumericType.Hp);
-                unitInfo.maxHp = numeric.GetAsInt(NumericType.MaxHp);
-                unitInfo.attack = numeric.GetAsInt(NumericType.Attack);
-                unitInfo.defense = numeric.GetAsInt(NumericType.Defense);
-                unitInfo.speed = numeric.GetAsFloat(NumericType.Speed);
+                unitInfo.hp = stats.Hp;
+                unitInfo.maxHp = stats.MaxHp;
+                unitInfo.attack = stats.Attack;
+                unitInfo.defense = stats.Defense;
+                unitInfo.speed = stats.Speed;
             }
 
             BattleUnitCombatComponent combat = unit.GetComponent<BattleUnitCombatComponent>();
@@ -98,15 +98,15 @@ namespace ET.Server
             BattleRoom battleRoom = attacker.GetParent<BattleRoom>();
             if (battleRoom == null) return;
 
-            NumericComponent numeric = target.GetComponent<NumericComponent>();
+            BattleStatsComponent stats = target.GetOrCreateBattleStats();
 
             M2C_Damage message = M2C_Damage.Create();
             message.attackerId = attacker.Id;
             message.targetId = target.Id;
             message.damage = damage;
             message.isCrit = false;
-            message.targetCurrentHp = numeric?.GetAsInt(NumericType.Hp) ?? 0;
-            message.targetMaxHp = numeric?.GetAsInt(NumericType.MaxHp) ?? 0;
+            message.targetCurrentHp = stats?.Hp ?? 0;
+            message.targetMaxHp = stats?.MaxHp ?? 0;
             message.targetDead = target.IsDead;
             message.damageType = damageType;
 

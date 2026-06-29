@@ -21,18 +21,18 @@ namespace ET.Server
         /// 应用技能效果组
         /// </summary>
         public static List<EffectResult> ApplyEffects(this EffectApplyComponent self, 
-            BattleUnit caster, BattleUnit target, BuffGroupConfig effectGroup, int skillId)
+            BattleUnit caster, BattleUnit target, BuffGroupConfig buffGroup, int skillId)
         {
             List<EffectResult> results = new();
             
-            if (effectGroup == null || target == null || target.IsDead)
+            if (buffGroup == null || target == null || target.IsDead)
             {
                 return results;
             }
             
-            foreach (int effectId in effectGroup.EffectIds)
+            foreach (int buffId in buffGroup.BuffIds)
             {
-                BuffConfig effectConfig = BuffConfigCategory.Instance.GetOrDefault(effectId);
+                BuffConfig effectConfig = BuffConfigCategory.Instance.GetOrDefault(buffId);
                 if (effectConfig == null)
                 {
                     continue;
@@ -112,8 +112,8 @@ namespace ET.Server
         /// </summary>
         private static int CalculateDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
         {
-            NumericComponent attackerNumeric = caster?.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target?.GetComponent<NumericComponent>();
+            BattleStatsComponent attackerStats = caster?.GetOrCreateBattleStats();
+            BattleStatsComponent targetStats = target?.GetOrCreateBattleStats();
             
             float damageValue = effectConfig.BaseValue;
             
@@ -123,8 +123,8 @@ namespace ET.Server
             {
                 case FormulaTypeAttackMinusDefense:
                 {
-                    int attack = attackerNumeric?.GetAsInt(NumericType.Attack) ?? 0;
-                    int defense = targetNumeric?.GetAsInt(NumericType.Defense) ?? 0;
+                    int attack = attackerStats?.Attack ?? 0;
+                    int defense = targetStats?.Defense ?? 0;
                     damageValue += attack * effectConfig.RatioAtk - defense * effectConfig.RatioDef;
                     break;
                 }

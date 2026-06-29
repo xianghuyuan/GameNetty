@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83dc2841ac06b4a9dbabf0409f14260a, type: 3}
+  m_Name: BattleMainWorkflow
+  m_EditorClassIdentifier: 
+  WorkflowName: 美术工作流
+  Model: gpt-image-2
+  Size: 2048x1152
+  Quality: high
+  OutputFormat: png
+  OutputDir: Unity/Assets/AssetRaw/UIRaw/_Incoming/Battle/battle_main
+  Roots:
+  - NodeId: global_root
+    Name: Global
+    SizeOverride: 
+    OutputDirOverride: 
+    OverrideParentPrompt: 0
+    OverrideParentNegativePrompt: 0
+    Prompt: 生成一个独立的游戏美术资源，透明背景。
+    NegativePrompt: 完整界面 mockup、背景场景、角色、文字、数字。
+    Children:
+    - NodeId: battle_scene_root
+      Name: 战斗场景
+      SizeOverride: 
+      OutputDirOverride: 
+      OverrideParentPrompt: 0
+      OverrideParentNegativePrompt: 0
+      Prompt: 必须是 2D 横版 ARPG 使用的奇幻暗童话手工剪纸纸偶剧场风格。
+      NegativePrompt: 现代扁平 UI、科幻机械、写实 3D、亮色卡通。
+      Children:
+      - NodeId: battle_hud_root
+        Name: 战斗 HUD
+        SizeOverride: 
+        OutputDirOverride: 
+        OverrideParentPrompt: 0
+        OverrideParentNegativePrompt: 0
+        Prompt: 生成一个独立的 HUD 小图资源，透明背景。整体形状干净、可读、低噪声，并具有精致游戏 UI 质感。
+        NegativePrompt: 角色、背景场景、完整 HUD 截图、相邻 UI 元素。
+        Children:
+        - NodeId: player_hp_bg
+          Name: 玩家血条底图
+          SizeOverride: 
+          OutputDirOverride: 
+          OverrideParentPrompt: 0
+          OverrideParentNegativePrompt: 0
+          Prompt: 生成一个细长横向的玩家血条底图，由分层剪纸、哑光旧纸板和少量布条边饰组成。中心区域必须是空的深红褐色凹槽，用于后续叠放血量填充图。整体形状要干净、可读、低噪声，并适合横向 9-slice 拉伸。使用宽大的剪纸层边缘、柔和层次阴影、轻微手工边缘不规则感和精致游戏 UI 质感。
+          NegativePrompt: 血量填充、边框高光、文字、数字、图标、角色、背景场景、完整界面 mockup。
+          Children: []

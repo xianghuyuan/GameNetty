@@ -37,7 +37,7 @@ namespace ET
 
                 BattleUnit unit = battle.AddChildWithId<BattleUnit, int>(unitId, message.monsterConfigId);
                 unit.Camp = UnitCamp.Enemy;
-                unit.Position = new float3(posX, 0, 0);
+                unit.Position = new float3(posX, BattleAreaConfig.BattleUnitSpawnY, 0);
                 unit.Forward = new float3(message.moveDirX, message.moveDirY, 0);
                 unit.FaceDirection = message.moveDirX >= 0f ? 1f : -1f;
 
@@ -47,46 +47,12 @@ namespace ET
                 numeric.Set(NumericType.Attack, monsterConfig.Attack);
                 numeric.Set(NumericType.Defense, monsterConfig.Defense);
                 numeric.Set(NumericType.Speed, monsterConfig.Speed);
+                unit.GetOrCreateBattleStats().SetCore(monsterConfig.MaxHp, monsterConfig.MaxHp, monsterConfig.Attack, monsterConfig.Defense, monsterConfig.Speed, false);
 
-                unit.AddComponent<BattleUnitCombatComponent, float>(1.5f);
-
-                // 从 UnitCombatConfig 读取技能射程作为真实攻击距离
-                UnitCombatConfig combatConfig = ConfigHelper.UnitCombatConfig?.GetOrDefault(message.monsterConfigId);
-                if (combatConfig != null)
-                {
-                    // 优先从 AutoSkillIds 推算最短射程
-                    float shortestRange = float.MaxValue;
-                    int[] skillIds = combatConfig.AutoSkillIds;
-                    if (skillIds == null || skillIds.Length == 0)
-                    {
-                        skillIds = combatConfig.NormalAttackSkillId > 0 ? new[] { combatConfig.NormalAttackSkillId } : null;
-                    }
-
-                    if (skillIds != null)
-                    {
-                        foreach (int skillId in skillIds)
-                        {
-                            SkillConfig sc = ConfigHelper.SkillConfig?.GetOrDefault(skillId);
-                            if (sc == null) continue;
-                            SkillTargetingConfig tc = sc.TargetingConfigId_Ref;
-                            if (tc == null) continue;
-                            float range = tc.CastRange + tc.EdgeDistance;
-                            if (range < shortestRange) shortestRange = range;
-                        }
-                    }
-
-                    if (shortestRange < float.MaxValue)
-                    {
-                        var cc = unit.GetComponent<BattleUnitCombatComponent>();
-                        if (cc != null) cc.AttackRange = shortestRange;
-                    }
-                }
-                unit.AddComponent<ClientMinionAIComponent>();
+                BattleUnitHelper.SetupMinionEmitter(unit, message.monsterConfigId, unitId);
 
                 BattleUnitView view = unit.AddComponent<BattleUnitView, UnitCamp, float3>(unit.Camp, unit.Position);
                 view.InitViewAsync().Forget();
-
-                BattleUIHelper.CreateUnitUI(unit);
             }
 
             // 确保 Battle 上挂载 AI Tick 组件

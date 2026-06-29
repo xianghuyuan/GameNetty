@@ -5,61 +5,78 @@ namespace ET
 {
     /// <summary>
     /// 战斗UI管理器
-    /// 负责将 ET 逻辑层的 BattleUnit 数据分发给 TEngine UI 层的 BattleHUDWindow 窗口
+    /// 负责维护 ET 逻辑层与 TEngine 战斗主窗口之间的少量状态桥接。
     /// </summary>
     public static class BattleUIHelper
     {
-        private static GameLogic.BattleHUDWindow _hudWindow;
+        private static GameLogic.BattleMainWindow _mainWindow;
 
         /// <summary>
-        /// 绑定 HUD 主窗口 (由 BattleHUDWindow.OnCreate 调用)
+        /// 绑定战斗主窗口 (由 BattleMainWindow.OnCreate 调用)
         /// </summary>
-        public static void BindHUD(GameLogic.BattleHUDWindow window)
+        public static void BindMainWindow(GameLogic.BattleMainWindow window)
         {
-            _hudWindow = window;
+            _mainWindow = window;
         }
 
-        /// <summary>
-        /// 创建并绑定单位UI
-        /// </summary>
-        public static void CreateUnitUI(BattleUnit unit)
+        public static void OnBattleStarted(Battle battle)
         {
-            if (_hudWindow == null) return;
-            _hudWindow.AddUnitWidget(unit);
-        }
-
-        /// <summary>
-        /// 处理数值变化事件
-        /// </summary>
-        public static void OnNumericChange(BattleUnit unit, int numericType, long newValue)
-        {
-            // 只处理HP相关属性
-            if (numericType != NumericType.Hp && numericType != NumericType.MaxHp && numericType != NumericType.Attack)
+            if (_mainWindow == null)
             {
                 return;
             }
 
-            if (_hudWindow == null) return;
-            _hudWindow.UpdateUnitWidget(unit);
+            _mainWindow.SetBattle(battle);
+        }
+
+        public static void RefreshUnit(BattleUnit unit)
+        {
+            if (_mainWindow == null)
+            {
+                return;
+            }
+
+            _mainWindow.RefreshUnit(unit);
+        }
+
+        public static void OnUnitDead(BattleUnit unit)
+        {
+            if (_mainWindow == null)
+            {
+                return;
+            }
+
+            _mainWindow.OnUnitDead(unit);
+        }
+
+        public static void OnWaveStarted(Battle battle, int waveNumber)
+        {
+            if (_mainWindow == null)
+            {
+                return;
+            }
+
+            _mainWindow.SetWave(waveNumber, battle?.TotalWaves ?? 0);
+        }
+
+        public static void OnWaveCompleted(Battle battle, int waveNumber)
+        {
+            if (_mainWindow == null)
+            {
+                return;
+            }
+
+            _mainWindow.SetWaveComplete(waveNumber, battle?.TotalWaves ?? 0);
         }
 
         public static void OnControlModeChanged(long unitId, int newMode)
         {
-            if (_hudWindow == null)
+            if (_mainWindow == null)
             {
                 return;
             }
 
-            _hudWindow.SetControlMode(newMode);
-        }
-
-        /// <summary>
-        /// 关闭并清理指定单位的UI
-        /// </summary>
-        public static void CloseUnitUI(long battleUnitId)
-        {
-            if (_hudWindow == null) return;
-            _hudWindow.RemoveUnitWidget(battleUnitId);
+            _mainWindow.SetControlMode(newMode);
         }
 
         /// <summary>
@@ -67,21 +84,54 @@ namespace ET
         /// </summary>
         public static void ClearAll()
         {
-            if (_hudWindow != null)
+            if (_mainWindow != null)
             {
-                _hudWindow.ClearAllWidgets();
-                GameModule.UI.CloseUI<GameLogic.BattleHUDWindow>();
+                GameModule.UI.CloseUI<GameLogic.BattleMainWindow>();
             }
-            _hudWindow = null;
+            _mainWindow = null;
         }
     }
 
     [Event(SceneType.Main)]
-    public class BattleUnitNumericChange_UI : AEvent<Scene, BattleUnitNumericChange>
+    public class BattleUnitNumericChange_BattleMainWindow : AEvent<Scene, BattleUnitNumericChange>
     {
         protected override async ETTask Run(Scene scene, BattleUnitNumericChange args)
         {
-            BattleUIHelper.OnNumericChange(args.BattleUnit, args.NumericType, args.NewValue);
+            if (args.NumericType == NumericType.Hp || args.NumericType == NumericType.MaxHp)
+            {
+                BattleUIHelper.RefreshUnit(args.BattleUnit);
+            }
+
+            await ETTask.CompletedTask;
+        }
+    }
+
+    [Event(SceneType.Main)]
+    public class BattleUnitDamaged_BattleMainWindow : AEvent<Scene, BattleUnitDamaged>
+    {
+        protected override async ETTask Run(Scene scene, BattleUnitDamaged args)
+        {
+            BattleUIHelper.RefreshUnit(args.Unit);
+            await ETTask.CompletedTask;
+        }
+    }
+
+    [Event(SceneType.Main)]
+    public class WaveStart_BattleMainWindow : AEvent<Scene, WaveStart>
+    {
+        protected override async ETTask Run(Scene scene, WaveStart args)
+        {
+            BattleUIHelper.OnWaveStarted(args.Battle, args.WaveNumber);
+            await ETTask.CompletedTask;
+        }
+    }
+
+    [Event(SceneType.Main)]
+    public class WaveComplete_BattleMainWindow : AEvent<Scene, WaveComplete>
+    {
+        protected override async ETTask Run(Scene scene, WaveComplete args)
+        {
+            BattleUIHelper.OnWaveCompleted(args.Battle, args.WaveNumber);
             await ETTask.CompletedTask;
         }
     }
@@ -97,7 +147,7 @@ namespace ET
         protected override async ETTask Run(Scene scene, BattleUnitDead args)
         {
             BattleUnit unit = args.BattleUnit;
-            BattleUIHelper.CloseUnitUI(unit.Id);
+            BattleUIHelper.OnUnitDead(unit);
 
             var view = unit.GetComponent<BattleUnitView>();
             if (view != null && view.SkeletonAnimation != null)
@@ -135,7 +185,7 @@ namespace ET
 
     /// <summary>
     /// 单位复活表现：服务端纠错时回滚客户端乐观死亡。
-    /// 恢复单位状态、重建 UI、恢复视图到存活表现。
+    /// 恢复单位状态和视图到存活表现。
     /// </summary>
     [Event(SceneType.Main)]
     public class BattleUnitRevivedView : AEvent<Scene, BattleUnitRevived>
@@ -164,9 +214,7 @@ namespace ET
                 }
             }
 
-            // 重建单位 UI
-            BattleUIHelper.CreateUnitUI(unit);
-
+            BattleUIHelper.RefreshUnit(unit);
             await ETTask.CompletedTask;
         }
     }

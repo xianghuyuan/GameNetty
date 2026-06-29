@@ -4,7 +4,7 @@
 2026-01-20
 
 ## 更新日期
-2026-03-04（更新为 BattleRoom 命名）
+2026-04-13（更新 BattleUnitRegistryComponent、InitBattle 等最新实现）
 
 ## 项目概述
 成功将战斗系统从直接挂载在 Map Scene 改为基于 BattleRoom 的虚拟能力场景架构，实现逻辑隔离和多战斗实例支持，并完善了错误码体系。
@@ -19,8 +19,8 @@
 **文件**: `Server/Model/Demo/Battle/BattleScene.cs`
 
 ```csharp
-[ComponentOf]
-public class BattleRoom : Entity, IScene, IAwake, IUpdate
+[ChildOf]
+public class BattleRoom : Entity, IScene, IAwake<int>, IDestroy, IUpdate
 {
     public Fiber Fiber { get; set; }
     public SceneType SceneType { get; set; } = SceneType.Battle;
@@ -39,11 +39,10 @@ public class BattleRoom : Entity, IScene, IAwake, IUpdate
     
     // 玩家选择状态
     public Dictionary<long, bool> PlayerChoiceStates { get; } = new();
-    
-    // 战斗单位
-    public Dictionary<long, EntityRef<BattleUnit>> Units { get; } = new();
 }
 ```
+
+> **注意**: 战斗单位不再存储在 BattleRoom.Units 字典中，而是统一由 `BattleUnitRegistryComponent` 管理。BattleRoom 通过 `GetComponent<BattleUnitRegistryComponent>()` 进行注册/查询/遍历。
 
 #### 1.2 BattleState 枚举
 **文件**: `Server/Model/Demo/Battle/BattleScene.cs`
@@ -79,7 +78,29 @@ public class BattleRoomManagerComponent : Entity, IAwake, IDestroy
 }
 ```
 
-#### 1.4 BattleRoomManagerComponentSystem
+#### 1.4 BattleUnitRegistryComponent
+**文件**: `Server/Model/Demo/Battle/BattleUnitRegistryComponent.cs`
+
+**职责**:
+- 挂载在 BattleRoom 上，统一管理所有 BattleUnit 的注册与查询
+- 接管原 BattleRoom.Units 字典的查询职责
+
+**关键实现**:
+```csharp
+[ComponentOf(typeof(BattleRoom))]
+public class BattleUnitRegistryComponent : Entity, IAwake, IDestroy
+{
+    public Dictionary<long, EntityRef<BattleUnit>> Units { get; } = new();
+}
+```
+
+**核心方法** (`BattleUnitRegistryComponentSystem.cs`):
+- `Register(unit)`: 注册战斗单位
+- `Unregister(unitId)`: 反注册
+- `GetUnit(unitId)`: 按ID查询
+- `ForEachUnit(action)`: 遍历所有存活单位
+
+#### 1.6 BattleRoomManagerComponentSystem
 **文件**: `Hotfix/Server/Demo/Battle/BattleRoomManagerComponentSystem.cs`
 
 **核心方法**:
@@ -110,6 +131,28 @@ public static List<BattleRoom> GetActiveBattleRooms(this BattleRoomManagerCompon
     return activeBattleRooms;
 }
 ```
+
+#### 1.7 BattleRoomSystem 核心方法
+**文件**: `Server/Hotfix/Demo/Battle/BattleRoomSystem.cs`
+
+**初始化组件** (Awake 时自动创建):
+- `SlotManagerComponent` — 槽位管理
+- `BattleSpatialGrid(5f)` — 空间网格碰撞检测
+- `SkillTimelineComponent` — 技能时间轴
+- `BossSyncComponent` — Boss 20Hz 同步
+- `BattleUnitRegistryComponent` — 战斗单位注册表
+
+**核心方法**:
+- `AddPlayer(playerId)` / `RemovePlayer(playerId)` — 玩家进出
+- `GetUnit(unitId)` — 通过 RegistryComponent 查询单位
+- `RemoveUnit(unitId)` — 移除并 Dispose 单位
+- `ForEachUnit(action)` — 遍历所有存活单位（委托给 RegistryComponent）
+- `GetAllUnits()` — 获取所有单位列表
+- `GetUnitsByCamp(camp)` — 按阵营获取单位列表
+- `InitBattle(playerUnit, stageId, battleType)` — 初始化单人战斗
+- `InitTeamBattle(mapScene, memberIds, battleType)` — 初始化组队战斗
+- `StartFirstWave()` — 开始第一波
+- `BroadcastToPlayers(message)` — 广播消息给房间所有玩家
 
 ---
 
@@ -362,19 +405,23 @@ public static void BroadcastToBattleRoom(BattleRoom battleRoom, IMessage message
 ### 新增/修改文件
 
 #### Model 层
-1. `Server/Model/Demo/Battle/BattleScene.cs` - BattleRoom 实体定义
-2. `Model/Server/Demo/Battle/BattleRoomManagerComponent.cs` - 房间管理器组件
-3. `Model/Share/Demo/Battle/BattleComponent.cs` - 修改 ComponentOf
+1. `Server/Model/Demo/Battle/BattleScene.cs` - BattleRoom 实体定义（无 Units 字典，使用 RegistryComponent）
+2. `Server/Model/Demo/Battle/BattleUnitRegistryComponent.cs` - 战斗单位注册表
+3. `Model/Server/Demo/Battle/BattleRoomManagerComponent.cs` - 房间管理器组件
+4. `Model/Share/Demo/Battle/BattleComponent.cs` - 修改 ComponentOf
 
 #### Hotfix 层
-4. `Server/Hotfix/Demo/Map/Unit/UnitFactory.cs` - 更新为 BattleRoom 参数
-5. `Hotfix/Server/Demo/Battle/BattleRoomManagerComponentSystem.cs` - 房间管理器系统
-6. `Hotfix/Server/Demo/Battle/Handler/C2M_StartBattleHandler.cs` - 单人战斗
-7. `Hotfix/Server/Demo/Battle/Handler/C2M_TeamStartBattleHandler.cs` - 组队战斗
-8. `Hotfix/Server/Demo/Battle/Handler/C2M_JoinTeamBattleHandler.cs` - 中途加入
-9. `Hotfix/Server/Demo/Battle/Handler/C2M_ExitBattleHandler.cs` - 退出战斗
-10. `Hotfix/Server/Demo/Battle/BattleComponentSystem.cs` - 使用 BattleRoom 广播
-11. `Hotfix/Server/Demo/Map/RoomMessageHelper.cs` - 添加 BroadcastToBattleRoom
+5. `Server/Hotfix/Demo/Battle/BattleRoomSystem.cs` - BattleRoom 系统（InitBattle/InitTeamBattle/StartFirstWave 等）
+6. `Server/Hotfix/Demo/Battle/BattleUnitRegistryComponentSystem.cs` - 注册表系统
+7. `Server/Hotfix/Demo/Map/Unit/UnitFactory.cs` - 更新为 BattleRoom 参数
+8. `Hotfix/Server/Demo/Battle/BattleRoomManagerComponentSystem.cs` - 房间管理器系统
+9. `Hotfix/Server/Demo/Battle/Handler/C2M_StartBattleHandler.cs` - 单人战斗
+10. `Hotfix/Server/Demo/Battle/Handler/C2M_TeamStartBattleHandler.cs` - 组队战斗
+11. `Hotfix/Server/Demo/Battle/Handler/C2M_JoinTeamBattleHandler.cs` - 中途加入
+12. `Hotfix/Server/Demo/Battle/Handler/C2M_ExitBattleHandler.cs` - 退出战斗
+13. `Hotfix/Server/Demo/Battle/Handler/C2M_BattleReadyHandler.cs` - 战斗准备就绪
+14. `Hotfix/Server/Demo/Battle/BattleComponentSystem.cs` - 使用 BattleRoom 广播
+15. `Hotfix/Server/Demo/Map/RoomMessageHelper.cs` - 添加 BroadcastToBattleRoom
 
 #### Proto 层
 12. `Config/Proto/OuterMessage_C_10001.proto` - 新增组队协议
@@ -454,8 +501,8 @@ M2C_ExitBattle response = await session.Call(request);
 
 ---
 
-**文档版本**: v2.0
+**文档版本**: v3.0
 **创建日期**: 2026-01-20
-**更新日期**: 2026-03-04
+**更新日期**: 2026-04-13
 **作者**: Droid
-**状态**: ✅ 实施完成，已更新为 BattleRoom 命名
+**状态**: ✅ 实施完成，已更新为 BattleRoom 命名 + BattleUnitRegistryComponent 架构

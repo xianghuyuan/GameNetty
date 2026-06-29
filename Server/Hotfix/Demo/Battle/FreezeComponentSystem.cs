@@ -29,26 +29,37 @@ namespace ET.Server
         }
         
         /// <summary>
-        /// 应用冻结效果（只管冻结状态，不管移动）
+        /// 应用冻结效果（支持刷新时长：已冻结时延长冻结时间）
         /// </summary>
         public static void ApplyFreeze(this FreezeComponent self, int durationMs)
         {
+            BattleUnit unit = self.GetParent<BattleUnit>();
+            long currentTime = TimeInfo.Instance.ServerFrameTime();
+
             if (self.IsFrozen)
             {
+                // 已冻结时刷新时长：移除旧定时器，注册新定时器
+                long oldTimerId = self.FreezeTimerId;
+                if (oldTimerId != 0)
+                {
+                    unit.Root().GetComponent<TimerComponent>()?.Remove(ref oldTimerId);
+                }
+                self.FreezeEndTime = currentTime + durationMs;
+                self.FreezeTimerId = unit.Root().GetComponent<TimerComponent>()
+                    ?.NewOnceTimer(self.FreezeEndTime, TimerInvokeType.FreezeEnd, self) ?? 0;
+
+                BattleUnitHelper.BroadcastUnitFrozen(unit, durationMs);
                 return;
             }
-            
-            BattleUnit unit = self.GetParent<BattleUnit>();
-            
+
             // 发布冻结开始事件，让 MoveComponent 自己处理移动中断
             EventSystem.Instance.Publish(unit.Root(), new FreezeStartEvent { Target = unit, DurationMs = durationMs });
-            
+
             self.IsFrozen = true;
-            self.FreezeEndTime = TimeInfo.Instance.ServerFrameTime() + durationMs;
-            
-            // 注册定时器，冻结结束
-            unit.Root().GetComponent<TimerComponent>()?.NewOnceTimer(self.FreezeEndTime, TimerInvokeType.FreezeEnd, self);
-            
+            self.FreezeEndTime = currentTime + durationMs;
+            self.FreezeTimerId = unit.Root().GetComponent<TimerComponent>()
+                ?.NewOnceTimer(self.FreezeEndTime, TimerInvokeType.FreezeEnd, self) ?? 0;
+
             // 广播冻结状态
             BattleUnitHelper.BroadcastUnitFrozen(unit, durationMs);
         }
@@ -65,6 +76,7 @@ namespace ET.Server
             
             self.IsFrozen = false;
             self.FreezeEndTime = 0;
+            self.FreezeTimerId = 0;
             
             BattleUnit unit = self.GetParent<BattleUnit>();
             

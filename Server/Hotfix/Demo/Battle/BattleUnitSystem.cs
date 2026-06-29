@@ -33,15 +33,9 @@ namespace ET.Server
             {
                 return true;
             }
-            
-            var numeric = self.GetComponent<NumericComponent>();
-            if (numeric == null)
-            {
-                return false;
-            }
-            
-            long hp = numeric.GetAsInt(NumericType.Hp);
-            return hp <= 0;
+
+            BattleStatsComponent stats = self.GetOrCreateBattleStats();
+            return stats != null && stats.Hp <= 0;
         }
         
         public static void TakeDamage(this BattleUnit self, int damage)
@@ -51,21 +45,32 @@ namespace ET.Server
                 return;
             }
             
-            var numeric = self.GetComponent<NumericComponent>();
-            if (numeric == null)
+            BattleStatsComponent stats = self.GetOrCreateBattleStats();
+            if (stats == null)
+            {
+                return;
+            }
+
+            // 先扣护盾
+            ShieldComponent shieldComp = self.GetComponent<ShieldComponent>();
+            if (shieldComp != null && shieldComp.IsActive)
+            {
+                damage = shieldComp.AbsorbDamage(damage);
+            }
+
+            if (damage <= 0)
             {
                 return;
             }
             
-            int currentHp = numeric.GetAsInt(NumericType.Hp);
-            int newHp = currentHp - damage;
+            int newHp = stats.Hp - damage;
             
             if (newHp < 0)
             {
                 newHp = 0;
             }
             
-            numeric.Set(NumericType.Hp, newHp);
+            stats.SetHp(newHp, true);
             
             if (newHp <= 0)
             {
@@ -81,22 +86,20 @@ namespace ET.Server
                 return;
             }
             
-            var numeric = self.GetComponent<NumericComponent>();
-            if (numeric == null)
+            BattleStatsComponent stats = self.GetOrCreateBattleStats();
+            if (stats == null)
             {
                 return;
             }
             
-            int currentHp = numeric.GetAsInt(NumericType.Hp);
-            int maxHp = numeric.GetAsInt(NumericType.MaxHp);
-            int newHp = currentHp + healAmount;
+            int newHp = stats.Hp + healAmount;
             
-            if (newHp > maxHp)
+            if (newHp > stats.MaxHp)
             {
-                newHp = maxHp;
+                newHp = stats.MaxHp;
             }
             
-            numeric.Set(NumericType.Hp, newHp);
+            stats.SetHp(newHp, true);
         }
     }
     

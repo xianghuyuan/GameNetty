@@ -17,8 +17,7 @@ namespace ET
                 return;
             }
 
-            target.SetNumeric(NumericType.MaxHp, message.targetMaxHp);
-            target.SetNumeric(NumericType.Hp, message.targetCurrentHp);
+            target.GetOrCreateBattleStats().SetHpMax(message.targetCurrentHp, message.targetMaxHp, true);
 
             EventSystem.Instance.Publish(root, new BattleUnitDamaged
             {

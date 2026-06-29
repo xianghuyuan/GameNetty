@@ -27,14 +27,8 @@ namespace ET
         public static bool CheckIsDead(this BattleUnitCombatComponent self)
         {
             BattleUnit unit = self.GetParent<BattleUnit>();
-            var numeric = unit?.GetComponent<NumericComponent>();
-            if (numeric == null)
-            {
-                return false;
-            }
-
-            long hp = numeric.GetByKey(NumericType.Hp);
-            return hp <= 0;
+            BattleStatsComponent stats = unit?.GetOrCreateBattleStats();
+            return stats != null && stats.Hp <= 0;
         }
 
         /// <summary>
@@ -48,21 +42,20 @@ namespace ET
                 return;
             }
 
-            var numeric = unit.GetComponent<NumericComponent>();
-            if (numeric == null)
+            BattleStatsComponent stats = unit.GetOrCreateBattleStats();
+            if (stats == null)
             {
                 return;
             }
 
-            long currentHp = numeric.GetByKey(NumericType.Hp);
-            long newHp = currentHp - damage;
+            int newHp = stats.Hp - damage;
 
             if (newHp < 0)
             {
                 newHp = 0;
             }
 
-            unit.SetNumeric(NumericType.Hp, newHp);
+            stats.SetHp(newHp, true);
 
             if (newHp <= 0)
             {
@@ -82,22 +75,20 @@ namespace ET
                 return;
             }
 
-            var numeric = unit.GetComponent<NumericComponent>();
-            if (numeric == null)
+            BattleStatsComponent stats = unit.GetOrCreateBattleStats();
+            if (stats == null)
             {
                 return;
             }
 
-            long currentHp = numeric.GetByKey(NumericType.Hp);
-            long maxHp = numeric.GetByKey(NumericType.MaxHp);
-            long newHp = currentHp + healAmount;
+            int newHp = stats.Hp + healAmount;
 
-            if (newHp > maxHp)
+            if (newHp > stats.MaxHp)
             {
-                newHp = maxHp;
+                newHp = stats.MaxHp;
             }
 
-            unit.SetNumeric(NumericType.Hp, newHp);
+            stats.SetHp(newHp, true);
         }
     }
 }

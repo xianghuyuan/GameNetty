@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7781231263524470254}
   - component: {fileID: 422795792539106721}
-  - component: {fileID: 775201620890167359}
+  - component: {fileID: 9087671998433250915}
   m_Layer: 5
   m_Name: m_tmpDamage
   m_TagString: Untagged
@@ -45,7 +45,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5271937495262200870}
   m_CullTransparentMesh: 1
---- !u!114 &775201620890167359
+--- !u!114 &9087671998433250915
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -54,7 +54,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5271937495262200870}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Script: {fileID: 11500000, guid: 9919d5e0ef32489d88bc082ef46cb58e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 63ebef0048ea14fe88a63b45f672d525, type: 2}
-  m_sharedMaterial: {fileID: 5250436514535730352, guid: 63ebef0048ea14fe88a63b45f672d525, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 19bb67ac7d0f64ee6b261c746a27bba8, type: 2}
+  m_sharedMaterial: {fileID: 82520415559548833, guid: 19bb67ac7d0f64ee6b261c746a27bba8, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -184,7 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_components:
-  - {fileID: 775201620890167359}
+  - {fileID: 9087671998433250915}
   genCodePath: Assets/GameScripts/HotFix/GameLogic/UI/Gen
   className: UIDamageWindows
   impCodePath: Assets/GameScripts/HotFix/GameLogic/UI

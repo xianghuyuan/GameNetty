@@ -1,0 +1,65 @@
+{
+  "name": "BattleMainWindow HUD",
+  "model": "gpt-image-2",
+  "quality": "high",
+  "raw_output_dir": "../../Unity/Assets/AssetRaw/UIRaw/_Incoming/Battle/Source/ui_assets",
+  "extra_request_fields": {
+    "output_format": "png"
+  },
+  "style_prompt": "Match the approved BattleMainWindow medium-saturation creamy moonlit HUD direction: vanilla-gray rounded panels, soft peach-pink and mint-green accents, pale gold thin trims, blue-violet soft shadows, matte hand-painted 2D mobile HUD edges, low decoration density, thin readable silhouettes, reusable game UI slice, front-facing orthographic view, transparent background, crisp edge, restrained highlights, no large illustration-like ornaments, no paper material cues",
+  "negative_prompt": "text, numbers, watermark, cast shadow, photorealism, cyberpunk, metal sci-fi UI, heavy dark fantasy, gothic horror, thick cardboard, dirty old paper, parchment, paper craft, paper theater, visible paper fibers, heavy wood frame, medieval equipment UI, bright candy colors, pure dessert theme, overexposed white UI, washed-out milky blur, full UI mockup, background scene, large moon ornament, clouds, flower bouquet, large leaves, dangling banners, decorative ribbons that change the target silhouette, thick frame, filled center",
+  "assets": [
+    {
+      "name": "emitter_slot_bg",
+      "group": "minimal",
+      "prompt": "a compact vertical emitter slot background matching the medium-saturation creamy moonlit HUD direction, target proportion 78x100, vanilla-gray matte rounded card with a thin soft peach border and subtle mint or pale blue accent strip, mostly empty interior for runtime buff icons and emitter icon, flat reusable slot silhouette",
+      "size": "78x100",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/emitter_slot_bg.png"
+    },
+    {
+      "name": "emitter_icon_frame",
+      "group": "minimal",
+      "prompt": "a small rounded-square emitter icon frame derived from the medium-saturation creamy moonlit emitter cards, target proportion 48x48, vanilla-gray rim with restrained blue-violet inner shadow and pale gold micro accent, empty transparent center for runtime icon, readable at small size",
+      "size": "48x48",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/emitter_icon_frame.png"
+    },
+    {
+      "name": "buff_icon_frame",
+      "group": "minimal",
+      "prompt": "a tiny buff icon frame matching the small round buff badges at the top of each medium-saturation creamy moonlit emitter slot, target proportion 22x22, simple vanilla-gray token rim with muted mint, soft pink, or pale blue accent, empty transparent center, very clean silhouette for small HUD use",
+      "size": "22x22",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/buff_icon_frame.png"
+    },
+    {
+      "name": "icon_button_bg",
+      "group": "minimal",
+      "prompt": "a compact rounded-square system button background matching the top-right medium-saturation creamy moonlit HUD buttons, target proportion 36x32, small vanilla-gray matte button with soft peach rim, shallow inset center for runtime icon, pale gold restrained highlight, no decorative object attached",
+      "size": "36x32",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/icon_button_bg.png"
+    },
+    {
+      "name": "player_hp_frame",
+      "group": "minimal",
+      "prompt": "a slim horizontal player HP bar frame matching the bottom-left medium-saturation creamy moonlit HUD status bar, target proportion 184x22, thin vanilla-gray rounded frame with soft peach edge and blue-violet shadow, straight long center slot fully empty for runtime fill, tiny pale gold bevel only, suitable for horizontal 9-slice",
+      "size": "184x22",
+      "fit_mode": "nine_slice_source",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/player_hp_frame.png"
+    },
+    {
+      "name": "boss_hp_frame",
+      "group": "minimal",
+      "prompt": "a long slim boss HP bar frame matching the top-center medium-saturation creamy moonlit HUD boss bar, target proportion 366x24, thin vanilla-gray rounded frame with subtle dark inner groove, empty transparent center for runtime red-pink fill, compact pale gold end caps only, suitable for horizontal 9-slice",
+      "size": "366x24",
+      "fit_mode": "nine_slice_source",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/boss_hp_frame.png"
+    },
+    {
+      "name": "wave_plate",
+      "group": "minimal",
+      "prompt": "a compact horizontal wave information plate matching the top-center medium-saturation creamy moonlit HUD wave strip, target proportion 260x48, narrow vanilla-gray rounded plate with small soft ends and simple pale gold progress path area, clean center for runtime wave markers and text, no large ornaments",
+      "size": "260x48",
+      "fit_mode": "nine_slice_source",
+      "path": "Unity/Assets/AssetRaw/UIRaw/Atlas/Battle/wave_plate.png"
+    }
+  ]
+}

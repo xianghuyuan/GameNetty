@@ -22,6 +22,7 @@ public sealed partial class StageConfig : Luban.BeanBase
         TotalWaves = _buf.ReadInt();
         {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);WaveList = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); WaveList[__index0] = __e0;}}
         Reward = _buf.ReadInt();
+        Reward_Ref = null;
         TimeLimit = _buf.ReadInt();
     }
 
@@ -50,10 +51,12 @@ public sealed partial class StageConfig : Luban.BeanBase
     /// WaveList
     /// </summary>
     public readonly int[] WaveList;
+    public WaveConfig[] WaveList_Ref;
     /// <summary>
     /// Reward
     /// </summary>
     public readonly int Reward;
+    public ResourceConfig Reward_Ref;
     /// <summary>
     /// TimeLimit
     /// </summary>
@@ -64,6 +67,10 @@ public sealed partial class StageConfig : Luban.BeanBase
 
     public  void ResolveRef(Tables tables)
     {
+        WaveList_Ref = new WaveConfig[WaveList.Length];
+        for (int _i = 0; _i < WaveList.Length; _i++) { WaveList_Ref[_i] = tables.WaveConfigCategory.GetOrDefault(WaveList[_i]); }
+
+        Reward_Ref = tables.ResourceConfigCategory.GetOrDefault(Reward);
     }
 
     public override string ToString()

@@ -58,8 +58,6 @@ namespace ET
         public DropChoice CurrentChoice { get; set; }
         // 玩家选择状态：playerId -> 是否已选择
         public Dictionary<long, bool> PlayerChoiceStates { get; } = new();
-        // 战斗单位
-        public Dictionary<long, EntityRef<BattleUnit>> Units { get; } = new();
     }
 
 }

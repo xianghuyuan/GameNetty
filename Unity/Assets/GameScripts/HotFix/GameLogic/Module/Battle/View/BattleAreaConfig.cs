@@ -39,6 +39,16 @@ namespace ET
         /// </summary>
         public const float SpawnAheadOffset = 10f;
 
+        /// <summary>
+        /// 横版战斗单位默认站立线 Y 坐标。
+        /// </summary>
+        public const float BattleUnitSpawnY = -2f;
+
+        public static float3 WithBattleUnitSpawnY(float3 position)
+        {
+            return new float3(position.x, BattleUnitSpawnY, position.z);
+        }
+
         public static Vector3 GetWorldPosition(UnitCamp camp, float3 position)
         {
             return new Vector3(position.x + BattleAreaCenter.x, position.y + BattleAreaCenter.y, 0f);

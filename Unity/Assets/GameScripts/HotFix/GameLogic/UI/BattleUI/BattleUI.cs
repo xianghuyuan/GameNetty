@@ -11,8 +11,15 @@ namespace GameLogic
         private async partial void OnClickBeginBtn()
         {
             if (_battleActive) return;
-            await BattleHelper.StartBattle(global::Init.Root);
-            BattleHelper.BattleReady(global::Init.Root).Coroutine();
+            BattleStartResult result = await BattleEntry.StartBattle(global::Init.Root, new BattleStartRequest
+            {
+                Mode = BattleStartMode.Online,
+                AutoReady = true,
+            });
+            if (!result.IsSuccess)
+            {
+                return;
+            }
         }
 
         private async partial void OnClickExitBtn()
@@ -25,13 +32,10 @@ namespace GameLogic
             Battle battle = battleComponent.GetCurrentBattle();
             if (battle == null) return;
 
-            bool success = await BattleHelper.ExitBattle(global::Init.Root, battle.BattleId);
+            bool success = await BattleEntry.ExitCurrentBattle(global::Init.Root);
             if (success)
             {
-                battle.End(false);
-                battleComponent.RemoveBattle(battle.BattleId);
                 SetBattleActive(false);
-                BattleUIHelper.ClearAll();
             }
         }
 
@@ -41,8 +45,8 @@ namespace GameLogic
             if (m_btnBegin != null) m_btnBegin.gameObject.SetActive(!active);
             if (m_btnExit != null) m_btnExit.gameObject.SetActive(active);
 
-            if (m_tmpBegin != null) m_tmpBegin.text = active ? "战斗中..." : "开始战斗";
-            if (m_tmpExit != null) m_tmpExit.text = "离开战斗";
+            if (m_tmpBegin != null) m_tmpBegin.SetText(active ? "战斗中..." : "开始战斗");
+            if (m_tmpExit != null) m_tmpExit.SetText("离开战斗");
         }
     }
 }

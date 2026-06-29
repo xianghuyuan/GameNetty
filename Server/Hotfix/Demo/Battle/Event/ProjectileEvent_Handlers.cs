@@ -25,6 +25,7 @@ namespace ET.Server
     /// </summary>
     [Event(SceneType.Battle)]
     [FriendOf(typeof(BattleUnit))]
+    [FriendOf(typeof(BattleUnitRegistryComponent))]
     public class ProjectileHitEvent_Handler : AEvent<Scene, ProjectileHitEvent>
     {
         protected override async ETTask Run(Scene scene, ProjectileHitEvent args)
@@ -40,26 +41,19 @@ namespace ET.Server
                 return;
             }
 
-            if (!battleRoom.Units.TryGetValue(args.CasterId, out EntityRef<BattleUnit> casterRef))
-            {
-                return;
-            }
-
-            BattleUnit caster = casterRef;
+            BattleUnit caster = battleRoom.GetUnit(args.CasterId);
             if (caster == null)
             {
                 return;
             }
 
-            SkillConfig skillConfig = SkillConfigCategory.Instance.GetOrDefault(args.SkillId);
-            BuffGroupConfig effectGroupConfig = skillConfig?.BuffGroupIdConfig;
-            if (effectGroupConfig == null)
+            EmitterConfig skillConfig = EmitterConfigCategory.Instance.GetOrDefault(args.SkillId);
+            if (skillConfig == null || !skillConfig.IsEnabled)
             {
                 return;
             }
 
-            // 通过 BuffComponent 统一执行buff（内部已包含伤害广播和死亡广播）
-            BattleSkillHelper.ApplyEffects(caster, args.Target, effectGroupConfig, skillConfig);
+            BattleSkillHelper.ApplyEmitterDamage(caster, args.Target, skillConfig);
             BattleUnitHelper.BroadcastProjectileHit(args.Projectile, args.Target.Id);
 
             await ETTask.CompletedTask;

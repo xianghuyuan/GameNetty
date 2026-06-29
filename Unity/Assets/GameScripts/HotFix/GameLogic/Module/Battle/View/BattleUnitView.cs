@@ -42,5 +42,20 @@ namespace ET
         /// 死亡取消标记：服务端纠错复活时置 true，阻止延迟销毁
         /// </summary>
         public bool DeathCancelled { get; set; }
+
+        /// <summary>
+        /// 受击动画待播放标记（攻击关键窗口内延后播放）
+        /// </summary>
+        public bool PendingHitReact { get; set; }
+
+        /// <summary>
+        /// 上次播放受击动画的时间（Time.time）
+        /// </summary>
+        public float LastHitReactTime { get; set; }
+
+        /// <summary>
+        /// 攻击不可被受击打断的结束时间（Time.time）
+        /// </summary>
+        public float AttackUninterruptibleEndTime { get; set; }
     }
 }

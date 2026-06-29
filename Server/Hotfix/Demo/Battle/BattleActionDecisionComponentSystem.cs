@@ -108,7 +108,11 @@ namespace ET.Server
 
             if (inRange)
             {
-                // 不停止移动，直接释放技能，让角色边走边打，避免"到达→停顿→攻击"的迟钝感
+                if (!plan.EmitterConfig.CanMoveCast)
+                {
+                    self.PublishStopMove(owner);
+                }
+
                 Log.Debug($"[{LogDebugHelper.GetUnitName(owner)}] 范程内，释放: SkillId={plan.SkillId}");
                 self.PublishCast(owner, plan.SkillId, target.Id);
             }

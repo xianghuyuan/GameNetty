@@ -40,7 +40,32 @@ namespace ET.Server
                     }
                     break;
                 }
+                case (int)EffectType.DOT:
+                {
+                    if (buffEntity.CasterId > 0)
+                    {
+                        BattleRoom battleRoom = target.GetParent<BattleRoom>();
+                        BattleUnit caster = battleRoom?.GetUnit(buffEntity.CasterId);
+
+                        int damage = CalculateBuffDamage(caster, target, buffEntity.Config);
+                        EventSystem.Instance.Publish(target.Root(), new DamageEvent
+                        {
+                            Attacker = caster,
+                            Target = target,
+                            Damage = damage,
+                            SkillId = buffEntity.SkillId,
+                            CasterId = buffEntity.CasterId,
+                        });
+                    }
+                    break;
+                }
                 case (int)EffectType.Freeze:
+                {
+                    FreezeComponent freeze = target.GetComponent<FreezeComponent>();
+                    freeze?.ApplyFreeze((int)buffEntity.Config.BaseValue);
+                    break;
+                }
+                case (int)EffectType.Stun:
                 {
                     FreezeComponent freeze = target.GetComponent<FreezeComponent>();
                     freeze?.ApplyFreeze((int)buffEntity.Config.BaseValue);
@@ -77,6 +102,14 @@ namespace ET.Server
                     }
                     break;
                 }
+                case (int)EffectType.SlowDown:
+                {
+                    SlowDownComponent slowComp = target.GetComponent<SlowDownComponent>();
+                    float slowPercent = buffEntity.Config.BaseValue;
+                    int slowDuration = buffEntity.Config.Duration > 0 ? buffEntity.Config.Duration : 2000;
+                    slowComp?.ApplySlow(slowPercent, slowDuration);
+                    break;
+                }
             }
 
             await ETTask.CompletedTask;
@@ -84,8 +117,8 @@ namespace ET.Server
 
         private static int CalculateBuffDamage(BattleUnit caster, BattleUnit target, BuffConfig effectConfig)
         {
-            NumericComponent attackerNumeric = caster?.GetComponent<NumericComponent>();
-            NumericComponent targetNumeric = target?.GetComponent<NumericComponent>();
+            BattleStatsComponent attackerStats = caster?.GetOrCreateBattleStats();
+            BattleStatsComponent targetStats = target?.GetOrCreateBattleStats();
 
             float damageValue = effectConfig.BaseValue;
 
@@ -95,8 +128,8 @@ namespace ET.Server
             {
                 case FormulaTypeAttackMinusDefense:
                 {
-                    int attack = attackerNumeric?.GetAsInt(NumericType.Attack) ?? 0;
-                    int defense = targetNumeric?.GetAsInt(NumericType.Defense) ?? 0;
+                    int attack = attackerStats?.Attack ?? 0;
+                    int defense = targetStats?.Defense ?? 0;
                     damageValue += attack * effectConfig.RatioAtk - defense * effectConfig.RatioDef;
                     break;
                 }

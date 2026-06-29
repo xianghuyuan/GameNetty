@@ -43,13 +43,19 @@ namespace ET
 
         public static UnitCombatConfigCategory UnitCombatConfig => tables?.UnitCombatConfigCategory;
 
-        public static SkillConfigCategory SkillConfig => tables?.SkillConfigCategory;
+        public static EmitterConfigCategory EmitterConfig => tables?.EmitterConfigCategory;
+
+        public static EmitterUpgradeConfigCategory EmitterUpgradeConfig => tables?.EmitterUpgradeConfigCategory;
+
+        public static EmitterEffectConfigCategory EmitterEffectConfig => tables?.EmitterEffectConfigCategory;
+
+        public static EmitterEffectPackConfigCategory EmitterEffectPackConfig => tables?.EmitterEffectPackConfigCategory;
 
         public static SkillTargetingConfigCategory SkillTargetingConfig => tables?.SkillTargetingConfigCategory;
 
-        public static BuffGroupConfigCategory SkillEffectGroupConfig => tables?.BuffGroupConfigCategory;
+        public static BuffGroupConfigCategory BuffGroupConfig => tables?.BuffGroupConfigCategory;
 
-        public static BuffConfigCategory SkillEffectConfig => tables?.BuffConfigCategory;
+        public static BuffConfigCategory BuffConfigCategory => tables?.BuffConfigCategory;
 
         public static SpawnConfigCategory SpawnConfig => tables?.SpawnConfigCategory;
 

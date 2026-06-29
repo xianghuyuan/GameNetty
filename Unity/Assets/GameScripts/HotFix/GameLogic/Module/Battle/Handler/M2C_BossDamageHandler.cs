@@ -31,8 +31,7 @@ namespace ET
                 return;
             }
 
-            boss.SetNumeric(NumericType.MaxHp, message.bossMaxHp);
-            boss.SetNumeric(NumericType.Hp, message.bossCurrentHp);
+            boss.GetOrCreateBattleStats().SetHpMax(message.bossCurrentHp, message.bossMaxHp, true);
 
             EventSystem.Instance.Publish(root, new BattleUnitDamaged
             {

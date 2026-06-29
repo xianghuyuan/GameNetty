@@ -31,6 +31,6 @@ namespace ET.Server
         /// </summary>
         public bool CanAttack { get; set; } = true;
 
-        public Dictionary<int, long> SkillCooldownEnds { get; } = new();
+        public Dictionary<int, long> EmitterCooldownEnds { get; } = new();
     }
 }

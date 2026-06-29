@@ -18,8 +18,8 @@ namespace ET
         {
             Id = _buf.ReadInt();
             ConfigId = _buf.ReadInt();
-            NormalAttackSkillId = _buf.ReadInt();
-            {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoSkillIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoSkillIds[__index0] = __e0;}}
+            NormalAttackEmitterId = _buf.ReadInt();
+            {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);AutoEmitterIds = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); AutoEmitterIds[__index0] = __e0;}}
             MoveSpeed = _buf.ReadFloat();
             AutoCastNormalAttack = _buf.ReadBool();
             DefaultTargetPolicy = _buf.ReadString();
@@ -44,19 +44,19 @@ namespace ET
         public readonly int ConfigId;
 
         /// <summary>
-        /// 默认普攻技能ID
+        /// 默认普攻发射器ID
         /// </summary>
-        public readonly int NormalAttackSkillId;
+        public readonly int NormalAttackEmitterId;
 
         /// <summary>
-        /// 默认普攻技能ID
+        /// 默认普攻发射器ID
         /// </summary>
-        public SkillConfig NormalAttackSkillIdConfig => SkillConfigCategory.Instance.GetOrDefault(NormalAttackSkillId);
+        public EmitterConfig NormalAttackEmitterIdConfig => EmitterConfigCategory.Instance.GetOrDefault(NormalAttackEmitterId);
 
         /// <summary>
-        /// AI自动择优技能列表（为空则回退普攻）
+        /// AI自动择优发射器列表（为空则回退普攻）
         /// </summary>
-        public readonly int[] AutoSkillIds;
+        public readonly int[] AutoEmitterIds;
 
         /// <summary>
         /// 移动速度（米/秒）
@@ -87,8 +87,8 @@ namespace ET
             return "{ "
             + "Id:" + Id + ","
             + "ConfigId:" + ConfigId + ","
-            + "NormalAttackSkillId:" + NormalAttackSkillId + ","
-            + "AutoSkillIds:" + Luban.StringUtil.CollectionToString(AutoSkillIds) + ","
+            + "NormalAttackEmitterId:" + NormalAttackEmitterId + ","
+            + "AutoEmitterIds:" + Luban.StringUtil.CollectionToString(AutoEmitterIds) + ","
             + "MoveSpeed:" + MoveSpeed + ","
             + "AutoCastNormalAttack:" + AutoCastNormalAttack + ","
             + "DefaultTargetPolicy:" + DefaultTargetPolicy + ","

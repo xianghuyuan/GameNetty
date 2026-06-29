@@ -1,6 +1,13 @@
 # Rider
 .idea/
 
+.DS_Store
+Unity/Assets/AssetRaw/**/*.json
+Unity/Assets/AssetRaw/**/*.json.meta
+Unity/Assets/AssetRaw/UIRaw/Raw/Generated/
+Unity/Assets/AssetRaw/UIRaw/Raw/Generated.meta
+Tools/ImageGen/imagegen.local.json
+
 # Visual Studio cache directory
 .vs/
 

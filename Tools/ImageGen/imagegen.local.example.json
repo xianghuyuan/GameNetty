@@ -1,0 +1,6 @@
+{
+  "endpoint": "http://localhost:8317/",
+  "api_key": "your-api-key",
+  "model": "gpt-image-2",
+  "quality": "high"
+}

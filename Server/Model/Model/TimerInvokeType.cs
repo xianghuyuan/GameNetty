@@ -45,5 +45,7 @@
         public const int BossSyncTick = 329;       // Boss高频同步心跳 50ms (20Hz)
         public const int BatchDamageSend = 330;    // 批量伤害下发心跳 100ms
         public const int NetworkStateCheck = 331;  // 网络状态机检查心跳 500ms
+        public const int SlowDownEnd = 332;         // 减速结束
+        public const int ShieldEnd = 333;           // 护盾结束
     }
 }

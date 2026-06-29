@@ -24,6 +24,9 @@ public sealed partial class BuffConfig : Luban.BeanBase
         RatioDef = _buf.ReadFloat();
         MinValue = _buf.ReadInt();
         MaxValue = _buf.ReadInt();
+        Duration = _buf.ReadInt();
+        TickInterval = _buf.ReadInt();
+        MaxStack = _buf.ReadInt();
         CanCritical = _buf.ReadBool();
         ApplyTargetFilter = _buf.ReadString();
         Desc = _buf.ReadString();
@@ -67,6 +70,18 @@ public sealed partial class BuffConfig : Luban.BeanBase
     /// </summary>
     public readonly int MaxValue;
     /// <summary>
+    /// 持续时间(ms)
+    /// </summary>
+    public readonly int Duration;
+    /// <summary>
+    /// tick间隔(ms)
+    /// </summary>
+    public readonly int TickInterval;
+    /// <summary>
+    /// 最大叠层
+    /// </summary>
+    public readonly int MaxStack;
+    /// <summary>
     /// 是否可暴击
     /// </summary>
     public readonly bool CanCritical;
@@ -97,6 +112,9 @@ public sealed partial class BuffConfig : Luban.BeanBase
         + "RatioDef:" + RatioDef + ","
         + "MinValue:" + MinValue + ","
         + "MaxValue:" + MaxValue + ","
+        + "Duration:" + Duration + ","
+        + "TickInterval:" + TickInterval + ","
+        + "MaxStack:" + MaxStack + ","
         + "CanCritical:" + CanCritical + ","
         + "ApplyTargetFilter:" + ApplyTargetFilter + ","
         + "Desc:" + Desc + ","

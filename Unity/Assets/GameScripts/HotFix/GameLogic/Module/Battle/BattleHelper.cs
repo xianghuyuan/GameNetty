@@ -162,6 +162,13 @@ namespace ET
         /// </summary>
         public static void SyncPlayerPosition(Scene scene, long battleId, float3 position)
         {
+            BattleComponent battleComponent = scene?.GetComponent<BattleComponent>();
+            Battle battle = battleComponent?.GetBattle(battleId) ?? battleComponent?.GetCurrentBattle();
+            if (battle?.GetComponent<OfflineBattleComponent>() != null)
+            {
+                return;
+            }
+
             C2M_PlayerPositionSync message = C2M_PlayerPositionSync.Create();
             message.battleId = battleId;
             message.position = position;

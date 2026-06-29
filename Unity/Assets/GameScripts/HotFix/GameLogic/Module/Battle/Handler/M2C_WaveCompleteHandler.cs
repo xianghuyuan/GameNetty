@@ -19,6 +19,9 @@ namespace ET
                 return;
             }
 
+            battle.CurrentWave = message.waveNumber;
+            battle.TotalWaves = message.totalWaves;
+
             Log.Info($"波次完成: 第 {message.waveNumber}/{message.totalWaves} 波, 耗时: {message.duration}秒");
 
             EventSystem.Instance.Publish(root, new WaveComplete
