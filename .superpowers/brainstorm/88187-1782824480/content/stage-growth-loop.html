@@ -1,0 +1,84 @@
+<h2>A 方案细化：章节闯关 + 局外养成</h2>
+<p class="subtitle">这条动线的目标是让玩家每次战斗后都知道：我获得了什么、能强化哪里、下一步挑战什么。</p>
+
+<div class="mockup">
+  <div class="mockup-header">推荐主流程</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:stretch">
+      <div class="mock-content">
+        <div class="label">01 大厅</div>
+        <h3>当前目标</h3>
+        <p>显示下一关、战力差距、可强化项。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">02 章节地图</div>
+        <h3>选关</h3>
+        <p>1-1、1-2、1-3、Boss 节点推进。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">03 战前构筑</div>
+        <h3>装配</h3>
+        <p>选择发射器、效果包、Buff 槽位。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">04 战斗</div>
+        <h3>验证</h3>
+        <p>小怪潮推进，精英/Boss 检验构筑强度。</p>
+      </div>
+    </div>
+
+    <div style="height:18px"></div>
+    <div class="placeholder">战斗结果决定回流：胜利推进下一关；失败定位短板并引导强化</div>
+    <div style="height:18px"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:stretch">
+      <div class="mock-content">
+        <div class="label">05 结算</div>
+        <h3>奖励</h3>
+        <p>金币、发射器碎片、效果包材料、章节首通奖励。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">06 局外养成</div>
+        <h3>强化</h3>
+        <p>升级角色、发射器、效果包、解锁槽位。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">07 构筑调整</div>
+        <h3>换方案</h3>
+        <p>针对关卡特性替换发射器和效果包。</p>
+      </div>
+      <div class="mock-content">
+        <div class="label">08 再挑战</div>
+        <h3>推进</h3>
+        <p>继续下一关，或回刷目标材料。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>早期开放顺序</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="phase1" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>第一阶段：只开角色 + 发射器升级</h3>
+        <p>最容易理解，让玩家先形成“打关拿材料变强”的闭环。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="phase2" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>第二阶段：开放效果包装配</h3>
+        <p>开始让玩家感到构筑差异，而不是只堆战力。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="phase3" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>第三阶段：开放槽位和章节掉落差异</h3>
+        <p>让回刷有目的，玩家会为了某个发射器或效果包去刷指定关卡。</p>
+      </div>
+    </div>
+  </div>
+</div>

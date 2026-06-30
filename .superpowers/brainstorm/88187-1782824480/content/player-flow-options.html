@@ -1,0 +1,61 @@
+<h2>GameNetty 玩家主动线方向</h2>
+<p class="subtitle">先选择游戏的主循环锚点。后续的大厅、关卡、结算、养成和新手引导都会围绕这个选择展开。</p>
+
+<div class="cards">
+  <div class="card" data-choice="stage_build_loop" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A. 章节闯关 + 构筑验证</div>
+        <div class="mockup-body">
+          <div class="mock-nav">登录 / 大厅</div>
+          <div class="placeholder">章节地图：1-1 → 1-2 → Boss</div>
+          <div class="mock-content">战前装配发射器和效果包</div>
+          <div class="mock-content">割草波次 + Boss 验证构筑</div>
+          <div class="mock-content">结算奖励 → 解锁新槽位/新效果包 → 下一关</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 推荐：章节闯关 + 构筑验证</h3>
+      <p>最贴合现有文档：构筑是深度，波次和 Boss 是验证环境。玩家目标清晰，也方便逐步开放系统。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="roguelite_run_loop" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B. 单局 Roguelite 成长</div>
+        <div class="mockup-body">
+          <div class="mock-nav">选择角色 / 初始发射器</div>
+          <div class="placeholder">进入一局 8-15 分钟生存战</div>
+          <div class="mock-content">局内升级：三选一 Buff / 效果包</div>
+          <div class="mock-content">精英波 → Boss → 最终结算</div>
+          <div class="mock-content">局外永久成长 → 再开一局</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 单局 Roguelite 成长</h3>
+      <p>局内选择感强，适合短局反复刷；但需要补齐局内升级、随机池、掉落节奏和失败保底。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="hub_mode_loop" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C. 大厅多模式分发</div>
+        <div class="mockup-body">
+          <div class="mock-nav">大厅：战役 / 副本 / Boss / 活动</div>
+          <div class="placeholder">玩家按资源需求选择入口</div>
+          <div class="mock-content">不同入口产出不同材料</div>
+          <div class="mock-content">角色、载具、发射器、效果包多线养成</div>
+          <div class="mock-content">战力门槛推动更多模式循环</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 大厅多模式分发</h3>
+      <p>商业化和长期运营空间大；但早期会稀释核心体验，系统和 UI 范围也最大。</p>
+    </div>
+  </div>
+</div>

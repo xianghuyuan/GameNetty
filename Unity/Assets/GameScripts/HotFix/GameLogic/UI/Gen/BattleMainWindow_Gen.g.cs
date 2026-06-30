@@ -21,9 +21,10 @@ namespace GameLogic
 		private Image m_imgboss_hp = null!;
 		private GameObject m_goplayer = null!;
 		private Image m_imgplayer_hp = null!;
-		private GameObject m_itemvehicle = null!;
+		private GameObject m_itemVehicle = null!;
 		private UIButton m_btnGear = null!;
 		private UIButton m_btnCreateEnemy = null!;
+		private Transform m_tfVehicles = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -37,9 +38,10 @@ namespace GameLogic
 			m_imgboss_hp = m_bindComponent.GetComponent<Image>(1);
 			m_goplayer = m_bindComponent.GetComponent<RectTransform>(2).gameObject;
 			m_imgplayer_hp = m_bindComponent.GetComponent<Image>(3);
-			m_itemvehicle = m_bindComponent.GetComponent<RectTransform>(4).gameObject;
+			m_itemVehicle = m_bindComponent.GetComponent<RectTransform>(4).gameObject;
 			m_btnGear = m_bindComponent.GetComponent<UIButton>(5);
 			m_btnCreateEnemy = m_bindComponent.GetComponent<UIButton>(6);
+			m_tfVehicles = m_bindComponent.GetComponent<Transform>(7);
 			m_btnGear.SetClick(OnClickGearBtn);
 			m_btnCreateEnemy.SetClick(OnClickCreateEnemyBtn);
 		}

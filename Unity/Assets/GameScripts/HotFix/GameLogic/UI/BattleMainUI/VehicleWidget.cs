@@ -4,19 +4,19 @@ namespace GameLogic
 {
     public sealed partial class VehicleWidget : UIWidget
     {
-        private Action _clickHandler;
+        private Action<long> _clickHandler;
+        private long _vehicleId;
 
         protected override void OnCreate()
         {
-            SetBuffIconCount(0);
         }
 
         private partial void OnClickvehicleBtn()
         {
-            _clickHandler?.Invoke();
+            _clickHandler?.Invoke(_vehicleId);
         }
 
-        public void SetClickHandler(Action clickHandler)
+        public void SetClickHandler(Action<long> clickHandler)
         {
             _clickHandler = clickHandler;
         }
@@ -26,19 +26,26 @@ namespace GameLogic
             Visible = visible;
         }
 
-        public void Refresh(string info, int buffIconCount)
+        public void Refresh(long vehicleId, string info, int buffIconCount)
         {
+            _vehicleId = vehicleId;
             m_tmpInfo.SetText(info ?? string.Empty);
             SetBuffIconCount(buffIconCount);
         }
 
         private void SetBuffIconCount(int count)
         {
-            if (m_gobuff != null)
+            int childCount = m_tfbuff.childCount;
+            for (int i = childCount; i < count; i++)
             {
-                m_gobuff.SetActive(count > 0);
+                var obj = UnityEngine.Object.Instantiate(m_gobuff, m_tfbuff);
+                obj.SetActive(true);
+            }
+
+            for (int i = 0; i < m_tfbuff.childCount; i++)
+            {
+                m_tfbuff.GetChild(i).gameObject.SetActive(i < count);
             }
         }
-
     }
 }

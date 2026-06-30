@@ -147,15 +147,12 @@ namespace GameLogic
             int optionCount = dataList?.Count ?? 0;
             EnsureBuffOptionCount(optionCount);
 
-            HashSet<int> slottedIds = vehicle.SlottedEffectPackIds != null
-                ? new HashSet<int>(vehicle.SlottedEffectPackIds)
-                : new HashSet<int>();
             bool hasEmptySlot = (vehicle.SlottedEffectPackIds?.Count ?? 0) < Math.Max(0, vehicle.BuffSlotCount);
 
             for (int i = 0; i < _buffOptions.Count; i++)
             {
                 EmitterEffectPackConfig config = dataList != null && i < dataList.Count ? dataList[i] : null;
-                bool canAdd = config != null && hasEmptySlot && !slottedIds.Contains(config.Id);
+                bool canAdd = config != null && hasEmptySlot;
                 _buffOptions[i].Refresh(config, canAdd);
             }
         }

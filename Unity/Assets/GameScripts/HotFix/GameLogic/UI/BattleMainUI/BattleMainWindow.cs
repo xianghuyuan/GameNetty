@@ -20,7 +20,9 @@ namespace GameLogic
 
         private const int DefaultDebugBuffGroupId = 61021;
 
-        private VehicleWidget _itemVehicleWidget;
+        private readonly List<VehicleWidget> _vehicleWidgets = new List<VehicleWidget>();
+        private readonly List<VehicleData> _equippedVehicleBuffer = new List<VehicleData>();
+        private GameObject _vehiclePrefab;
         private float _playerHpWidth;
 
         
@@ -48,7 +50,9 @@ namespace GameLogic
             _battle = null;
             _emitterAddPanelWidget = null;
             _emitterAdjustPanelWidget = null;
-            _itemVehicleWidget = null;
+            _vehicleWidgets.Clear();
+            _equippedVehicleBuffer.Clear();
+            _vehiclePrefab = null;
             _selectedEmitterVehicleId = 0;
             _playerUnitId = 0;
             _bossUnitId = 0;
@@ -212,13 +216,30 @@ namespace GameLogic
         private void CacheLayoutRefs()
         {
             _playerHpWidth = m_imgplayer_hp.rectTransform.sizeDelta.x;
-            _itemVehicleWidget = CreateWidget<VehicleWidget>(m_itemvehicle);
-            _itemVehicleWidget.SetClickHandler(OnClickEmitterItem);
+            _vehiclePrefab = m_itemVehicle;
         }
 
-        private void OnClickEmitterItem()
+        private void OnClickEmitterItem(long vehicleId)
         {
-            ToggleEmitterAdjustPanel();
+            if (vehicleId == 0)
+            {
+                return;
+            }
+
+            BattleUnit player = ResolvePlayerUnit();
+            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
+            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, vehicleId);
+            if (vehicle == null)
+            {
+                return;
+            }
+
+            _selectedEmitterVehicleId = vehicleId;
+            vehicleComponent.EquippedVehicleId = vehicleId;
+            vehicleComponent.EquippedVehicle = vehicle;
+            _emitterAddPanelWidget?.SetPanelVisible(false);
+            _emitterAdjustPanelWidget?.SetPanelVisible(true);
+            RefreshEmitterAdjustPanelWidget();
         }
 
         private static string GetBattleUnitName(BattleUnit unit, string fallback)
@@ -335,25 +356,44 @@ namespace GameLogic
 
         private void RefreshEmitterOwnedBarWidget()
         {
-            if (m_itemvehicle == null)
-            {
-                return;
-            }
-
             BattleUnit player = ResolvePlayerUnit();
             VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
-            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId) ?? GetLastEquippedVehicle(vehicleComponent);
-            bool hasVehicle = player != null && vehicle != null && vehicle.State == VehicleState.Equipped;
-            _itemVehicleWidget?.SetPanelVisible(hasVehicle);
-            if (!hasVehicle)
+            FillEquippedVehicles(vehicleComponent, _equippedVehicleBuffer);
+            EnsureVehicleWidgetCount(_equippedVehicleBuffer.Count);
+            if (player == null || _equippedVehicleBuffer.Count == 0)
             {
-                _itemVehicleWidget?.Refresh(string.Empty, 0);
+                _selectedEmitterVehicleId = 0;
+                HideVehicleWidgets(0);
                 _emitterAdjustPanelWidget?.SetPanelVisible(false);
                 return;
             }
 
-            _selectedEmitterVehicleId = vehicle.VehicleId;
-            BattleAttackRuntime attack = FindAttackRuntime(player.GetComponent<BattleAttackComponent>(), vehicle.VehicleId);
+            if (GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId) == null)
+            {
+                VehicleData selectedVehicle = _equippedVehicleBuffer[_equippedVehicleBuffer.Count - 1];
+                _selectedEmitterVehicleId = selectedVehicle.VehicleId;
+                vehicleComponent.EquippedVehicleId = selectedVehicle.VehicleId;
+                vehicleComponent.EquippedVehicle = selectedVehicle;
+            }
+
+            BattleAttackComponent attackComponent = player.GetComponent<BattleAttackComponent>();
+            for (int i = 0; i < _vehicleWidgets.Count; i++)
+            {
+                if (i >= _equippedVehicleBuffer.Count)
+                {
+                    _vehicleWidgets[i].SetPanelVisible(false);
+                    continue;
+                }
+
+                VehicleData vehicle = _equippedVehicleBuffer[i];
+                BattleAttackRuntime attack = FindAttackRuntime(attackComponent, vehicle.VehicleId);
+                _vehicleWidgets[i].SetPanelVisible(true);
+                _vehicleWidgets[i].Refresh(vehicle.VehicleId, BuildVehicleInfo(vehicle, attack), vehicle.SlottedEffectPackIds?.Count ?? 0);
+            }
+        }
+
+        private static string BuildVehicleInfo(VehicleData vehicle, BattleAttackRuntime attack)
+        {
             string name = GetEmitterDisplayName(vehicle);
             string cooldown = attack != null ? $"{attack.CooldownMs}ms" : $"{vehicle.AttackCooldownMs}ms";
             float range = attack?.AttackRange ?? vehicle.AttackRange;
@@ -361,7 +401,7 @@ namespace GameLogic
             float attackRatio = attack?.WhiteAttackRatio ?? vehicle.WhiteAttackRatio;
             int slotCount = System.Math.Max(0, vehicle.BuffSlotCount);
             int usedCount = vehicle.SlottedEffectPackIds?.Count ?? 0;
-            _itemVehicleWidget?.Refresh($"{name}\n伤害 {baseDamage:0.#}+攻击 x{attackRatio:0.##}\nCD {cooldown}  射程 {range:0.0}\nBuff {usedCount}/{slotCount}", usedCount);
+            return $"{name}\n伤害 {baseDamage:0.#}+攻击 x{attackRatio:0.##}\nCD {cooldown}  射程 {range:0.0}\nBuff {usedCount}/{slotCount}";
         }
 
         private void RefreshEmitterAddPanelWidget()
@@ -613,11 +653,6 @@ namespace GameLogic
                 return;
             }
 
-            if (vehicle.SlottedEffectPackIds.Contains(effectPackId))
-            {
-                return;
-            }
-
             vehicle.SlottedEffectPackIds.Add(effectPackId);
             SyncPlayerAttackFromVehicles(player);
 
@@ -775,6 +810,53 @@ namespace GameLogic
             }
 
             return count;
+        }
+
+        private void EnsureVehicleWidgetCount(int count)
+        {
+            int currentCount = _vehicleWidgets.Count;
+            for (int i = currentCount; i < count; i++)
+            {
+                AddVehicleWidget(CreateWidgetByPrefab<VehicleWidget>(_vehiclePrefab, m_tfVehicles));
+            }
+
+            HideVehicleWidgets(count);
+        }
+
+        private void HideVehicleWidgets(int startIndex)
+        {
+            for (int i = startIndex; i < _vehicleWidgets.Count; i++)
+            {
+                _vehicleWidgets[i].SetPanelVisible(false);
+            }
+        }
+
+        private void AddVehicleWidget(VehicleWidget widget)
+        {
+            widget.SetClickHandler(OnClickEmitterItem);
+            _vehicleWidgets.Add(widget);
+        }
+
+        private static void FillEquippedVehicles(VehicleComponent vehicleComponent, List<VehicleData> vehicles)
+        {
+            vehicles.Clear();
+            if (vehicleComponent == null)
+            {
+                return;
+            }
+
+            foreach (VehicleData vehicle in vehicleComponent.OwnedVehicles)
+            {
+                if (vehicle != null && vehicle.State == VehicleState.Equipped)
+                {
+                    vehicles.Add(vehicle);
+                }
+            }
+
+            if (vehicles.Count == 0 && vehicleComponent.EquippedVehicle != null)
+            {
+                vehicles.Add(vehicleComponent.EquippedVehicle);
+            }
         }
 
         private static VehicleData GetLastEquippedVehicle(VehicleComponent vehicleComponent)

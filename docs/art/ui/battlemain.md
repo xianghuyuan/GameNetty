@@ -4,7 +4,7 @@
 
 ## 输入文件
 
-- `image.png`：战斗主界面整体效果图。
+- `spec/art/ui-reference-atlas/BattleMainWindow/source/BattleMainWindow.png`：当前战斗主界面正式效果图。
 - `image-1.png`：Boss 信息栏局部标注图。
 
 正式流程中，同一个界面只保留一张最终效果图，文件名应与界面名一致，例如 `BattleMainWindow.png`。不要使用 `preview`、`effect`、`v2`、`v3` 等后缀区分版本。
