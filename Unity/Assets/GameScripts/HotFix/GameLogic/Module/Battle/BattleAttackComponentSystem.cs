@@ -67,33 +67,23 @@ namespace ET
 
         public static void SetSingleEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int cooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
-            self.SetSingleEffectAttack(attackRuntimeId, 0, cooldownMs, attackRange, 0.5f, canMoveCast, buffGroupId);
+            self.SetSingleEffectAttack(attackRuntimeId, 0, cooldownMs, attackRange, canMoveCast, buffGroupId);
         }
 
-        public static void SetSingleEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int cooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
-        {
-            self.SetSingleEffectAttack(attackRuntimeId, 0, cooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
-        }
-
-        public static void SetSingleEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int sourceConfigId, int cooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
+        public static void SetSingleEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int sourceConfigId, int cooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
             self.Attacks.Clear();
-            self.AddEffectAttack(attackRuntimeId, sourceConfigId, cooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+            self.AddEffectAttack(attackRuntimeId, sourceConfigId, cooldownMs, attackRange, canMoveCast, buffGroupId);
 
             self.TrimStaleTriggerRecords();
         }
 
         public static void AddEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int cooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
-            self.AddEffectAttack(attackRuntimeId, cooldownMs, attackRange, 0.5f, canMoveCast, buffGroupId);
+            self.AddEffectAttack(attackRuntimeId, 0, cooldownMs, attackRange, canMoveCast, buffGroupId);
         }
 
-        public static void AddEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int cooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
-        {
-            self.AddEffectAttack(attackRuntimeId, 0, cooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
-        }
-
-        public static void AddEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int sourceConfigId, int cooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
+        public static void AddEffectAttack(this BattleAttackComponent self, long attackRuntimeId, int sourceConfigId, int cooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
             self.AddAttack(new BattleAttackRuntime
             {
@@ -103,10 +93,8 @@ namespace ET
                 BuffSlotCount = buffGroupId > 0 ? 1 : 0,
                 CooldownMs = cooldownMs > 0 ? cooldownMs : 1000,
                 AttackRange = attackRange > 0f ? attackRange : 1.5f,
-                AttackHitRatio = attackHitRatio,
                 BaseDamage = 0f,
                 WhiteAttackRatio = 0f,
-                WhiteDamageMultiplier = 1.0f,
                 CanMoveCast = canMoveCast,
                 DeliveryType = BattleAttackDeliveryType.Instant,
                 PayloadType = BattleAttackPayloadType.VehicleBuff,
@@ -124,7 +112,6 @@ namespace ET
 
             attack.CooldownMs = attack.CooldownMs > 0 ? attack.CooldownMs : 1000;
             attack.AttackRange = attack.AttackRange > 0f ? attack.AttackRange : 1.5f;
-            attack.AttackHitRatio = NormalizeAttackHitRatio(attack.AttackHitRatio);
             attack.EffectPackIds ??= new List<int>();
             attack.BuffGroupIds ??= new List<int>();
             self.Attacks.Add(attack);
@@ -229,7 +216,7 @@ namespace ET
             BattleUnitView view = attacker.GetComponent<BattleUnitView>();
             if (view != null && !view.IsDisposed)
             {
-                view.PlayAttackFeedback(null, attackInstances[0].AttackRuntime.AttackHitRatio);
+                view.PlayAttackFeedback(null, 0.5f);
                 hitDelayMs = (int)System.Math.Max(0, view.AttackHitTime * 1000f);
             }
 
@@ -284,10 +271,8 @@ namespace ET
                 Level = System.Math.Max(1, attack.Level),
                 CooldownMs = attack.CooldownMs,
                 AttackRange = attack.AttackRange,
-                AttackHitRatio = attack.AttackHitRatio,
                 BaseDamage = attack.BaseDamage,
                 WhiteAttackRatio = attack.WhiteAttackRatio,
-                WhiteDamageMultiplier = attack.WhiteDamageMultiplier > 0f ? attack.WhiteDamageMultiplier : 1.0f,
                 CanMoveCast = attack.CanMoveCast,
                 DeliveryType = attack.DeliveryType,
                 PayloadType = attack.PayloadType,
@@ -311,26 +296,14 @@ namespace ET
                 BuffSlotCount = System.Math.Max(0, emitterRuntime.BuffSlotCount),
                 CooldownMs = emitterRuntime.CooldownMs,
                 AttackRange = emitterRuntime.AttackRange,
-                AttackHitRatio = NormalizeAttackHitRatio(emitterRuntime.AttackHitRatio),
                 BaseDamage = emitterRuntime.BaseDamage,
                 WhiteAttackRatio = emitterRuntime.WhiteAttackRatio,
-                WhiteDamageMultiplier = emitterRuntime.WhiteDamageMultiplier > 0f ? emitterRuntime.WhiteDamageMultiplier : 1.0f,
                 CanMoveCast = emitterRuntime.CanMoveCast,
                 DeliveryType = emitterRuntime.DeliveryType,
                 PayloadType = emitterRuntime.PayloadType,
                 EffectPackIds = emitterRuntime.EffectPackIds != null ? new List<int>(emitterRuntime.EffectPackIds) : new List<int>(),
                 BuffGroupIds = emitterRuntime.BuffGroupIds != null ? new List<int>(emitterRuntime.BuffGroupIds) : new List<int>(),
             };
-        }
-
-        private static float NormalizeAttackHitRatio(float ratio)
-        {
-            if (ratio <= 0f || ratio > 1f)
-            {
-                return 0.5f;
-            }
-
-            return ratio;
         }
 
         private static void TrimStaleTriggerRecords(this BattleAttackComponent self)

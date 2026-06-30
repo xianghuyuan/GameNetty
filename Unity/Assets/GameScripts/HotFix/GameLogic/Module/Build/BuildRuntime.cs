@@ -21,10 +21,8 @@ namespace ET
         public int BuffSlotCount;
         public int CooldownMs = 1000;
         public float AttackRange = 1.5f;
-        public float AttackHitRatio = 0.5f;
         public float BaseDamage;
         public float WhiteAttackRatio;
-        public float WhiteDamageMultiplier = 1.0f;
         public bool CanMoveCast;
         public BattleAttackDeliveryType DeliveryType = BattleAttackDeliveryType.Instant;
         public BattleAttackPayloadType PayloadType = BattleAttackPayloadType.VehicleBuff;

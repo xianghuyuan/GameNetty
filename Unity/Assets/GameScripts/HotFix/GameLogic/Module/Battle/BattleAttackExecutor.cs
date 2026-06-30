@@ -35,7 +35,6 @@ namespace ET
                 AttackRange = attack.AttackRange,
                 BaseDamage = attack.BaseDamage,
                 WhiteAttackRatio = attack.WhiteAttackRatio,
-                WhiteDamageMultiplier = attack.WhiteDamageMultiplier > 0f ? attack.WhiteDamageMultiplier : 1.0f,
                 CanMoveCast = attack.CanMoveCast,
                 SlottedBuffIds = new System.Collections.Generic.List<int>(attack.BuffGroupIds),
             };
@@ -61,7 +60,7 @@ namespace ET
             int defense = target.GetOrCreateBattleStats()?.Defense ?? 0;
             rawDamage += attack * vehicle.WhiteAttackRatio - defense;
 
-            int damage = (int)System.Math.Floor(System.Math.Max(0f, rawDamage) * (vehicle.WhiteDamageMultiplier > 0f ? vehicle.WhiteDamageMultiplier : 1.0f));
+            int damage = (int)System.Math.Floor(System.Math.Max(0f, rawDamage));
             if (damage <= 0)
             {
                 return;

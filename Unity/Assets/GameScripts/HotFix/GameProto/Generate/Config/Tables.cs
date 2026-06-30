@@ -78,10 +78,10 @@ public partial class Tables
         SkillTargetingConfigCategory.ResolveRef(this);
         BuffGroupConfigCategory.ResolveRef(this);
         BuffConfigCategory.ResolveRef(this);
-        BattleGlobalConfigCategory.ResolveRef(this);
         EmitterEffectConfigCategory.ResolveRef(this);
         EmitterEffectPackConfigCategory.ResolveRef(this);
     }
 }
 
 }
+

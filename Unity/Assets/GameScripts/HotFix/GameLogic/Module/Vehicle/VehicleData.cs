@@ -22,10 +22,8 @@ namespace ET
         public List<int> SlottedBuffIds = new();
         public int AttackCooldownMs = 1000;
         public float AttackRange = 2.0f;
-        public float AttackHitRatio = 0.5f;
         public float BaseDamage;
         public float WhiteAttackRatio;
-        public float WhiteDamageMultiplier = 1.0f;
         /// <summary>
         /// 当前载具是否允许边移动边释放。
         /// 后续可改为从 VehicleConfig 同步到运行时数据。

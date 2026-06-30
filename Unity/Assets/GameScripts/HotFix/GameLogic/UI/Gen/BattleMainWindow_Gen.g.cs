@@ -23,6 +23,7 @@ namespace GameLogic
 		private Image m_imgplayer_hp = null!;
 		private GameObject m_itemvehicle = null!;
 		private UIButton m_btnGear = null!;
+		private UIButton m_btnCreateEnemy = null!;
 
 		protected override void ScriptGenerator()
 		{
@@ -38,7 +39,9 @@ namespace GameLogic
 			m_imgplayer_hp = m_bindComponent.GetComponent<Image>(3);
 			m_itemvehicle = m_bindComponent.GetComponent<RectTransform>(4).gameObject;
 			m_btnGear = m_bindComponent.GetComponent<UIButton>(5);
+			m_btnCreateEnemy = m_bindComponent.GetComponent<UIButton>(6);
 			m_btnGear.SetClick(OnClickGearBtn);
+			m_btnCreateEnemy.SetClick(OnClickCreateEnemyBtn);
 		}
 
 		#endregion
@@ -46,6 +49,8 @@ namespace GameLogic
 		#region 事件
 
 		private partial void OnClickGearBtn();
+
+		private partial void OnClickCreateEnemyBtn();
 
 		#endregion
 	}

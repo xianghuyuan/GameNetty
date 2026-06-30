@@ -40,8 +40,8 @@ namespace ET
                 vehicle,
                 out int cooldownMs,
                 out float attackRange,
-                out float whiteDamageMultiplier,
                 out float baseDamage,
+                out float attackRatio,
                 buffGroupIds);
 
             return new EmitterRuntime
@@ -52,32 +52,14 @@ namespace ET
                 BuffSlotCount = System.Math.Max(0, vehicle.BuffSlotCount),
                 CooldownMs = cooldownMs,
                 AttackRange = attackRange,
-                AttackHitRatio = ResolveAttackHitRatio(vehicle.VehicleConfigId, vehicle.AttackHitRatio),
                 BaseDamage = baseDamage,
-                WhiteAttackRatio = vehicle.WhiteAttackRatio,
-                WhiteDamageMultiplier = whiteDamageMultiplier,
+                WhiteAttackRatio = attackRatio,
                 CanMoveCast = vehicle.CanMoveCast,
                 DeliveryType = BattleAttackDeliveryType.Instant,
                 PayloadType = BattleAttackPayloadType.VehicleBuff,
                 EffectPackIds = vehicle.SlottedEffectPackIds != null ? new List<int>(vehicle.SlottedEffectPackIds) : new List<int>(),
                 BuffGroupIds = buffGroupIds,
             };
-        }
-
-        private static float ResolveAttackHitRatio(int emitterConfigId, float fallbackRatio)
-        {
-            EmitterConfig emitterConfig = ConfigHelper.EmitterConfig?.GetOrDefault(emitterConfigId);
-            return NormalizeAttackHitRatio(emitterConfig != null ? emitterConfig.AttackHitRatio : fallbackRatio);
-        }
-
-        private static float NormalizeAttackHitRatio(float ratio)
-        {
-            if (ratio <= 0f || ratio > 1f)
-            {
-                return 0.5f;
-            }
-
-            return ratio;
         }
     }
 }

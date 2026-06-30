@@ -9,8 +9,8 @@ namespace ET
 
         private const int TargetStatCooldownMs = 1;
         private const int TargetStatRange = 2;
-        private const int TargetStatWhiteDamage = 3;
-        private const int TargetStatBaseDamage = 4;
+        private const int TargetStatBaseDamage = 3;
+        private const int TargetStatAttackRatio = 4;
 
         private const int ModifyOpAdd = 1;
         private const int ModifyOpMultiply = 2;
@@ -20,14 +20,14 @@ namespace ET
             VehicleData vehicle,
             out int cooldownMs,
             out float attackRange,
-            out float whiteDamageMultiplier,
             out float baseDamage,
+            out float attackRatio,
             List<int> buffGroupIds)
         {
             cooldownMs = 1000;
             attackRange = 2.0f;
-            whiteDamageMultiplier = 1.0f;
             baseDamage = 0f;
+            attackRatio = 0f;
 
             if (vehicle == null)
             {
@@ -36,8 +36,8 @@ namespace ET
 
             float runtimeCooldownMs = vehicle.AttackCooldownMs > 0 ? vehicle.AttackCooldownMs : 1000;
             float runtimeAttackRange = vehicle.AttackRange > 0f ? vehicle.AttackRange : 2.0f;
-            float runtimeWhiteDamageMultiplier = vehicle.WhiteDamageMultiplier > 0f ? vehicle.WhiteDamageMultiplier : 1.0f;
             float runtimeBaseDamage = vehicle.BaseDamage;
+            float runtimeAttackRatio = vehicle.WhiteAttackRatio;
 
             buffGroupIds?.Clear();
             List<int> packIds = vehicle.SlottedEffectPackIds;
@@ -77,7 +77,7 @@ namespace ET
                         switch (effectConfig.EffectKind)
                         {
                             case EffectKindModifyEmitterStat:
-                                ApplyEmitterStatEffect(effectConfig, ref runtimeCooldownMs, ref runtimeAttackRange, ref runtimeWhiteDamageMultiplier, ref runtimeBaseDamage);
+                                ApplyEmitterStatEffect(effectConfig, ref runtimeCooldownMs, ref runtimeAttackRange, ref runtimeBaseDamage, ref runtimeAttackRatio);
                                 break;
                             case EffectKindApplyBuffGroup:
                                 if (effectConfig.BuffGroupId > 0 && buffGroupIds != null)
@@ -92,8 +92,8 @@ namespace ET
 
             cooldownMs = System.Math.Max(100, (int)System.Math.Round(runtimeCooldownMs));
             attackRange = System.Math.Max(0.1f, runtimeAttackRange);
-            whiteDamageMultiplier = System.Math.Max(0.1f, runtimeWhiteDamageMultiplier);
             baseDamage = System.Math.Max(0f, runtimeBaseDamage);
+            attackRatio = System.Math.Max(0f, runtimeAttackRatio);
         }
 
         public static List<int> ResolveBuffGroupIds(IReadOnlyList<int> packIds)
@@ -125,7 +125,7 @@ namespace ET
             return buffGroupIds;
         }
 
-        private static void ApplyEmitterStatEffect(EmitterEffectConfig effectConfig, ref float cooldownMs, ref float attackRange, ref float whiteDamageMultiplier, ref float baseDamage)
+        private static void ApplyEmitterStatEffect(EmitterEffectConfig effectConfig, ref float cooldownMs, ref float attackRange, ref float baseDamage, ref float attackRatio)
         {
             switch (effectConfig.TargetStat)
             {
@@ -135,11 +135,11 @@ namespace ET
                 case TargetStatRange:
                     attackRange = Modify(attackRange, effectConfig.ModifyOp, effectConfig.Value);
                     break;
-                case TargetStatWhiteDamage:
-                    whiteDamageMultiplier = Modify(whiteDamageMultiplier, effectConfig.ModifyOp, effectConfig.Value);
-                    break;
                 case TargetStatBaseDamage:
                     baseDamage = Modify(baseDamage, effectConfig.ModifyOp, effectConfig.Value);
+                    break;
+                case TargetStatAttackRatio:
+                    attackRatio = Modify(attackRatio, effectConfig.ModifyOp, effectConfig.Value);
                     break;
             }
         }

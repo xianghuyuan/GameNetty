@@ -21,9 +21,10 @@ public sealed partial class EmitterUpgradeConfig : Luban.BeanBase
         Level = _buf.ReadInt();
         Code = _buf.ReadString();
         Name = _buf.ReadString();
-        CooldownReduceMs = _buf.ReadInt();
-        RangeAdd = _buf.ReadFloat();
-        WhiteDamageMultiplier = _buf.ReadFloat();
+        CooldownMs = _buf.ReadInt();
+        Range = _buf.ReadFloat();
+        BaseDamage = _buf.ReadFloat();
+        AttackRatio = _buf.ReadFloat();
         Desc = _buf.ReadString();
     }
 
@@ -53,17 +54,21 @@ public sealed partial class EmitterUpgradeConfig : Luban.BeanBase
     /// </summary>
     public readonly string Name;
     /// <summary>
-    /// 累计减少冷却毫秒
+    /// 最终冷却毫秒
     /// </summary>
-    public readonly int CooldownReduceMs;
+    public readonly int CooldownMs;
     /// <summary>
-    /// 累计增加射程
+    /// 最终攻击射程
     /// </summary>
-    public readonly float RangeAdd;
+    public readonly float Range;
     /// <summary>
-    /// 白值伤害倍率
+    /// 最终基础伤害
     /// </summary>
-    public readonly float WhiteDamageMultiplier;
+    public readonly float BaseDamage;
+    /// <summary>
+    /// 最终攻击力系数
+    /// </summary>
+    public readonly float AttackRatio;
     /// <summary>
     /// 描述
     /// </summary>
@@ -84,9 +89,10 @@ public sealed partial class EmitterUpgradeConfig : Luban.BeanBase
         + "Level:" + Level + ","
         + "Code:" + Code + ","
         + "Name:" + Name + ","
-        + "CooldownReduceMs:" + CooldownReduceMs + ","
-        + "RangeAdd:" + RangeAdd + ","
-        + "WhiteDamageMultiplier:" + WhiteDamageMultiplier + ","
+        + "CooldownMs:" + CooldownMs + ","
+        + "Range:" + Range + ","
+        + "BaseDamage:" + BaseDamage + ","
+        + "AttackRatio:" + AttackRatio + ","
         + "Desc:" + Desc + ","
         + "}";
     }

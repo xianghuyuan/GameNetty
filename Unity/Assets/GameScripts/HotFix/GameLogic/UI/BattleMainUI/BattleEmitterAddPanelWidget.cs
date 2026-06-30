@@ -65,11 +65,6 @@ namespace GameLogic
 
         private void CacheViews()
         {
-            if (m_tfEmitterSlots == null || m_itemEmitterSlot == null || m_scrollEmitterOptions == null)
-            {
-                throw new InvalidOperationException("BattleEmitterAddPanelWidget prefab bindings are incomplete.");
-            }
-
             _optionItems.Clear();
             AddOptionItem(CreateWidget<BattleEmitterOptionItemWidget>(m_itemEmitterSlot));
 
@@ -104,7 +99,8 @@ namespace GameLogic
 
         private void EnsureOptionItemCount(int count)
         {
-            while (_optionItems.Count < count)
+            int currentCount = _optionItems.Count;
+            for (int i = currentCount; i < count; i++)
             {
                 BattleEmitterOptionItemWidget item = CreateWidgetByPrefab<BattleEmitterOptionItemWidget>(_optionPrefab, m_tfEmitterSlots);
                 AddOptionItem(item);
@@ -118,11 +114,6 @@ namespace GameLogic
 
         private void AddOptionItem(BattleEmitterOptionItemWidget item)
         {
-            if (item == null)
-            {
-                throw new InvalidOperationException("BattleEmitterAddPanelWidget option item is missing.");
-            }
-
             item.SetClickHandler(OnOptionClicked);
             _optionItems.Add(item);
         }

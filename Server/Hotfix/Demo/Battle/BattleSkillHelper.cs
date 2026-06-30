@@ -673,7 +673,10 @@ namespace ET.Server
                 return 0;
             }
 
-            if (emitterConfig.BaseDamage <= 0f && emitterConfig.WhiteAttackRatio <= 0f)
+            EmitterUpgradeConfig levelConfig = ResolveEmitterLevelConfig(emitterConfig, 1);
+            float baseDamage = System.Math.Max(0f, levelConfig?.BaseDamage ?? 0f);
+            float attackRatio = System.Math.Max(0f, levelConfig?.AttackRatio ?? 0f);
+            if (baseDamage <= 0f && attackRatio <= 0f)
             {
                 return 0;
             }
@@ -682,7 +685,7 @@ namespace ET.Server
             BattleStatsComponent targetStats = target.GetOrCreateBattleStats();
             int attack = attackerStats?.Attack ?? 0;
             int defense = targetStats?.Defense ?? 0;
-            float rawDamage = emitterConfig.BaseDamage + attack * emitterConfig.WhiteAttackRatio - defense;
+            float rawDamage = baseDamage + attack * attackRatio - defense;
             int damage = (int)System.Math.Floor(System.Math.Max(0f, rawDamage));
             if (damage <= 0)
             {
@@ -698,6 +701,36 @@ namespace ET.Server
             }
 
             return damage;
+        }
+
+        private static EmitterUpgradeConfig ResolveEmitterLevelConfig(EmitterConfig emitterConfig, int level)
+        {
+            if (emitterConfig == null)
+            {
+                return null;
+            }
+
+            int targetLevel = System.Math.Max(1, level);
+            EmitterUpgradeConfig levelOne = null;
+            foreach (EmitterUpgradeConfig levelConfig in EmitterUpgradeConfigCategory.Instance.DataList)
+            {
+                if (levelConfig == null || levelConfig.UpgradeConfigId != emitterConfig.UpgradeConfigId)
+                {
+                    continue;
+                }
+
+                if (levelConfig.Level == 1)
+                {
+                    levelOne = levelConfig;
+                }
+
+                if (levelConfig.Level == targetLevel)
+                {
+                    return levelConfig;
+                }
+            }
+
+            return levelOne;
         }
 
         /// <summary>

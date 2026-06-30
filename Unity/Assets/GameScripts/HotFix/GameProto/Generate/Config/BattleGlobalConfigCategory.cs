@@ -36,10 +36,6 @@ public partial class BattleGlobalConfigCategory
     /// </summary>
      public string Description => _data.Description;
     
-    public void ResolveRef(Tables tables)
-    {
-        _data.ResolveRef(tables);
-    }
 }
 
 }

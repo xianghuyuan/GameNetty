@@ -6,34 +6,22 @@ namespace GameLogic
 {
     public partial class BattleMainWindow : UIWindow
     {
-        private void OnClickBookmarkBtn()
-        {
-            ToggleBuffPanel();
-        }
-
-        private void OnClickPauseBtn()
-        {
-            DeleteLastEmitter();
-        }
-
         private partial void OnClickGearBtn()
         {
             ToggleEmitterPanel();
         }
 
         private const int MaxDebugEmitterSlots = 8;
-        private const int DefaultDebugBuffGroupId = 61021;
-        private const int MonsterDeathRewardOptionCount = 3;
 
-        private int? _currentControlMode;
-        private UIText _tmpBossName;
-        private UIText _tmpBossHp;
-        private UIText _tmpWave;
-        private UIText _tmpPlayerHp;
-        private UIText _tmpControlMode;
-        private UIText _tmpEmitterInfo;
-        private RectTransform _tfEmitterBuffRoot;
-        private GameObject _gobuffTemplate;
+        private partial void OnClickCreateEnemyBtn()
+        {
+            SpawnDebugEnemy();
+        }
+
+        private const int DefaultDebugBuffGroupId = 61021;
+
+        private VehicleWidget _itemVehicleWidget;
+        private float _playerHpWidth;
 
         
         private Battle _battle;
@@ -42,16 +30,14 @@ namespace GameLogic
         private long _playerUnitId;
         private long _bossUnitId;
         private BattleEmitterAddPanelWidget _emitterAddPanelWidget;
-        private BattleBuffAddPanelWidget _buffAddPanelWidget;
-        private BattleGMWidget _gmWidget;
+        private BattleEmitterAdjustPanelWidget _emitterAdjustPanelWidget;
         private long _selectedEmitterVehicleId;
 
         protected override void OnCreate()
         {
             CacheLayoutRefs();
             CreateEmitterAddPanelWidget();
-            CreateBuffAddPanelWidget();
-            CreateGMWidget();
+            CreateEmitterAdjustPanelWidget();
             ResetBattleData();
             BattleUIHelper.BindMainWindow(this);
         }
@@ -61,8 +47,8 @@ namespace GameLogic
             BattleUIHelper.BindMainWindow(null);
             _battle = null;
             _emitterAddPanelWidget = null;
-            _buffAddPanelWidget = null;
-            _gmWidget = null;
+            _emitterAdjustPanelWidget = null;
+            _itemVehicleWidget = null;
             _selectedEmitterVehicleId = 0;
             _playerUnitId = 0;
             _bossUnitId = 0;
@@ -77,13 +63,10 @@ namespace GameLogic
                 _emitterAddPanelWidget.Refresh(_battle, _playerUnitId);
             }
 
-            if (_buffAddPanelWidget != null && _buffAddPanelWidget.Visible)
+            if (_emitterAdjustPanelWidget != null && _emitterAdjustPanelWidget.Visible)
             {
-                _buffAddPanelWidget.Refresh();
+                RefreshEmitterAdjustPanelWidget();
             }
-
-            RefreshDebugButtonStates();
-
             _hasOverrideUpdate = true;
         }
 
@@ -114,6 +97,7 @@ namespace GameLogic
             SetWave(battle.CurrentWave, battle.TotalWaves);
             RefreshEmitterOwnedBarWidget();
             RefreshEmitterAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
         }
 
         public void RefreshUnit(BattleUnit unit)
@@ -129,6 +113,7 @@ namespace GameLogic
                 RefreshPlayer(unit);
                 RefreshEmitterOwnedBarWidget();
                 RefreshEmitterAddPanelWidget();
+                RefreshEmitterAdjustPanelWidget();
             }
 
             if (unit.IsBoss && (_bossUnitId == 0 || _bossUnitId == unit.Id))
@@ -155,37 +140,18 @@ namespace GameLogic
                 SetBossVisible(false);
                 _bossUnitId = 0;
             }
-
-            if (unit.Camp == UnitCamp.Enemy && !unit.IsBoss)
-            {
-                ShowMonsterDeathReward();
-            }
         }
 
         public void SetWave(int currentWave, int totalWaves)
         {
-            if (_tmpWave == null)
-            {
-                return;
-            }
-
-            _tmpWave.SetText(totalWaves > 0 ? $"第 {currentWave}/{totalWaves} 波" : "第 0/0 波");
         }
 
         public void SetWaveComplete(int waveNumber, int totalWaves)
         {
-            if (_tmpWave == null)
-            {
-                return;
-            }
-
-            _tmpWave.SetText(totalWaves > 0 ? $"第 {waveNumber}/{totalWaves} 波完成" : "波次完成");
         }
 
         public void SetControlMode(int mode)
         {
-            _currentControlMode = mode;
-            RefreshControlModeLabel();
         }
 
         private void ResetBattleData()
@@ -198,10 +164,9 @@ namespace GameLogic
             SetPlayerHp(0, 0);
             SetBossVisible(false);
             SetWave(0, 0);
-            RefreshControlModeLabel();
             RefreshEmitterOwnedBarWidget();
             RefreshEmitterAddPanelWidget();
-            RefreshBuffAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
         }
 
         private void RefreshPlayer(BattleUnit unit)
@@ -219,8 +184,6 @@ namespace GameLogic
                 m_imgboss_hp.fillAmount = GetHpFill(hp, maxHp);
             }
 
-            _tmpBossName?.SetText(GetBattleUnitName(unit, "Boss"));
-            _tmpBossHp?.SetText(maxHp > 0 ? $"{hp}/{maxHp}" : "0/0");
         }
 
         private void SetPlayerHp(int hp, int maxHp)
@@ -228,10 +191,12 @@ namespace GameLogic
             hp = Mathf.Clamp(hp, 0, Mathf.Max(0, maxHp));
             if (m_imgplayer_hp != null)
             {
-                m_imgplayer_hp.fillAmount = GetHpFill(hp, maxHp);
+                RectTransform hpRect = m_imgplayer_hp.rectTransform;
+                Vector2 size = hpRect.sizeDelta;
+                size.x = _playerHpWidth * GetHpFill(hp, maxHp);
+                hpRect.sizeDelta = size;
             }
 
-            _tmpPlayerHp?.SetText(maxHp > 0 ? $"{hp}/{maxHp}" : "0/0");
         }
 
         private void SetBossVisible(bool visible)
@@ -241,35 +206,19 @@ namespace GameLogic
             if (!visible)
             {
                 if (m_imgboss_hp != null) m_imgboss_hp.fillAmount = 0f;
-                _tmpBossHp?.SetText("0/0");
             }
-        }
-
-        private void RefreshControlModeLabel()
-        {
-            if (_tmpControlMode == null)
-            {
-                return;
-            }
-
-            _tmpControlMode.SetText(_currentControlMode.HasValue ? $"模式 {_currentControlMode.Value}" : "自动战斗");
         }
 
         private void CacheLayoutRefs()
         {
-            _tmpBossName = FindUIText("TopCenterStatus/top_long_bar/m_tmpBossName");
-            _tmpBossHp = FindUIText("TopCenterStatus/top_long_bar/m_tmpBossHp");
-            _tmpWave = FindUIText("wave_panel_bg/m_tmpWave");
-            _tmpPlayerHp = FindUIText("playerstatus/m_tmpPlayerHp");
-            _tmpControlMode = FindUIText("playerstatus/m_tmpControlMode");
-            _tmpEmitterInfo = m_itemvehicle?.transform.Find("m_tmpInfo")?.GetComponent<UIText>();
-            _tfEmitterBuffRoot = m_itemvehicle?.transform.Find("m_tfbuff") as RectTransform;
-            _gobuffTemplate = _tfEmitterBuffRoot != null ? _tfEmitterBuffRoot.Find("m_gobuff")?.gameObject : null;
+            _playerHpWidth = m_imgplayer_hp.rectTransform.sizeDelta.x;
+            _itemVehicleWidget = CreateWidget<VehicleWidget>(m_itemvehicle);
+            _itemVehicleWidget.SetClickHandler(OnClickEmitterItem);
         }
 
-        private UIText FindUIText(string path)
+        private void OnClickEmitterItem()
         {
-            return transform.Find(path)?.GetComponent<UIText>();
+            ToggleEmitterAdjustPanel();
         }
 
         private static string GetBattleUnitName(BattleUnit unit, string fallback)
@@ -363,6 +312,27 @@ namespace GameLogic
             _emitterAddPanelWidget.SetPanelVisible(false);
         }
 
+        private void CreateEmitterAdjustPanelWidget()
+        {
+            RectTransform parent = gameObject.transform as RectTransform;
+            if (parent == null)
+            {
+                return;
+            }
+
+            _emitterAdjustPanelWidget = CreateWidgetByType<BattleEmitterAdjustPanelWidget>(parent);
+            if (_emitterAdjustPanelWidget == null)
+            {
+                return;
+            }
+
+            _emitterAdjustPanelWidget.SetLevelChangedHandler(SetSelectedEmitterLevel);
+            _emitterAdjustPanelWidget.SetAddBuffHandler(AddBuffToSelectedEmitter);
+            _emitterAdjustPanelWidget.SetRemoveBuffHandler(RemoveBuffFromSelectedEmitter);
+            _emitterAdjustPanelWidget.SetDeleteEmitterHandler(DeleteSelectedEmitter);
+            _emitterAdjustPanelWidget.SetPanelVisible(false);
+        }
+
         private void RefreshEmitterOwnedBarWidget()
         {
             if (m_itemvehicle == null)
@@ -374,10 +344,11 @@ namespace GameLogic
             VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
             VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId) ?? GetLastEquippedVehicle(vehicleComponent);
             bool hasVehicle = player != null && vehicle != null && vehicle.State == VehicleState.Equipped;
-            SetActive(m_itemvehicle, hasVehicle);
+            _itemVehicleWidget?.SetPanelVisible(hasVehicle);
             if (!hasVehicle)
             {
-                SetEmitterBuffIconCount(0);
+                _itemVehicleWidget?.Refresh(string.Empty, 0);
+                _emitterAdjustPanelWidget?.SetPanelVisible(false);
                 return;
             }
 
@@ -386,101 +357,37 @@ namespace GameLogic
             string name = GetEmitterDisplayName(vehicle);
             string cooldown = attack != null ? $"{attack.CooldownMs}ms" : $"{vehicle.AttackCooldownMs}ms";
             float range = attack?.AttackRange ?? vehicle.AttackRange;
-            float hit = attack?.AttackHitRatio ?? vehicle.AttackHitRatio;
-            float damage = attack?.WhiteDamageMultiplier ?? vehicle.WhiteDamageMultiplier;
+            float baseDamage = attack?.BaseDamage ?? vehicle.BaseDamage;
+            float attackRatio = attack?.WhiteAttackRatio ?? vehicle.WhiteAttackRatio;
             int slotCount = System.Math.Max(0, vehicle.BuffSlotCount);
             int usedCount = vehicle.SlottedEffectPackIds?.Count ?? 0;
-            _tmpEmitterInfo?.SetText($"{name}\nCD {cooldown}  射程 {range:0.0}\n命中 {hit:0.00}  倍率 x{damage:0.0}\nBuff {usedCount}/{slotCount}");
-            SetEmitterBuffIconCount(usedCount);
-        }
-
-        private void CreateBuffAddPanelWidget()
-        {
-            RectTransform parent = gameObject.transform as RectTransform;
-            if (parent == null)
-            {
-                return;
-            }
-
-            _buffAddPanelWidget = CreateWidgetByType<BattleBuffAddPanelWidget>(parent);
-            if (_buffAddPanelWidget == null)
-            {
-                return;
-            }
-
-            _buffAddPanelWidget.SetAddBuffHandler(AddBuffToSelectedEmitter);
-            _buffAddPanelWidget.SetPanelVisible(false);
-        }
-
-        private void RefreshBuffAddPanelWidget()
-        {
-            _buffAddPanelWidget?.SetSelectedEmitter(_selectedEmitterVehicleId);
-            _buffAddPanelWidget?.Refresh();
-        }
-
-        private void CreateGMWidget()
-        {
-            RectTransform parent = gameObject.transform as RectTransform;
-            if (parent == null)
-            {
-                return;
-            }
-
-            _gmWidget = CreateWidgetByType<BattleGMWidget>(parent, false);
-            if (_gmWidget == null)
-            {
-                return;
-            }
-
-            _gmWidget.SetHandlers(
-                ToggleEmitterPanel,
-                DeleteLastEmitter,
-                ToggleBuffPanel,
-                SpawnDebugEnemy);
-        }
-
-        private void ToggleGMWidget()
-        {
-            if (_gmWidget == null)
-            {
-                return;
-            }
-
-            bool visible = !_gmWidget.Visible;
-            _gmWidget.Visible = visible;
-            if (!visible)
-            {
-                CloseDebugSubPanels();
-            }
-
-            RefreshDebugButtonStates();
-        }
-
-        private void ToggleBuffPanel()
-        {
-            if (_buffAddPanelWidget == null)
-            {
-                return;
-            }
-
-            bool visible = !_buffAddPanelWidget.Visible;
-            if (visible)
-            {
-                _emitterAddPanelWidget?.SetPanelVisible(false);
-            }
-
-            _buffAddPanelWidget.SetPanelVisible(visible);
-            if (_buffAddPanelWidget.Visible)
-            {
-                RefreshBuffAddPanelWidget();
-            }
-
-            RefreshDebugButtonStates();
+            _itemVehicleWidget?.Refresh($"{name}\n伤害 {baseDamage:0.#}+攻击 x{attackRatio:0.##}\nCD {cooldown}  射程 {range:0.0}\nBuff {usedCount}/{slotCount}", usedCount);
         }
 
         private void RefreshEmitterAddPanelWidget()
         {
             _emitterAddPanelWidget?.Refresh(_battle, _playerUnitId);
+        }
+
+        private void RefreshEmitterAdjustPanelWidget()
+        {
+            if (_emitterAdjustPanelWidget == null || !_emitterAdjustPanelWidget.Visible)
+            {
+                return;
+            }
+
+            EnsureSelectedEmitter();
+            BattleUnit player = ResolvePlayerUnit();
+            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
+            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId);
+            if (vehicle == null)
+            {
+                _emitterAdjustPanelWidget.SetPanelVisible(false);
+                return;
+            }
+
+            BattleAttackRuntime attack = FindAttackRuntime(player.GetComponent<BattleAttackComponent>(), vehicle.VehicleId);
+            _emitterAdjustPanelWidget.Refresh(vehicle, attack);
         }
 
         private static BattleAttackRuntime FindAttackRuntime(BattleAttackComponent attackComponent, long vehicleId)
@@ -517,11 +424,6 @@ namespace GameLogic
             return vehicle.VehicleConfigId > 0 ? $"发射器 {vehicle.VehicleConfigId}" : "调试发射器";
         }
 
-        private void SetEmitterBuffIconCount(int count)
-        {
-            SetActive(_gobuffTemplate, count > 0);
-        }
-
         private void ToggleEmitterPanel()
         {
             if (_emitterAddPanelWidget == null)
@@ -532,7 +434,7 @@ namespace GameLogic
             bool visible = !_emitterAddPanelWidget.Visible;
             if (visible)
             {
-                _buffAddPanelWidget?.SetPanelVisible(false);
+                _emitterAdjustPanelWidget?.SetPanelVisible(false);
             }
 
             _emitterAddPanelWidget.SetPanelVisible(visible);
@@ -540,8 +442,6 @@ namespace GameLogic
             {
                 RefreshEmitterAddPanelWidget();
             }
-
-            RefreshDebugButtonStates();
         }
 
         private void AddEmitterToPlayer(EmitterConfig config)
@@ -557,13 +457,9 @@ namespace GameLogic
                 return;
             }
 
-            SkillTargetingConfig targetingConfig = ConfigHelper.SkillTargetingConfig?.GetOrDefault(config.TargetingConfigId);
-            float attackRange = targetingConfig != null ? targetingConfig.CastRange + targetingConfig.EdgeDistance : 1.5f;
-            float attackHitRatio = config.AttackHitRatio > 0f && config.AttackHitRatio <= 1f ? config.AttackHitRatio : 0.5f;
-
             VehicleComponent vehicleComponent = player.GetComponent<VehicleComponent>() ?? player.AddComponent<VehicleComponent>();
             int beforeCount = GetEquippedVehicleCount(vehicleComponent);
-            int maxLevel = GetEmitterMaxLevel(config);
+            int maxLevel = EmitterUpgradeRuntimeHelper.ResolveMaxLevel(config);
             VehicleData vehicle = vehicleComponent.AddOrUpgradeVehicle(config.Id, maxLevel, out bool upgraded);
             bool wasEquipped = vehicle.State == VehicleState.Equipped;
             if (!upgraded && beforeCount >= MaxDebugEmitterSlots)
@@ -572,8 +468,7 @@ namespace GameLogic
                 return;
             }
 
-            ApplyEmitterLevelStats(vehicle, config, ResolveEmitterUpgradeLevelConfig(config, vehicle.Level), maxLevel, attackRange);
-            vehicle.AttackHitRatio = attackHitRatio;
+            ApplyEmitterLevelStats(vehicle, config, EmitterUpgradeRuntimeHelper.ResolveLevelConfig(config, vehicle.Level), maxLevel);
             vehicle.CanMoveCast = config.CanMoveCast;
             vehicle.BuffSlotCount = System.Math.Max(0, config.BuffSlotCount);
             if (!upgraded)
@@ -588,7 +483,6 @@ namespace GameLogic
             {
                 RefreshEmitterOwnedBarWidget();
                 RefreshEmitterAddPanelWidget();
-                RefreshBuffAddPanelWidget();
                 return;
             }
 
@@ -600,7 +494,7 @@ namespace GameLogic
 
             RefreshEmitterOwnedBarWidget();
             RefreshEmitterAddPanelWidget();
-            RefreshBuffAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
             _emitterAddPanelWidget.SetPanelVisible(false);
         }
 
@@ -621,10 +515,8 @@ namespace GameLogic
             VehicleData vehicle = vehicleComponent.AddNewVehicle(0);
             vehicle.AttackCooldownMs = 1000;
             vehicle.AttackRange = 3f;
-            vehicle.AttackHitRatio = 0.1f;
             vehicle.BaseDamage = 5f;
             vehicle.WhiteAttackRatio = 1.0f;
-            vehicle.WhiteDamageMultiplier = 1.0f;
             vehicle.BuffSlotCount = 3;
             vehicle.CanMoveCast = false;
             vehicle.State = VehicleState.Equipped;
@@ -640,10 +532,124 @@ namespace GameLogic
 
             RefreshEmitterOwnedBarWidget();
             RefreshEmitterAddPanelWidget();
-            RefreshBuffAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
         }
 
-        private static void ApplyEmitterLevelStats(VehicleData vehicle, EmitterConfig config, EmitterUpgradeConfig levelConfig, int maxLevel, float baseAttackRange)
+        private void ToggleEmitterAdjustPanel()
+        {
+            if (_emitterAdjustPanelWidget == null)
+            {
+                return;
+            }
+
+            EnsureSelectedEmitter();
+            if (_selectedEmitterVehicleId == 0)
+            {
+                _emitterAdjustPanelWidget.SetPanelVisible(false);
+                return;
+            }
+
+            bool visible = !_emitterAdjustPanelWidget.Visible;
+            if (visible)
+            {
+                _emitterAddPanelWidget?.SetPanelVisible(false);
+            }
+
+            _emitterAdjustPanelWidget.SetPanelVisible(visible);
+            if (_emitterAdjustPanelWidget.Visible)
+            {
+                RefreshEmitterAdjustPanelWidget();
+            }
+        }
+
+        private void SetSelectedEmitterLevel(int level)
+        {
+            BattleUnit player = ResolvePlayerUnit();
+            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
+            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId);
+            if (player == null || vehicle == null)
+            {
+                return;
+            }
+
+            EmitterConfig config = ConfigHelper.EmitterConfig?.GetOrDefault(vehicle.VehicleConfigId);
+            if (config == null)
+            {
+                return;
+            }
+
+            int maxLevel = EmitterUpgradeRuntimeHelper.ResolveMaxLevel(config);
+            int nextLevel = System.Math.Min(System.Math.Max(1, level), System.Math.Max(1, maxLevel));
+            vehicle.Level = nextLevel;
+            ApplyEmitterLevelStats(vehicle, config, EmitterUpgradeRuntimeHelper.ResolveLevelConfig(config, nextLevel), maxLevel);
+            SyncPlayerAttackFromVehicles(player);
+
+            RefreshEmitterOwnedBarWidget();
+            RefreshEmitterAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
+        }
+
+        private void AddBuffToSelectedEmitter(int effectPackId)
+        {
+            BattleUnit player = ResolvePlayerUnit();
+            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
+            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId);
+            if (player == null || vehicle == null)
+            {
+                return;
+            }
+
+            EmitterEffectPackConfig config = ConfigHelper.EmitterEffectPackConfig?.GetOrDefault(effectPackId);
+            if (config == null)
+            {
+                Log.Error($"[BattleMainWindow] Invalid emitter effect pack id={effectPackId}.");
+                return;
+            }
+
+            vehicle.SlottedEffectPackIds ??= new List<int>();
+            int slotCount = System.Math.Max(0, vehicle.BuffSlotCount);
+            if (slotCount == 0 || vehicle.SlottedEffectPackIds.Count >= slotCount)
+            {
+                return;
+            }
+
+            if (vehicle.SlottedEffectPackIds.Contains(effectPackId))
+            {
+                return;
+            }
+
+            vehicle.SlottedEffectPackIds.Add(effectPackId);
+            SyncPlayerAttackFromVehicles(player);
+
+            RefreshEmitterOwnedBarWidget();
+            RefreshEmitterAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
+        }
+
+        private void RemoveBuffFromSelectedEmitter(int slotIndex)
+        {
+            BattleUnit player = ResolvePlayerUnit();
+            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
+            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId);
+            if (player == null || vehicle == null || vehicle.SlottedEffectPackIds == null)
+            {
+                return;
+            }
+
+            if (slotIndex < 0 || slotIndex >= vehicle.SlottedEffectPackIds.Count)
+            {
+                return;
+            }
+
+            vehicle.SlottedEffectPackIds.RemoveAt(slotIndex);
+            SyncPlayerAttackFromVehicles(player);
+
+            RefreshEmitterOwnedBarWidget();
+            RefreshEmitterAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
+        }
+
+        private static void ApplyEmitterLevelStats(VehicleData vehicle, EmitterConfig config, EmitterUpgradeConfig levelConfig, int maxLevel)
         {
             if (vehicle == null || config == null)
             {
@@ -652,76 +658,13 @@ namespace GameLogic
 
             int levelCap = maxLevel > 0 ? maxLevel : 1;
             vehicle.Level = System.Math.Min(levelCap, System.Math.Max(1, vehicle.Level));
-            int baseCooldownMs = config.CooldownMs > 0 ? config.CooldownMs : 1000;
-            int cooldownMs = baseCooldownMs - (levelConfig?.CooldownReduceMs ?? 0);
-            vehicle.AttackCooldownMs = System.Math.Max(100, cooldownMs);
-            vehicle.AttackRange = System.Math.Max(0.1f, (baseAttackRange > 0f ? baseAttackRange : 1.5f) + (levelConfig?.RangeAdd ?? 0f));
-            vehicle.BaseDamage = config.BaseDamage;
-            vehicle.WhiteAttackRatio = config.WhiteAttackRatio;
-            vehicle.WhiteDamageMultiplier = System.Math.Max(0.1f, levelConfig?.WhiteDamageMultiplier ?? 1.0f);
+            vehicle.AttackCooldownMs = EmitterUpgradeRuntimeHelper.ResolveCooldownMs(levelConfig);
+            vehicle.AttackRange = EmitterUpgradeRuntimeHelper.ResolveRange(config, levelConfig);
+            vehicle.BaseDamage = EmitterUpgradeRuntimeHelper.ResolveBaseDamage(levelConfig);
+            vehicle.WhiteAttackRatio = EmitterUpgradeRuntimeHelper.ResolveAttackRatio(levelConfig);
         }
 
-        private static int GetEmitterMaxLevel(EmitterConfig config)
-        {
-            if (config == null)
-            {
-                return 1;
-            }
-
-            int maxLevel = 1;
-            if (ConfigHelper.EmitterUpgradeConfig?.DataList == null)
-            {
-                if (config.UpgradeConfigId > 0)
-                {
-                    Log.Error($"Emitter upgrade table missing: emitterId={config.Id}, upgradeConfigId={config.UpgradeConfigId}");
-                }
-
-                return maxLevel;
-            }
-
-            bool found = false;
-            foreach (EmitterUpgradeConfig levelConfig in ConfigHelper.EmitterUpgradeConfig.DataList)
-            {
-                if (levelConfig != null && levelConfig.UpgradeConfigId == config.UpgradeConfigId)
-                {
-                    found = true;
-                    maxLevel = System.Math.Max(maxLevel, levelConfig.Level);
-                }
-            }
-
-            if (!found && config.UpgradeConfigId > 0)
-            {
-                Log.Error($"Emitter upgrade config missing: emitterId={config.Id}, upgradeConfigId={config.UpgradeConfigId}");
-            }
-
-            return maxLevel;
-        }
-
-        private static EmitterUpgradeConfig ResolveEmitterUpgradeLevelConfig(EmitterConfig config, int level)
-        {
-            if (config == null || ConfigHelper.EmitterUpgradeConfig?.DataList == null)
-            {
-                return null;
-            }
-
-            int targetLevel = System.Math.Max(1, level);
-            foreach (EmitterUpgradeConfig levelConfig in ConfigHelper.EmitterUpgradeConfig.DataList)
-            {
-                if (levelConfig != null && levelConfig.UpgradeConfigId == config.UpgradeConfigId && levelConfig.Level == targetLevel)
-                {
-                    return levelConfig;
-                }
-            }
-
-            if (config.UpgradeConfigId > 0)
-            {
-                Log.Error($"Emitter upgrade level missing: emitterId={config.Id}, upgradeConfigId={config.UpgradeConfigId}, level={targetLevel}");
-            }
-
-            return null;
-        }
-
-        private void DeleteLastEmitter()
+        private void DeleteSelectedEmitter()
         {
             BattleUnit player = ResolvePlayerUnit();
             VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
@@ -736,177 +679,37 @@ namespace GameLogic
                 return;
             }
 
-            vehicle.State = VehicleState.Stored;
+            long removedVehicleId = vehicle.VehicleId;
+            vehicleComponent.OwnedVehicles.Remove(vehicle);
             if (vehicleComponent.EquippedVehicleId == vehicle.VehicleId)
             {
                 vehicleComponent.EquippedVehicleId = 0;
+            }
+
+            if (vehicleComponent.EquippedVehicle == vehicle)
+            {
                 vehicleComponent.EquippedVehicle = null;
             }
-            if (_selectedEmitterVehicleId == vehicle.VehicleId)
+
+            if (_selectedEmitterVehicleId == removedVehicleId)
             {
                 VehicleData nextVehicle = GetLastEquippedVehicle(vehicleComponent);
                 _selectedEmitterVehicleId = nextVehicle != null && nextVehicle.State == VehicleState.Equipped ? nextVehicle.VehicleId : 0;
+                vehicleComponent.EquippedVehicleId = _selectedEmitterVehicleId;
+                vehicleComponent.EquippedVehicle = nextVehicle;
             }
 
             BattleAttackComponent attackComponent = player.GetComponent<BattleAttackComponent>();
-            attackComponent?.ResetEmitterCooldown(vehicle.VehicleId);
+            attackComponent?.ResetEmitterCooldown(removedVehicleId);
             SyncPlayerAttackFromVehicles(player);
 
             RefreshEmitterOwnedBarWidget();
             RefreshEmitterAddPanelWidget();
-            RefreshBuffAddPanelWidget();
+            RefreshEmitterAdjustPanelWidget();
             if (_selectedEmitterVehicleId == 0)
             {
-                _buffAddPanelWidget?.SetPanelVisible(false);
+                _emitterAdjustPanelWidget?.SetPanelVisible(false);
             }
-        }
-
-        private void AddBuffToSelectedEmitter(EmitterEffectPackConfig config)
-        {
-            if (config == null)
-            {
-                return;
-            }
-
-            BattleUnit player = ResolvePlayerUnit();
-            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
-            if (player == null || vehicleComponent == null)
-            {
-                return;
-            }
-
-            VehicleData vehicle = GetEquippedVehicle(vehicleComponent, _selectedEmitterVehicleId);
-            if (vehicle == null)
-            {
-                return;
-            }
-
-            vehicle.SlottedEffectPackIds ??= new List<int>();
-            if (vehicle.BuffSlotCount <= 0)
-            {
-                Log.Error($"Emitter has no effect slots: vehicleId={vehicle.VehicleId}, configId={vehicle.VehicleConfigId}, effectPackId={config.Id}");
-                return;
-            }
-
-            if (vehicle.SlottedEffectPackIds.Count >= vehicle.BuffSlotCount)
-            {
-                Log.Error($"Emitter effect slots full: vehicleId={vehicle.VehicleId}, configId={vehicle.VehicleConfigId}, slotCount={vehicle.BuffSlotCount}, effectPackId={config.Id}");
-                return;
-            }
-
-            vehicle.SlottedEffectPackIds.Add(config.Id);
-            SyncPlayerAttackFromVehicles(player);
-
-            RefreshEmitterOwnedBarWidget();
-            RefreshEmitterAddPanelWidget();
-            RefreshBuffAddPanelWidget();
-            if (vehicle.SlottedEffectPackIds.Count >= vehicle.BuffSlotCount)
-            {
-                _buffAddPanelWidget?.SetPanelVisible(false);
-            }
-        }
-
-        private void ShowMonsterDeathReward()
-        {
-            if (_buffAddPanelWidget == null)
-            {
-                return;
-            }
-
-            BattleUnit player = ResolvePlayerUnit();
-            VehicleComponent vehicleComponent = player?.GetComponent<VehicleComponent>();
-            VehicleData rewardTarget = GetRewardTargetVehicle(vehicleComponent);
-            if (rewardTarget == null)
-            {
-                return;
-            }
-
-            List<EmitterEffectPackConfig> options = BuildMonsterDeathRewardOptions(rewardTarget);
-            if (options.Count == 0)
-            {
-                return;
-            }
-
-            _selectedEmitterVehicleId = rewardTarget.VehicleId;
-            _emitterAddPanelWidget?.SetPanelVisible(false);
-            _buffAddPanelWidget.ShowRewardOptions(options, rewardTarget.VehicleId);
-            RefreshBuffAddPanelWidget();
-            RefreshDebugButtonStates();
-        }
-
-        private static VehicleData GetRewardTargetVehicle(VehicleComponent vehicleComponent)
-        {
-            if (vehicleComponent == null)
-            {
-                return null;
-            }
-
-            VehicleData fallback = null;
-            foreach (VehicleData vehicle in vehicleComponent.OwnedVehicles)
-            {
-                if (vehicle == null || vehicle.State != VehicleState.Equipped)
-                {
-                    continue;
-                }
-
-                if (fallback == null)
-                {
-                    fallback = vehicle;
-                }
-
-                int usedCount = vehicle.SlottedEffectPackIds?.Count ?? 0;
-                if (vehicle.BuffSlotCount > 0 && usedCount < vehicle.BuffSlotCount)
-                {
-                    return vehicle;
-                }
-            }
-
-            if (fallback == null && vehicleComponent.EquippedVehicle != null)
-            {
-                fallback = vehicleComponent.EquippedVehicle;
-            }
-
-            if (fallback == null)
-            {
-                return null;
-            }
-
-            int fallbackUsedCount = fallback.SlottedEffectPackIds?.Count ?? 0;
-            return fallback.BuffSlotCount > 0 && fallbackUsedCount < fallback.BuffSlotCount ? fallback : null;
-        }
-
-        private static List<EmitterEffectPackConfig> BuildMonsterDeathRewardOptions(VehicleData targetVehicle)
-        {
-            List<EmitterEffectPackConfig> options = new List<EmitterEffectPackConfig>(MonsterDeathRewardOptionCount);
-            List<EmitterEffectPackConfig> dataList = ConfigHelper.EmitterEffectPackConfig?.DataList;
-            if (targetVehicle == null || dataList == null || dataList.Count == 0)
-            {
-                return options;
-            }
-
-            HashSet<int> slottedIds = targetVehicle.SlottedEffectPackIds != null
-                ? new HashSet<int>(targetVehicle.SlottedEffectPackIds)
-                : new HashSet<int>();
-            List<EmitterEffectPackConfig> pool = new List<EmitterEffectPackConfig>(dataList.Count);
-            foreach (EmitterEffectPackConfig config in dataList)
-            {
-                if (config != null
-                    && config.EffectIds != null
-                    && config.EffectIds.Length > 0
-                    && !slottedIds.Contains(config.Id))
-                {
-                    pool.Add(config);
-                }
-            }
-
-            while (pool.Count > 0 && options.Count < MonsterDeathRewardOptionCount)
-            {
-                int index = UnityEngine.Random.Range(0, pool.Count);
-                options.Add(pool[index]);
-                pool.RemoveAt(index);
-            }
-
-            return options;
         }
 
         private void SpawnDebugEnemy()
@@ -932,7 +735,6 @@ namespace GameLogic
                     {
                         CooldownMs = 1200,
                         Range = 2.5f,
-                        AttackHitRatio = 0.1f,
                         CanMoveCast = false,
                         PayloadType = BattleAttackPayloadType.VehicleBuff,
                         BuffGroupIds = buffGroupId > 0 ? new List<int> { buffGroupId } : new List<int>(),
@@ -1042,34 +844,10 @@ namespace GameLogic
             return null;
         }
 
-        private void RefreshDebugButtonStates()
-        {
-            bool hasBattle = _battle != null && !_battle.IsDisposed && _battle.State == BattleState.Fighting;
-            BattleUnit player = hasBattle ? ResolvePlayerUnit() : null;
-            BattleAttackComponent attackComponent = player?.GetComponent<BattleAttackComponent>();
-            int attackCount = attackComponent?.Attacks.Count ?? 0;
-            int emitterCount = GetEquippedVehicleCount(player?.GetComponent<VehicleComponent>());
-            if (emitterCount == 0 && attackCount > 0)
-            {
-                emitterCount = attackCount;
-            }
-
-            VehicleData selectedVehicle = GetEquippedVehicle(player?.GetComponent<VehicleComponent>(), _selectedEmitterVehicleId);
-            bool canAddEffect = selectedVehicle != null
-                                && selectedVehicle.BuffSlotCount > 0
-                                && (selectedVehicle.SlottedEffectPackIds?.Count ?? 0) < selectedVehicle.BuffSlotCount;
-
-            _gmWidget?.Refresh(
-                player != null && emitterCount < MaxDebugEmitterSlots,
-                player != null && emitterCount > 0,
-                player != null && canAddEffect,
-                hasBattle);
-        }
-
         private void CloseDebugSubPanels()
         {
             _emitterAddPanelWidget?.SetPanelVisible(false);
-            _buffAddPanelWidget?.SetPanelVisible(false);
+            _emitterAdjustPanelWidget?.SetPanelVisible(false);
         }
 
         private void EnsureSelectedEmitter()

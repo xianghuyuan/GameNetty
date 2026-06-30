@@ -199,13 +199,12 @@ namespace ET
 
             float attackRange = 1.5f;
             int attackCooldownMs = 1000;
-            float attackHitRatio = 0.5f;
             int attackSourceConfigId = 0;
             bool canMoveCast = false;
             int buffGroupId = 0;
-            ResolveMonsterAttack(configId, ref attackRange, ref attackCooldownMs, ref attackHitRatio, ref attackSourceConfigId, ref canMoveCast, ref buffGroupId);
+            ResolveMonsterAttack(configId, ref attackRange, ref attackCooldownMs, ref attackSourceConfigId, ref canMoveCast, ref buffGroupId);
 
-            SetupMinionEmitter(battleUnit, attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+            SetupMinionEmitter(battleUnit, attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, canMoveCast, buffGroupId);
         }
 
         public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, bool canMoveCast)
@@ -215,15 +214,10 @@ namespace ET
 
         public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
-            SetupMinionEmitter(battleUnit, attackRuntimeId, attackCooldownMs, attackRange, 0.5f, canMoveCast, buffGroupId);
+            SetupMinionEmitter(battleUnit, attackRuntimeId, 0, attackCooldownMs, attackRange, canMoveCast, buffGroupId);
         }
 
-        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackCooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
-        {
-            SetupMinionEmitter(battleUnit, attackRuntimeId, 0, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
-        }
-
-        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackSourceConfigId, int attackCooldownMs, float attackRange, float attackHitRatio, bool canMoveCast, int buffGroupId)
+        public static void SetupMinionEmitter(BattleUnit battleUnit, long attackRuntimeId, int attackSourceConfigId, int attackCooldownMs, float attackRange, bool canMoveCast, int buffGroupId)
         {
             if (battleUnit == null)
             {
@@ -246,7 +240,7 @@ namespace ET
                 battleAttack = battleUnit.AddComponent<BattleAttackComponent>();
             }
 
-            battleAttack.SetSingleEffectAttack(attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, attackHitRatio, canMoveCast, buffGroupId);
+            battleAttack.SetSingleEffectAttack(attackRuntimeId, attackSourceConfigId, attackCooldownMs, attackRange, canMoveCast, buffGroupId);
 
             if (battleUnit.GetComponent<ClientMinionAIComponent>() == null)
             {
@@ -254,7 +248,7 @@ namespace ET
             }
         }
 
-        private static void ResolveMonsterAttack(int configId, ref float attackRange, ref int attackCooldownMs, ref float attackHitRatio, ref int attackSourceConfigId, ref bool canMoveCast, ref int buffGroupId)
+        private static void ResolveMonsterAttack(int configId, ref float attackRange, ref int attackCooldownMs, ref int attackSourceConfigId, ref bool canMoveCast, ref int buffGroupId)
         {
             UnitCombatConfig combatConfig = ConfigHelper.UnitCombatConfig?.GetOrDefault(configId);
             if (combatConfig == null)
@@ -268,15 +262,10 @@ namespace ET
                 return;
             }
 
-            SkillTargetingConfig targetingConfig = ConfigHelper.SkillTargetingConfig?.GetOrDefault(attackEmitterConfig.TargetingConfigId);
-            if (targetingConfig != null)
-            {
-                attackRange = targetingConfig.CastRange + targetingConfig.EdgeDistance;
-            }
-
             attackSourceConfigId = attackEmitterConfig.Id;
-            attackCooldownMs = attackEmitterConfig.CooldownMs > 0 ? attackEmitterConfig.CooldownMs : attackCooldownMs;
-            attackHitRatio = attackEmitterConfig.AttackHitRatio > 0f ? attackEmitterConfig.AttackHitRatio : attackHitRatio;
+            EmitterUpgradeConfig levelConfig = EmitterUpgradeRuntimeHelper.ResolveLevelConfig(attackEmitterConfig, 1);
+            attackCooldownMs = EmitterUpgradeRuntimeHelper.ResolveCooldownMs(levelConfig);
+            attackRange = EmitterUpgradeRuntimeHelper.ResolveRange(attackEmitterConfig, levelConfig);
             canMoveCast = attackEmitterConfig.CanMoveCast;
         }
 

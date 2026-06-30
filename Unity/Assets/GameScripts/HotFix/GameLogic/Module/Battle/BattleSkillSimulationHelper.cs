@@ -307,14 +307,17 @@ namespace ET
                 return 0;
             }
 
-            if (emitterConfig.BaseDamage <= 0f && emitterConfig.WhiteAttackRatio <= 0f)
+            EmitterUpgradeConfig levelConfig = EmitterUpgradeRuntimeHelper.ResolveLevelConfig(emitterConfig, 1);
+            float baseDamage = EmitterUpgradeRuntimeHelper.ResolveBaseDamage(levelConfig);
+            float attackRatio = EmitterUpgradeRuntimeHelper.ResolveAttackRatio(levelConfig);
+            if (baseDamage <= 0f && attackRatio <= 0f)
             {
                 return 0;
             }
 
             int attack = caster.GetOrCreateBattleStats()?.Attack ?? 0;
             int defense = target.GetOrCreateBattleStats()?.Defense ?? 0;
-            float value = emitterConfig.BaseDamage + attack * emitterConfig.WhiteAttackRatio - defense;
+            float value = baseDamage + attack * attackRatio - defense;
             return (int)System.Math.Floor(System.Math.Max(0f, value));
         }
     }

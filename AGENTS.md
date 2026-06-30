@@ -133,6 +133,8 @@ Opcode 编号从 10001 开始顺序递增。新增消息使用下一个可用编
 - 事件：使用 `EventSystem.Instance.Publish<TContext, TEvent>(context, eventData)`，处理器标记 `[Event]`。
 - 组件创建：`entity.AddComponent<T>()`、`entity.AddComponent<T, P1>(param1)`。
 - `NumericComponent` 的值以 `long` 存储，通过 `GetAsInt()` / `GetAsFloat()` / `GetByKey()` 扩展方法访问。
+- 业务代码循环优先使用 `for` / `foreach`，不要使用 `while`。
 - Unity/TEngine UI 结构应放在 Prefab 中。不要在业务代码中通过 `new GameObject(...)` / `AddComponent(...)` 创建 UI 面板、列表项或 prefab 层级；应创建或修改 Prefab，并使用 TEngine 的 `CreateWidget` / `CreateWidgetByPrefab` / `AdjustIconNum` 绑定和复用。
 - 可点击 UI 节点必须使用项目内的 `GameLogic.UIButton` 组件，而不是直接绑定 Unity `Button`。生成的 UI 绑定应使用 `UIButton`，点击处理应通过 `UIButton.SetClick(...)` 注册，而不是 `Button.onClick.AddListener(...)`。
+- UI 业务脚本不要手写 `ValidateBindings` 之类逐个检查生成字段是否为 null 的绑定校验；绑定完整性由 Prefab 和 `*_Gen.g.cs` 负责。Gen 没有对应字段就不要在业务脚本中显示或接入该 UI。
 - 修改 Unity Prefab 时，必须优先使用 Unity MCP。如果 Unity MCP 不可用、断开连接，或无法检查/修改目标 Prefab，则停止并告知用户；由用户决定是否继续使用直接编辑 YAML 等非 MCP 兜底方案。不要在没有 Unity MCP 确认的情况下静默编辑 Prefab 文件。

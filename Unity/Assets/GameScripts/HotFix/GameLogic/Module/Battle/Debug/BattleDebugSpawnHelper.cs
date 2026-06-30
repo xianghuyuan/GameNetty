@@ -8,7 +8,6 @@ namespace ET
     {
         public int CooldownMs = 1000;
         public float Range = 3f;
-        public float AttackHitRatio = 0.1f;
         public bool CanMoveCast;
         public BattleAttackPayloadType PayloadType = BattleAttackPayloadType.VehicleBuff;
         public List<int> BuffGroupIds = new();
@@ -115,7 +114,6 @@ namespace ET
                         AttackRuntimeId = IdGenerater.Instance.GenerateInstanceId(),
                         CooldownMs = spec?.CooldownMs ?? 1000,
                         AttackRange = range,
-                        AttackHitRatio = spec?.AttackHitRatio ?? 0.1f,
                         CanMoveCast = spec?.CanMoveCast ?? false,
                         DeliveryType = BattleAttackDeliveryType.Instant,
                         PayloadType = spec?.PayloadType ?? BattleAttackPayloadType.VehicleBuff,

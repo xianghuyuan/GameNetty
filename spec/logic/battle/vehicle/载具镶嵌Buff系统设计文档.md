@@ -131,7 +131,8 @@ VehicleData (持久化到玩家数据)
 ├── BuffSlotCount: int           // Buff槽位数量，来自 EmitterConfig
 ├── BaseDamage: float            // 发射器白值基础伤害
 ├── WhiteAttackRatio: float      // 发射器白值攻击力系数
-├── SlottedBuffIds: List<int>    // 已镶嵌的 BuffGroupConfig.Id 列表，下标就是槽位位置
+├── SlottedEffectPackIds: List<int> // 已镶嵌的 EmitterEffectPackConfig.Id 列表
+├── SlottedBuffIds: List<int>    // 效果包展开后的 BuffGroupConfig.Id 列表
 └── State: VehicleState          // 装备状态
 ```
 
@@ -142,21 +143,19 @@ VehicleData (持久化到玩家数据)
 | Id | int | 发射器模板ID |
 | Name | string | 载具名称 |
 | Description | string | 描述 |
-| CooldownMs | int | 发射CD（毫秒），即多久触发一次攻击 |
-| TargetingConfigId | int | 目标与射程配置ID |
+| TargetingConfigId | int | 目标选择配置ID |
 | UpgradeConfigId | int | 升级方案ID，对应 `EmitterUpgradeConfig.UpgradeConfigId` |
 | BuffSlotCount | int | Buff槽位数量，决定该发射器最多可装配几个 Buff |
-| BaseDamage | float | 发射器白值基础伤害 |
-| WhiteAttackRatio | float | 发射器白值攻击力系数 |
 
-发射器未镶嵌任何 Buff 时，仍会结算白值伤害：
+`EmitterConfig` 只描述发射器身份、释放行为、目标选择和槽位数量；每级最终战斗数值都放在 `EmitterUpgradeConfig`。
+
+发射器未镶嵌任何 Buff 时，仍会按当前等级结算白值伤害：
 
 ```
-WhiteDamage = max(0, BaseDamage + Attacker.Attack * WhiteAttackRatio - Target.Defense)
-FinalWhiteDamage = floor(WhiteDamage * WhiteDamageMultiplier)
+Damage = floor(max(0, BaseDamage + Attacker.Attack * WhiteAttackRatio - Target.Defense))
 ```
 
-`BaseDamage / WhiteAttackRatio` 都为 0 时，不结算白值伤害。
+当前等级的 `BaseDamage / AttackRatio` 都为 0 时，不结算白值伤害。
 
 ### 3.3 发射器升级配置表（EmitterUpgradeConfig.xlsx）
 
@@ -167,12 +166,13 @@ FinalWhiteDamage = floor(WhiteDamage * WhiteDamageMultiplier)
 | Level | int | 等级 |
 | Code | string | 代码名 |
 | Name | text | 显示名称 |
-| CooldownReduceMs | int | 当前等级累计减少的发射 CD 毫秒数 |
-| RangeAdd | float | 当前等级累计增加的攻击射程 |
-| WhiteDamageMultiplier | float | 当前等级白值伤害倍率 |
+| CooldownMs | int | 当前等级最终发射 CD 毫秒数 |
+| Range | float | 当前等级最终攻击射程 |
+| BaseDamage | float | 当前等级最终基础伤害 |
+| AttackRatio | float | 当前等级最终攻击力系数 |
 | Desc | string | 描述 |
 
-同一个 `UpgradeConfigId` 下按 `Level` 配多行，例如 `12001 Lv.1~Lv.5`。重复获得发射器时直接查当前等级行，不再额外维护最大等级字段或每级增量字段。
+同一个 `UpgradeConfigId` 下按 `Level` 配多行。当前方案中 `EmitterConfig.UpgradeConfigId` 默认等于发射器 `Id`，即 `EmitterId + Level` 可以直接定位每级最终数值。
 
 > **注意**：载具本身不提供任何属性加成（不加攻击力、防御力、速度）。所有效果都来自镶嵌的 Buff 碎片。
 
@@ -183,12 +183,11 @@ FinalWhiteDamage = floor(WhiteDamage * WhiteDamageMultiplier)
 升级后战斗运行时读取 `UpgradeConfigId + Level` 对应行，并按以下规则刷新载具参数：
 
 ```
-AttackCooldownMs = max(100, CooldownMs - CurrentLevel.CooldownReduceMs)
-AttackRange = BaseRange + CurrentLevel.RangeAdd
-WhiteDamageMultiplier = max(0.1, CurrentLevel.WhiteDamageMultiplier)
+AttackCooldownMs = max(100, CurrentLevel.CooldownMs)
+AttackRange = CurrentLevel.Range
+BaseDamage = CurrentLevel.BaseDamage
+WhiteAttackRatio = CurrentLevel.AttackRatio
 ```
-
-`WhiteDamageMultiplier` 只影响发射器白值伤害，不影响镶嵌 Buff 的伤害或 DOT。
 
 ### 3.5 Buff 碎片
 

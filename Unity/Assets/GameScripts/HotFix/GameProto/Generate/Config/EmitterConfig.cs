@@ -24,7 +24,6 @@ public sealed partial class EmitterConfig : Luban.BeanBase
         TargetingConfigId = _buf.ReadInt();
         TargetingConfigId_Ref = null;
         CooldownGroupId = _buf.ReadInt();
-        CooldownMs = _buf.ReadInt();
         Priority = _buf.ReadInt();
         CanMoveCast = _buf.ReadBool();
         NeedExplicitTarget = _buf.ReadBool();
@@ -35,11 +34,8 @@ public sealed partial class EmitterConfig : Luban.BeanBase
         ProjectilePiercing = _buf.ReadBool();
         ProjectileMaxHitCount = _buf.ReadInt();
         Desc = _buf.ReadString();
-        AttackHitRatio = _buf.ReadFloat();
         UpgradeConfigId = _buf.ReadInt();
         BuffSlotCount = _buf.ReadInt();
-        BaseDamage = _buf.ReadFloat();
-        WhiteAttackRatio = _buf.ReadFloat();
     }
 
     public static EmitterConfig DeserializeEmitterConfig(ByteBuf _buf)
@@ -76,10 +72,6 @@ public sealed partial class EmitterConfig : Luban.BeanBase
     /// 冷却组ID
     /// </summary>
     public readonly int CooldownGroupId;
-    /// <summary>
-    /// 冷却毫秒
-    /// </summary>
-    public readonly int CooldownMs;
     /// <summary>
     /// 优先级
     /// </summary>
@@ -121,10 +113,6 @@ public sealed partial class EmitterConfig : Luban.BeanBase
     /// </summary>
     public readonly string Desc;
     /// <summary>
-    /// 攻击动画命中点比例
-    /// </summary>
-    public readonly float AttackHitRatio;
-    /// <summary>
     /// 升级方案ID
     /// </summary>
     public readonly int UpgradeConfigId;
@@ -132,14 +120,6 @@ public sealed partial class EmitterConfig : Luban.BeanBase
     /// Buff槽位数量
     /// </summary>
     public readonly int BuffSlotCount;
-    /// <summary>
-    /// 白值基础伤害
-    /// </summary>
-    public readonly float BaseDamage;
-    /// <summary>
-    /// 白值攻击力系数
-    /// </summary>
-    public readonly float WhiteAttackRatio;
    
     public const int __ID__ = -2062774224;
     public override int GetTypeId() => __ID__;
@@ -159,7 +139,6 @@ public sealed partial class EmitterConfig : Luban.BeanBase
         + "TargetType:" + TargetType + ","
         + "TargetingConfigId:" + TargetingConfigId + ","
         + "CooldownGroupId:" + CooldownGroupId + ","
-        + "CooldownMs:" + CooldownMs + ","
         + "Priority:" + Priority + ","
         + "CanMoveCast:" + CanMoveCast + ","
         + "NeedExplicitTarget:" + NeedExplicitTarget + ","
@@ -170,11 +149,8 @@ public sealed partial class EmitterConfig : Luban.BeanBase
         + "ProjectilePiercing:" + ProjectilePiercing + ","
         + "ProjectileMaxHitCount:" + ProjectileMaxHitCount + ","
         + "Desc:" + Desc + ","
-        + "AttackHitRatio:" + AttackHitRatio + ","
         + "UpgradeConfigId:" + UpgradeConfigId + ","
         + "BuffSlotCount:" + BuffSlotCount + ","
-        + "BaseDamage:" + BaseDamage + ","
-        + "WhiteAttackRatio:" + WhiteAttackRatio + ","
         + "}";
     }
 }

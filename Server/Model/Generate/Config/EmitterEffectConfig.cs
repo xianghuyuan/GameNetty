@@ -49,7 +49,7 @@ namespace ET
         public readonly int EffectKind;
 
         /// <summary>
-        /// 目标属性：1=CooldownMs，2=Range，3=WhiteDamage，4=BaseDamage
+        /// 目标属性：1=CooldownMs，2=Range，3=BaseDamage，4=AttackRatio
         /// </summary>
         public readonly int TargetStat;
 

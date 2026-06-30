@@ -17,7 +17,7 @@ namespace GameLogic
 
         protected override void OnCreate()
         {
-            ValidateBindings();
+            CacheComponents();
             PrepareCooldownFill(m_imgCooldownFill);
             ApplyFont(m_tmpName);
             ApplyFont(m_tmpMeta);
@@ -53,12 +53,12 @@ namespace GameLogic
                 return;
             }
 
-            SkillTargetingConfig targetingConfig = ConfigHelper.SkillTargetingConfig?.GetOrDefault(config.TargetingConfigId);
-            float range = targetingConfig != null ? targetingConfig.CastRange + targetingConfig.EdgeDistance : 1.5f;
+            EmitterUpgradeConfig levelConfig = EmitterUpgradeRuntimeHelper.ResolveLevelConfig(config, 1);
+            float range = EmitterUpgradeRuntimeHelper.ResolveRange(config, levelConfig);
 
             m_tmpName.SetText(GetEmitterName(config));
             m_tmpMeta.SetText(GetEmitterMeta(config));
-            m_tmpBuff.SetText(GetEmitterDebugInfo(config, range));
+            m_tmpBuff.SetText(GetEmitterDebugInfo(config, levelConfig, range));
 
             m_imgCooldownFill.fillAmount = 1f;
             m_imgCooldownFill.color = GetSlotColor(index);
@@ -86,12 +86,12 @@ namespace GameLogic
             return cooldownMs > 0 ? $"{cooldownMs / 1000f:0.0}秒" : "无";
         }
 
-        private static string FormatDamage(EmitterConfig config)
+        private static string FormatDamage(EmitterUpgradeConfig levelConfig)
         {
-            return $"{config.BaseDamage:0.#}+攻击*{config.WhiteAttackRatio:0.##}";
+            return $"{EmitterUpgradeRuntimeHelper.ResolveBaseDamage(levelConfig):0.#}+攻击*{EmitterUpgradeRuntimeHelper.ResolveAttackRatio(levelConfig):0.##}";
         }
 
-        private static string GetEmitterDebugInfo(EmitterConfig config, float range)
+        private static string GetEmitterDebugInfo(EmitterConfig config, EmitterUpgradeConfig levelConfig, float range)
         {
             if (config == null)
             {
@@ -100,8 +100,8 @@ namespace GameLogic
 
             string moveCast = config.CanMoveCast ? "移动施法" : "站定施法";
             string enabled = config.IsEnabled ? "启用" : "禁用";
-            return $"冷却 {FormatCooldown(config.CooldownMs)}  冷却组 {config.CooldownGroupId}  射程 {range:0.0}  命中点 {config.AttackHitRatio:0.##}\n" +
-                   $"伤害 {FormatDamage(config)}  效果槽 {config.BuffSlotCount}  升级组 {config.UpgradeConfigId}\n" +
+            return $"冷却 {FormatCooldown(EmitterUpgradeRuntimeHelper.ResolveCooldownMs(levelConfig))}  冷却组 {config.CooldownGroupId}  射程 {range:0.0}\n" +
+                   $"伤害 {FormatDamage(levelConfig)}  效果槽 {config.BuffSlotCount}  升级组 {config.UpgradeConfigId}\n" +
                    $"{moveCast}  指定目标 {FormatBool(config.NeedExplicitTarget)}  {enabled}\n" +
                    $"{FormatDesc(config.Desc)}";
         }
@@ -127,24 +127,10 @@ namespace GameLogic
             };
         }
 
-        private void ValidateBindings()
+        private void CacheComponents()
         {
-            if (m_imgCooldownFill == null || m_tmpName == null || m_tmpMeta == null || m_tmpBuff == null)
-            {
-                throw new InvalidOperationException("BattleEmitterOptionItemWidget prefab bindings are incomplete.");
-            }
-
             _button = gameObject.GetComponent<UIButton>();
-            if (_button == null)
-            {
-                throw new InvalidOperationException("BattleEmitterOptionItemWidget UIButton is missing.");
-            }
-
             _background = gameObject.GetComponent<Image>();
-            if (_background == null)
-            {
-                throw new InvalidOperationException("BattleEmitterOptionItemWidget Image is missing.");
-            }
         }
 
         private static void PrepareCooldownFill(Image image)
@@ -160,7 +146,7 @@ namespace GameLogic
         {
             if (text == null)
             {
-                throw new InvalidOperationException("BattleEmitterOptionItemWidget text binding is missing.");
+                return;
             }
 
             if (_font == null)

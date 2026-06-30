@@ -35,6 +35,8 @@ namespace ET
         /// </summary>
         public string Description => _data.Description;
         
+
         partial void PostInit();
     }
 }
+
